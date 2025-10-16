@@ -1,0 +1,19 @@
+docker compose -f docker-compose.windows.yml -f docker-compose.override.yml up -d
+================================================================
+docker exec -it vitecoverserver-api-1 bash -c "mkdir -p /app/keys && cd /app/keys && openssl genrsa -out jwt.key 2048 && openssl rsa -in jwt.key -pubout -out jwt.key.pub && ls -l /app/keys"
+
+================================================================
+docker exec -i vitecoverserver-api-1 python3 - <<'PYCODE'
+import requests, json
+query = """
+mutation {
+  tokenCreate(email: "admin@vitecover.com", password: "StrongPassword123") {
+    token
+    accountErrors { field code message }
+  }
+}
+"""
+r = requests.post("http://localhost:8000/graphql/", json={"query": query})
+print(r.text)
+PYCODE
+================================================================

@@ -1,0 +1,90 @@
+services:
+  api:
+    image: ghcr.io/saleor/saleor:3.22
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+      - redis
+      - jaeger
+    volumes:
+      # shared volume between worker and api for media
+      - saleor-media:/app/media
+    env_file:
+      - common.env
+      - backend.env
+    environment:
+      - DASHBOARD_URL=http://localhost:9000/
+      - ALLOWED_HOSTS=localhost,api
+
+
+  dashboard:
+    image: ghcr.io/saleor/saleor-dashboard:latest
+    restart: unless-stopped
+    environment:
+      - API_URL=/graphql/
+
+  db:
+    image: library/postgres:15-alpine
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+    volumes:
+      - saleor-db:/var/lib/postgresql/data
+      - ./replica_user.sql:/docker-entrypoint-initdb.d/replica_user.sql:ro,z
+    environment:
+      - POSTGRES_USER=saleor
+      - POSTGRES_PASSWORD=saleor
+
+  redis:
+    image: library/redis:7.0-alpine
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+    volumes:
+      - saleor-redis:/data
+
+  worker:
+    image: ghcr.io/saleor/saleor:3.22
+    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+    env_file:
+      - common.env
+      - backend.env
+    depends_on:
+      - redis
+      - mailpit
+    volumes:
+      # shared volume between worker and api for media
+      - saleor-media:/app/media
+
+  jaeger:
+    image: jaegertracing/jaeger
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+    volumes:
+      - type: tmpfs
+        target: /tmp
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    networks:
+      - saleor-backend-tier
+
+volumes:
+  saleor-db:
+    driver: local
+  saleor-redis:
+    driver: local
+  saleor-media:
+
+networks:
+  saleor-backend-tier:
+    driver: bridge
