@@ -27,7 +27,9 @@ services:
       - saleor-backend-tier
     environment:
       DASHBOARD_URL: http://localhost/dashboard/
-      ALLOWED_HOSTS: localhost,127.0.0.1,api
+      ALLOWED_HOSTS: localhost,127.0.0.1,api,*
+      ALLOWED_REDIRECT_HOSTS: localhost:8080
+      CORS_ALLOWED_ORIGINS: http://localhost:8080
       RSA_PRIVATE_KEY_PATH: /app/keys/jwt.key
       RSA_PUBLIC_KEY_PATH: /app/keys/jwt.key.pub
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
@@ -38,11 +40,15 @@ services:
       EMAIL_USE_TLS: "false"
       EMAIL_USE_SSL: "false"
       DEFAULT_FROM_EMAIL: no-reply@vitecover.com
+      USE_X_FORWARDED_HOST: True 
+      SECURE_PROXY_SSL_HEADER: HTTP_X_FORWARDED_PROTO,https
+      SITE_URL: http://vitecover.com
     depends_on:
       keygen:
         condition: service_completed_successfully
     volumes:
       - saleor-keys:/app/keys
+      - ./media:/app/media
     command: >
       sh -c "
         export RSA_PRIVATE_KEY=\"$(cat /app/keys/jwt.key)\" &&
@@ -104,6 +110,9 @@ services:
     restart: unless-stopped
     networks:
       - saleor-backend-tier
+    environment:
+      CELERY_MAX_TASKS_PER_CHILD: 100
+      CELERY_BEAT_MAX_INTERVAL: 10
 
 networks:
   saleor-backend-tier:

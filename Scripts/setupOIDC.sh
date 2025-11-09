@@ -3,7 +3,7 @@ set -euo pipefail
 
 # === 配置区 ===
 EMAIL="${1:-admin@vitecover.com}"
-PASS="${2:-Wm13221322+a}"
+PASS="${2:-13221322}"
 GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:-your-google-client-id.apps.googleusercontent.com}"
 GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-your-google-client-secret}"
 
