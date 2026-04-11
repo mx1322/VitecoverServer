@@ -52,8 +52,9 @@ VitecoverServer/
 Before first startup:
 
 1. make sure `backend/.env` is correct
-2. copy `deploy/linux/.env.frontend.example` to `deploy/linux/.env.frontend`
-3. copy `deploy/linux/.env.minio.example` to `deploy/linux/.env.minio`
+2. keep `deploy/linux/.env.frontend.example` and `deploy/linux/.env.minio.example` as the committed reference templates
+3. let `up.sh` create `.env.frontend` and `.env.minio` automatically if they do not exist
+4. edit the generated files before the first successful startup
 
 Suggested frontend values:
 
@@ -63,6 +64,11 @@ Suggested frontend values:
 Suggested backend note:
 
 - if Directus is meant to live behind `/directus`, update `backend/.env` so `PUBLIC_URL` matches that final public URL
+
+The repository keeps the example files as the initial committed reference.
+The real `.env.frontend` and `.env.minio` files should live only on the server and are ignored by Git.
+If a real env file is missing, `up.sh` will create it from the template.
+If a real env file still matches the template exactly, `up.sh` will stop and require you to edit it before startup.
 
 ## One-command startup
 
@@ -75,7 +81,8 @@ bash up.sh
 
 This will:
 
-- create frontend and MinIO env files if missing
+- create missing env files from the example templates
+- stop if those env files still match the template content
 - build the frontend image
 - start the full stack
 
