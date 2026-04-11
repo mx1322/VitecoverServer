@@ -9,6 +9,12 @@ copy_if_missing() {
   local template="$2"
 
   if [ ! -f "$target" ]; then
+    if [ ! -f "$template" ]; then
+      echo "Missing template file: $template"
+      echo "Run git pull and ensure deployment template files are present."
+      exit 1
+    fi
+
     cp "$template" "$target"
     echo "$target created from $template"
     echo "Please review and update $target before starting the stack."

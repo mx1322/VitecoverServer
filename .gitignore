@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+!deploy/linux/.env.frontend.example
+!deploy/linux/.env.minio.example
 
 # OS / editors
 .DS_Store
