@@ -10,11 +10,11 @@ Thumbs.db
 .idea/
 
 # Runtime data
-data/
-uploads/
-backups/
-snapshots/
-directus/schema/live-current.tmp.json
+backend/data/
+backend/uploads/
+backend/backups/
+backend/snapshots/
+backend/directus/schema/live-current.tmp.json
 
 # Logs
 *.log

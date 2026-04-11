@@ -1,101 +1,34 @@
-# Directus Starter for Insurance Backend
+# VitecoverServer
 
-This starter gives you a local Docker-based Directus backend with:
+This repository is now organized as a small monorepo:
 
-- Directus
-- PostgreSQL
-- Redis
-- Nginx reverse proxy
+- `backend/`
+  Directus-based insurance backend, local Docker stack, schema sync script, and deployment-oriented backend assets.
+- `frontend/`
+  Reserved for the website and customer/admin-facing frontend application.
+- `docs/`
+  Product, schema, and local workflow documentation.
 
-## Quick start
+## Current focus
 
-### 1. Copy environment variables
+The backend is already initialized around the temporary vehicle insurance workflow:
 
-```bash
-cp .env.example .env
-```
+- customer accounts
+- vehicles
+- drivers
+- insurance products
+- geo zones
+- pricing rules
+- quotes
+- orders
+- payments
+- admin reviews
+- policies
+- refunds
 
-### 2. Start the stack
+## Where to start
 
-```bash
-docker compose up -d
-```
-
-### 3. Open Directus
-
-- Through Nginx: http://localhost:8080
-- Direct access: http://localhost:8055
-
-## Stop the stack
-
-```bash
-docker compose down
-```
-
-## Schema files
-
-The schema workspace under `directus/schema` is intended to stay in Git, except for the temporary live snapshot file.
-
-- `schema-target.json`
-  The editable target schema you want to push to Directus. This is the main schema file to review, change, and version.
-- `schema-remote-baseline.json`
-  The last known remote/server baseline pulled from Directus. This helps compare your local target against the latest synced server state.
-- `live-current.tmp.json`
-  A temporary snapshot fetched during `pull` and `status`. This should not be committed.
-
-## Schema sync workflow
-
-Use the custom sync script to compare and move schema changes between your local repo and a Directus instance.
-
-```bash
-python3 scripts/directus_schema_sync.py pull
-python3 scripts/directus_schema_sync.py status
-python3 scripts/directus_schema_sync.py push
-```
-
-What each command does:
-
-- `pull`
-  Fetches the current Directus schema and refreshes `schema-remote-baseline.json`. You can also choose to overwrite `schema-target.json`.
-- `status`
-  Compares the live Directus schema against `schema-target.json` and the cached `schema-remote-baseline.json`.
-- `push`
-  Applies the diff from the live Directus schema to `schema-target.json`, then optionally refreshes both baseline files from the server.
-
-## Reset local data
-
-This removes containers and deletes local database/uploads.
-
-```bash
-docker compose down -v
-rm -rf data uploads
-mkdir -p data/postgres uploads
-```
-
-## Suggested next steps
-
-1. Continue refining the insurance backend collections and business logic:
-   - customers
-   - drivers
-   - vehicles
-   - insurance_products
-   - geo_zones
-   - pricing_rules
-   - quotes
-   - orders
-   - payments
-   - admin_reviews
-   - policies
-   - refunds
-
-2. Move uploads to S3 when you deploy to AWS.
-3. Put production secrets only on the server, not in GitHub.
-4. Add custom logic under `directus/extensions`.
-
-## Notes
-
-- Keep `.env` out of Git.
-- Commit `.env.example`, `docker-compose.yml`, `nginx/`, and `directus/extensions/`.
-- Commit `directus/schema/schema-target.json` and `directus/schema/schema-remote-baseline.json`.
-- Ignore `directus/schema/live-current.tmp.json`.
-- For EC2 production, put Directus behind HTTPS and use RDS + S3.
+- Backend runtime and schema workflow: [backend/README.md](/C:/Users/mx132/Desktop/vitecover/VitecoverServer/backend/README.md)
+- Local backend notes: [docs/LOCAL_README.md](/C:/Users/mx132/Desktop/vitecover/VitecoverServer/docs/LOCAL_README.md)
+- Product overview: [docs/PROJECT_OVERVIEW.md](/C:/Users/mx132/Desktop/vitecover/VitecoverServer/docs/PROJECT_OVERVIEW.md)
+- Schema design notes: [docs/SCHEMA_PLAN.md](/C:/Users/mx132/Desktop/vitecover/VitecoverServer/docs/SCHEMA_PLAN.md)
