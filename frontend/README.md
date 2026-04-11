@@ -60,8 +60,9 @@ Recommended approach:
 
 ## Notes
 
-Node.js and npm are not installed in the current environment, so this scaffold was created manually and has not been executed locally yet.
-Once Node is available, the next step is:
+This frontend workspace is intended to run inside Docker for Linux deployment, so day-to-day development does not have to happen on the same machine that runs the server stack.
+
+When Node.js is available in a development environment, the local development commands are:
 
 ```bash
 npm install

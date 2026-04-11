@@ -19,6 +19,11 @@ The local development model is:
 - build the product iteratively
 - move the validated stack to AWS for production
 
+In practice, the current workflow can also use a split setup:
+
+- edit code from a cloud development environment
+- let the Linux server pull the repository and run the stack
+
 ## Why this approach makes sense now
 
 At the current stage, the project benefits from:

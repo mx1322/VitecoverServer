@@ -80,6 +80,22 @@ The intended local development flow is:
 4. Push validated changes.
 5. Continue backend and frontend implementation on top of the synchronized schema.
 
+## Practical working mode
+
+The current practical workflow can be split across two machines:
+
+- development and code editing can continue in a cloud environment
+- the Linux server at `192.168.3.60` can pull the latest repository state and run the integrated deployment stack
+
+In practice, this means:
+
+1. update code in the repository
+2. push changes to Git
+3. pull the latest code on the Linux server
+4. run `deploy/linux/up.sh`
+
+This fits the current project well because the Linux server is being used as a local EC2-style runtime target, while editing can happen elsewhere.
+
 ## Notes
 
 - The backend is developed locally first.

@@ -11,11 +11,9 @@ All commands in this README assume your working directory is `backend/`.
 
 ## Quick start
 
-### 1. Copy environment variables
+### 1. Prepare environment variables
 
-```bash
-cp .env.example .env
-```
+Make sure `backend/.env` exists and contains the correct local or server configuration.
 
 ### 2. Start the stack
 
@@ -97,7 +95,7 @@ mkdir -p data/postgres uploads
 ## Notes
 
 - Keep `.env` out of Git.
-- Commit `.env.example`, `docker-compose.yml`, `nginx/`, and `directus/extensions/`.
+- Commit `docker-compose.yml`, `nginx/`, and `directus/extensions/`.
 - Commit `directus/schema/schema-target.json` and `directus/schema/schema-remote-baseline.json`.
 - Ignore `directus/schema/live-current.tmp.json`.
 - For EC2 production, put Directus behind HTTPS and use RDS + S3.

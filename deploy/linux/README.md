@@ -86,6 +86,18 @@ This will:
 - build the frontend image
 - start the full stack
 
+## Updating after new code is pushed
+
+On the Linux server, the normal update flow is:
+
+```bash
+git pull
+cd deploy/linux
+bash up.sh
+```
+
+This matches the intended workflow where development can continue elsewhere and the Linux server simply pulls the latest repository state and restarts the integrated stack.
+
 ## Shutdown
 
 ```bash
