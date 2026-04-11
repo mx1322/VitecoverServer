@@ -1,16 +1,69 @@
 # Frontend Workspace
 
-This directory is reserved for the insurance website frontend.
+## Chosen stack
 
-Recommended scope for this app:
+The first frontend foundation is designed around:
 
-- public marketing pages
-- quote flow
-- login and registration
-- vehicle and driver data forms
-- checkout and payment flow
-- policy download and order status pages
+- Next.js 16
+- React 19
+- TypeScript
+- App Router
+- Tailwind CSS 4
+- Directus JavaScript SDK
 
-Suggested next step:
+## Why this stack fits the project
 
-- scaffold the frontend here as a separate app while keeping it in the same repository as the backend
+This project is not only a marketing website.
+It needs public pages, account pages, quote flow, policy access, and later payment integration.
+
+For that reason:
+
+- Next.js is a better fit than plain JavaScript
+- TypeScript helps keep the frontend aligned with the growing backend schema
+- Tailwind is fast for adapting a template and building custom workflow screens
+- Directus SDK gives the app a clean path to backend integration
+
+## Current scaffold
+
+This directory now contains a manual Next.js-ready foundation with:
+
+- `src/app/`
+  App Router pages and global styling.
+- `src/components/`
+  Shared UI building blocks.
+- `src/lib/directus.ts`
+  Initial Directus client setup.
+- `src/types/directus-schema.ts`
+  Early frontend-facing schema types.
+
+## Current routes
+
+- `/`
+  Homepage and project framing.
+- `/quote`
+  Quote flow placeholder.
+- `/account`
+  Customer account area placeholder.
+- `/policies`
+  Policy delivery and PDF strategy placeholder.
+
+## PDF strategy
+
+Email delivery is recommended, but email should not be the only storage model.
+
+Recommended approach:
+
+- send the PDF policy by email
+- keep a private stored copy for portal access and support
+- use local file storage during development
+- move to private S3-backed storage in AWS production
+
+## Notes
+
+Node.js and npm are not installed in the current environment, so this scaffold was created manually and has not been executed locally yet.
+Once Node is available, the next step is:
+
+```bash
+npm install
+npm run dev
+```
