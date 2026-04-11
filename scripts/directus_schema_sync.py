@@ -11,8 +11,8 @@ import requests
 ROOT = Path.cwd()
 ENV_PATH = ROOT / ".env"
 SCHEMA_DIR = ROOT / "directus" / "schema"
-REMOTE_FILE = SCHEMA_DIR / "remote-latest.json"
-LOCAL_FILE = SCHEMA_DIR / "local-working.json"
+REMOTE_FILE = SCHEMA_DIR / "schema-remote-baseline.json"
+LOCAL_FILE = SCHEMA_DIR / "schema-target.json"
 LIVE_TMP_FILE = SCHEMA_DIR / "live-current.tmp.json"
 
 
@@ -108,24 +108,35 @@ def fetch_schema_diff(config: Dict[str, str], snapshot: Any, force: bool = False
     endpoint = "/schema/diff"
     if force:
         endpoint += "?force=true"
-    return api_request(config, "POST", endpoint, snapshot)
+    payload = api_request(config, "POST", endpoint, snapshot)
+    if isinstance(payload, dict) and "data" in payload:
+        return payload["data"]
+    return payload
 
 
 def apply_schema_diff(config: Dict[str, str], diff_payload: Any) -> Any:
     return api_request(config, "POST", "/schema/apply", diff_payload)
 
 
+def extract_diff_body(diff_payload: Any) -> Any:
+    if isinstance(diff_payload, dict) and "diff" in diff_payload:
+        return diff_payload["diff"]
+    return diff_payload
+
+
 def summarize_diff(diff_payload: Any) -> Dict[str, int]:
-    if not isinstance(diff_payload, dict):
+    diff_body = extract_diff_body(diff_payload)
+
+    if not isinstance(diff_body, dict):
         return {"collections": 0, "fields": 0, "relations": 0, "changes": 0}
 
-    collections = len(diff_payload.get("collections", []) or [])
-    fields = len(diff_payload.get("fields", []) or [])
-    relations = len(diff_payload.get("relations", []) or [])
+    collections = len(diff_body.get("collections", []) or [])
+    fields = len(diff_body.get("fields", []) or [])
+    relations = len(diff_body.get("relations", []) or [])
 
     changes = 0
     for bucket in ("collections", "fields", "relations"):
-        for entry in diff_payload.get(bucket, []) or []:
+        for entry in diff_body.get(bucket, []) or []:
             changes += len(entry.get("diff", []) or [])
 
     return {
@@ -151,11 +162,23 @@ def print_summary(title: str, diff_payload: Any) -> None:
 
 
 def print_diff_preview(diff_payload: Any, max_entries: int = 20) -> None:
+    diff_body = extract_diff_body(diff_payload)
     print("\nDiff preview:")
     printed = 0
 
+    if not isinstance(diff_body, dict):
+        print("- no detailed diff lines")
+        return
+
     for bucket in ("collections", "fields", "relations"):
-        for entry in diff_payload.get(bucket, []) or []:
+        entries = diff_body.get(bucket, []) or []
+        if not isinstance(entries, list):
+            continue
+
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+
             identifier = (
                 f"{entry['collection']}.{entry['field']}"
                 if entry.get("collection") and entry.get("field")
@@ -201,13 +224,13 @@ def cmd_pull() -> None:
     if remote_latest:
         try:
             remote_vs_live = fetch_schema_diff(config, remote_latest)
-            print_summary("Server compared to cached remote-latest.json", remote_vs_live)
+            print_summary("Server compared to cached schema-remote-baseline.json", remote_vs_live)
             if not has_changes(remote_vs_live):
-                print("Cached remote-latest.json already matches the server.")
+                print("Cached schema-remote-baseline.json already matches the server.")
         except Exception as exc:
             print(f"Warning: could not compare cached remote snapshot: {exc}")
     else:
-        print("No cached remote-latest.json found yet.")
+        print("No cached schema-remote-baseline.json found yet.")
 
     write_json(REMOTE_FILE, live)
     print(f"Saved live server snapshot to {REMOTE_FILE}")
@@ -219,16 +242,16 @@ def cmd_pull() -> None:
 
     try:
         live_vs_local = fetch_schema_diff(config, local_working)
-        print_summary("Server compared to local-working.json", live_vs_local)
+        print_summary("Server compared to schema-target.json", live_vs_local)
     except Exception as exc:
         print(f"Warning: could not compare local working copy: {exc}")
 
-    overwrite = confirm("Do you want to overwrite local-working.json with the latest server snapshot?")
+    overwrite = confirm("Do you want to overwrite schema-target.json with the latest server snapshot?")
     if overwrite:
         write_json(LOCAL_FILE, live)
         print(f"Updated {LOCAL_FILE}")
     else:
-        print("Kept local-working.json unchanged.")
+        print("Kept schema-target.json unchanged.")
 
 
 def cmd_status() -> None:
@@ -240,21 +263,21 @@ def cmd_status() -> None:
         raise FileNotFoundError(f"Missing {LOCAL_FILE}. Run pull first.")
 
     if not remote_latest:
-        print("No cached remote-latest.json found. Run pull first for a proper local baseline.")
+        print("No cached schema-remote-baseline.json found. Run pull first for a proper local baseline.")
 
     live = fetch_snapshot(config)
     write_json(LIVE_TMP_FILE, live)
 
     live_vs_local = fetch_schema_diff(config, local_working)
-    print_summary("Server compared to local-working.json", live_vs_local)
+    print_summary("Server compared to schema-target.json", live_vs_local)
     print_diff_preview(live_vs_local)
 
     if remote_latest:
         try:
             live_vs_cached = fetch_schema_diff(config, remote_latest)
-            print_summary("Server compared to remote-latest.json", live_vs_cached)
+            print_summary("Server compared to schema-remote-baseline.json", live_vs_cached)
         except Exception as exc:
-            print(f"Warning: could not compare remote-latest.json: {exc}")
+            print(f"Warning: could not compare schema-remote-baseline.json: {exc}")
 
 
 def cmd_push() -> None:
@@ -268,7 +291,7 @@ def cmd_push() -> None:
     live = fetch_snapshot(config)
     write_json(LIVE_TMP_FILE, live)
 
-    print("Computing diff between live server and local-working.json...")
+    print("Computing diff between live server and schema-target.json...")
     diff_payload = fetch_schema_diff(config, local_working)
     print_summary("Changes that would be applied", diff_payload)
     print_diff_preview(diff_payload)
@@ -286,7 +309,7 @@ def cmd_push() -> None:
     apply_schema_diff(config, diff_payload)
     print("Schema applied successfully.")
 
-    refresh = confirm("Refresh remote-latest.json and local-working.json from the server now?")
+    refresh = confirm("Refresh schema-remote-baseline.json and schema-target.json from the server now?")
     if refresh:
         refreshed = fetch_snapshot(config)
         write_json(REMOTE_FILE, refreshed)
