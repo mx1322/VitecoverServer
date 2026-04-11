@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "directus": "11.12.0",
+  "vendor": "postgres",
+  "collections": [
+    { "collection": "customers", "meta": { "accountability": "all" }, "schema": { "name": "customers" } },
+    { "collection": "drivers", "meta": { "accountability": "all" }, "schema": { "name": "drivers" } },
+    { "collection": "vehicles", "meta": { "accountability": "all" }, "schema": { "name": "vehicles" } },
+    { "collection": "orders", "meta": { "accountability": "all" }, "schema": { "name": "orders" } }
+  ],
+  "fields": [
+    {
+      "collection": "customers",
+      "field": "id",
+      "type": "integer",
+      "meta": { "hidden": true, "readonly": true },
+      "schema": {
+        "name": "id",
+        "table": "customers",
+        "data_type": "integer",
+        "is_primary_key": true,
+        "has_auto_increment": true,
+        "is_nullable": false
+      }
+    },
+    {
+      "collection": "customers",
+      "field": "first_name",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "first_name", "table": "customers", "data_type": "character varying" }
+    },
+    {
+      "collection": "customers",
+      "field": "last_name",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "last_name", "table": "customers", "data_type": "character varying" }
+    },
+    {
+      "collection": "customers",
+      "field": "email",
+      "type": "string",
+      "meta": { "required": true },
+      "schema": {
+        "name": "email",
+        "table": "customers",
+        "data_type": "character varying",
+        "is_unique": true
+      }
+    },
+
+    {
+      "collection": "drivers",
+      "field": "id",
+      "type": "integer",
+      "meta": { "hidden": true, "readonly": true },
+      "schema": {
+        "name": "id",
+        "table": "drivers",
+        "data_type": "integer",
+        "is_primary_key": true,
+        "has_auto_increment": true,
+        "is_nullable": false
+      }
+    },
+    {
+      "collection": "drivers",
+      "field": "first_name",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "first_name", "table": "drivers", "data_type": "character varying" }
+    },
+    {
+      "collection": "drivers",
+      "field": "last_name",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "last_name", "table": "drivers", "data_type": "character varying" }
+    },
+    {
+      "collection": "drivers",
+      "field": "birthday",
+      "type": "dateTime",
+      "meta": {},
+      "schema": { "name": "birthday", "table": "drivers", "data_type": "timestamp" }
+    },
+    {
+      "collection": "drivers",
+      "field": "customer",
+      "type": "integer",
+      "meta": { "special": ["m2o"] },
+      "schema": {
+        "name": "customer",
+        "table": "drivers",
+        "data_type": "integer",
+        "foreign_key_table": "customers",
+        "foreign_key_column": "id"
+      }
+    },
+
+    {
+      "collection": "vehicles",
+      "field": "id",
+      "type": "integer",
+      "meta": { "hidden": true, "readonly": true },
+      "schema": {
+        "name": "id",
+        "table": "vehicles",
+        "data_type": "integer",
+        "is_primary_key": true,
+        "has_auto_increment": true,
+        "is_nullable": false
+      }
+    },
+    {
+      "collection": "vehicles",
+      "field": "manufacturer",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "manufacturer", "table": "vehicles", "data_type": "character varying" }
+    },
+    {
+      "collection": "vehicles",
+      "field": "model",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "model", "table": "vehicles", "data_type": "character varying" }
+    },
+    {
+      "collection": "vehicles",
+      "field": "fiscal_power",
+      "type": "integer",
+      "meta": { "required": true },
+      "schema": { "name": "fiscal_power", "table": "vehicles", "data_type": "integer" }
+    },
+    {
+      "collection": "vehicles",
+      "field": "customer",
+      "type": "integer",
+      "meta": { "special": ["m2o"] },
+      "schema": {
+        "name": "customer",
+        "table": "vehicles",
+        "data_type": "integer",
+        "foreign_key_table": "customers",
+        "foreign_key_column": "id"
+      }
+    },
+
+    {
+      "collection": "orders",
+      "field": "id",
+      "type": "integer",
+      "meta": { "hidden": true, "readonly": true },
+      "schema": {
+        "name": "id",
+        "table": "orders",
+        "data_type": "integer",
+        "is_primary_key": true,
+        "has_auto_increment": true,
+        "is_nullable": false
+      }
+    },
+    {
+      "collection": "orders",
+      "field": "notes",
+      "type": "string",
+      "meta": {},
+      "schema": { "name": "notes", "table": "orders", "data_type": "character varying" }
+    },
+    {
+      "collection": "orders",
+      "field": "customer",
+      "type": "integer",
+      "meta": { "special": ["m2o"] },
+      "schema": {
+        "name": "customer",
+        "table": "orders",
+        "data_type": "integer",
+        "foreign_key_table": "customers",
+        "foreign_key_column": "id"
+      }
+    },
+    {
+      "collection": "orders",
+      "field": "driver",
+      "type": "integer",
+      "meta": { "special": ["m2o"] },
+      "schema": {
+        "name": "driver",
+        "table": "orders",
+        "data_type": "integer",
+        "foreign_key_table": "drivers",
+        "foreign_key_column": "id"
+      }
+    },
+    {
+      "collection": "orders",
+      "field": "vehicle",
+      "type": "integer",
+      "meta": { "special": ["m2o"] },
+      "schema": {
+        "name": "vehicle",
+        "table": "orders",
+        "data_type": "integer",
+        "foreign_key_table": "vehicles",
+        "foreign_key_column": "id"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "collection": "drivers",
+      "field": "customer",
+      "related_collection": "customers"
+    },
+    {
+      "collection": "vehicles",
+      "field": "customer",
+      "related_collection": "customers"
+    },
+    {
+      "collection": "orders",
+      "field": "customer",
+      "related_collection": "customers"
+    },
+    {
+      "collection": "orders",
+      "field": "driver",
+      "related_collection": "drivers"
+    },
+    {
+      "collection": "orders",
+      "field": "vehicle",
+      "related_collection": "vehicles"
+    }
+  ]
+}
