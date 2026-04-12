@@ -65,6 +65,36 @@ What each command does:
 - `push`
   Applies the diff from the live Directus schema to `schema-target.json`, then optionally refreshes both baseline files from the server.
 
+## Product catalog seed
+
+The repository now includes a seed file for the product catalog and pricing grid:
+
+- [product-catalog.json](/home/max/devwork/VitecoverServer/backend/directus/seed/product-catalog.json)
+
+This catalog is designed for:
+
+- one product record per sellable insurance line
+- one pricing rule per duration and fiscal power range
+
+The first seeded tariff block currently covers:
+
+- `AUTOMOBILE`
+- durations from 1 to 90 days
+- fiscal power range `2` to `10` CV
+
+To import or update the catalog in Directus:
+
+```bash
+python3 scripts/directus_catalog_seed.py seed
+```
+
+The script expects `DIRECTUS_TOKEN` or `ADMIN_TOKEN` in `backend/.env`.
+It upserts:
+
+- `geo_zones`
+- `insurance_products`
+- `pricing_rules`
+
 ## Reset local data
 
 This removes containers and deletes local database/uploads.

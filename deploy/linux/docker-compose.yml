@@ -47,6 +47,10 @@ services:
       minio:
         condition: service_started
     environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
       DB_CLIENT: ${DB_CLIENT}
       DB_HOST: postgres
       DB_PORT: 5432
@@ -78,6 +82,10 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      DIRECTUS_INTERNAL_URL: http://edge/directus
+      DIRECTUS_ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      DIRECTUS_ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+      DIRECTUS_DEFAULT_GEO_ZONE_CODE: ${DIRECTUS_DEFAULT_GEO_ZONE_CODE}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       NEXT_PUBLIC_DIRECTUS_URL: ${NEXT_PUBLIC_DIRECTUS_URL}
     depends_on:

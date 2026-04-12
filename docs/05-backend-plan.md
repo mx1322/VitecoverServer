@@ -70,7 +70,7 @@ Defines pricing geography such as mainland France, overseas areas, and nearby Eu
 
 ### `pricing_rules`
 
-Stores the pricing logic by product, zone, customer type, vehicle type, and duration.
+Stores the pricing logic by product, zone, customer type, vehicle type, duration, and fiscal power range.
 
 ### `quotes`
 

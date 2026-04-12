@@ -28,7 +28,7 @@ export default async function HomePage() {
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/quote"
-              className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition hover:translate-y-[-1px]"
+              className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)] transition duration-200 ease-out hover:scale-[1.03] hover:bg-[#f2a63a] hover:shadow-[0_16px_32px_rgba(255,179,71,0.28)] active:scale-[0.99]"
             >
               Get insured
             </Link>
@@ -120,7 +120,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/quote"
-            className="inline-flex w-full items-center justify-center rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition hover:translate-y-[-1px] md:w-auto"
+            className="inline-flex w-full items-center justify-center rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)] transition duration-200 ease-out hover:scale-[1.03] hover:bg-[#f2a63a] hover:shadow-[0_16px_32px_rgba(255,179,71,0.28)] active:scale-[0.99] md:w-auto"
           >
             Continue to quote
           </Link>

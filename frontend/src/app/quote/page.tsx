@@ -1,36 +1,31 @@
-import { InfoCard } from "@/components/info-card";
+import { QuoteForm } from "@/components/quote-form";
+import type { QuoteProductOption } from "@/lib/directus-admin";
 
-const quoteSteps = [
-  "Choose the short-term product",
-  "Sign in with Google or native account",
-  "Select or create a vehicle",
-  "Select or create a driver",
-  "Set coverage start and end time",
-  "Review pricing and continue to payment",
+const initialProducts: QuoteProductOption[] = [
+  {
+    code: "AUTOMOBILE",
+    name: "Assurance automobile temporaire",
+    description: "Produit temporaire pour automobile.",
+    minDurationDays: 1,
+    maxDurationDays: 90,
+  },
 ];
 
 export default function QuotePage() {
   return (
     <main className="section-wrap py-16">
-      <p className="eyebrow">Quote flow foundation</p>
-      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">Quote flow skeleton</h1>
+      <p className="eyebrow">Temporary auto checkout</p>
+      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">
+        Confirm the cover, the customer, the vehicle, and the driver one step at a time.
+      </h1>
       <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">
-        This route is the placeholder for the main insurance journey. The first production
-        version should split this flow into smaller steps while keeping the same overall
-        order.
+        The flow stays focused on one decision per screen. We start by confirming the temporary
+        cover window and the premium, then move through the account, vehicle, driver, payment,
+        and final order success state.
       </p>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-2">
-        {quoteSteps.map((step, index) => (
-          <InfoCard
-            key={step}
-            eyebrow={`Step ${index + 1}`}
-            title={step}
-          >
-            This block will later become a dedicated form step or section connected to
-            Directus-backed customer, driver, vehicle, and quote data.
-          </InfoCard>
-        ))}
+      <div className="mt-10">
+        <QuoteForm products={initialProducts} />
       </div>
     </main>
   );

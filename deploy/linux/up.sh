@@ -42,6 +42,10 @@ ensure_required_values_set() {
   local target="$1"
   local required_keys=(
     "DB_PASSWORD"
+    "DIRECTUS_KEY"
+    "DIRECTUS_SECRET"
+    "DIRECTUS_ADMIN_EMAIL"
+    "DIRECTUS_ADMIN_PASSWORD"
     "MINIO_ROOT_USER"
     "MINIO_ROOT_PASSWORD"
     "MINIO_BUCKET"

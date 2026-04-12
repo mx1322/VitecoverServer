@@ -10,6 +10,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = ROOT / ".env"
+FALLBACK_ENV_PATH = ROOT.parent / ".env"
 SCHEMA_DIR = ROOT / "directus" / "schema"
 REMOTE_FILE = SCHEMA_DIR / "schema-remote-baseline.json"
 LOCAL_FILE = SCHEMA_DIR / "schema-target.json"
@@ -33,7 +34,8 @@ def parse_env_file(path: Path) -> Dict[str, str]:
 
 
 def get_config() -> Dict[str, str]:
-    file_env = parse_env_file(ENV_PATH)
+    env_path = ENV_PATH if ENV_PATH.exists() else FALLBACK_ENV_PATH
+    file_env = parse_env_file(env_path)
 
     directus_url = (
         os.getenv("DIRECTUS_URL")
@@ -49,13 +51,58 @@ def get_config() -> Dict[str, str]:
         or file_env.get("ADMIN_TOKEN")
     )
 
-    if not token:
-        raise ValueError("Missing DIRECTUS_TOKEN or ADMIN_TOKEN in .env")
+    admin_email = (
+        os.getenv("DIRECTUS_ADMIN_EMAIL")
+        or os.getenv("ADMIN_EMAIL")
+        or file_env.get("DIRECTUS_ADMIN_EMAIL")
+        or file_env.get("ADMIN_EMAIL")
+    )
+
+    admin_password = (
+        os.getenv("DIRECTUS_ADMIN_PASSWORD")
+        or os.getenv("ADMIN_PASSWORD")
+        or file_env.get("DIRECTUS_ADMIN_PASSWORD")
+        or file_env.get("ADMIN_PASSWORD")
+    )
+
+    if not token and not (admin_email and admin_password):
+        raise ValueError("Missing token or admin login credentials in .env")
 
     return {
         "DIRECTUS_URL": directus_url,
         "TOKEN": token,
+        "ADMIN_EMAIL": admin_email,
+        "ADMIN_PASSWORD": admin_password,
     }
+
+
+def login_for_token(config: Dict[str, str]) -> str:
+    if not config.get("ADMIN_EMAIL") or not config.get("ADMIN_PASSWORD"):
+        raise ValueError("Missing DIRECTUS_ADMIN_EMAIL / DIRECTUS_ADMIN_PASSWORD")
+
+    response = requests.post(
+        f"{config['DIRECTUS_URL']}/auth/login",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps(
+            {
+                "email": config["ADMIN_EMAIL"],
+                "password": config["ADMIN_PASSWORD"],
+            }
+        ),
+        timeout=60,
+    )
+
+    payload = response.json()
+    if not response.ok:
+        raise RuntimeError(
+            f"HTTP {response.status_code} {response.reason}\n{json.dumps(payload, indent=2, ensure_ascii=False)}"
+        )
+
+    token = payload.get("data", {}).get("access_token")
+    if not token:
+        raise RuntimeError("Login succeeded but no access token was returned.")
+
+    return token
 
 
 def ensure_dir(path: Path) -> None:
@@ -75,8 +122,9 @@ def read_json(path: Path) -> Any:
 
 def api_request(config: Dict[str, str], method: str, endpoint: str, payload: Any = None) -> Any:
     url = f"{config['DIRECTUS_URL']}{endpoint}"
+    token = config.get("TOKEN") or login_for_token(config)
     headers = {
-        "Authorization": f"Bearer {config['TOKEN']}",
+        "Authorization": f"Bearer {token}",
     }
 
     kwargs: Dict[str, Any] = {"headers": headers, "timeout": 60}
@@ -85,6 +133,12 @@ def api_request(config: Dict[str, str], method: str, endpoint: str, payload: Any
         kwargs["data"] = json.dumps(payload)
 
     response = requests.request(method=method, url=url, **kwargs)
+
+    if response.status_code in {401, 403} and config.get("ADMIN_EMAIL") and config.get("ADMIN_PASSWORD"):
+        token = login_for_token(config)
+        config["TOKEN"] = token
+        headers["Authorization"] = f"Bearer {token}"
+        response = requests.request(method=method, url=url, **kwargs)
 
     try:
         data = response.json()
