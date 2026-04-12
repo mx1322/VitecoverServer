@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Vitecover",
   description:
-    "Temporary motor insurance for France, overseas territories, and nearby European transport routes.",
+    "Temporary vehicle insurance with a simple quote flow focused on auto only.",
   supportEmail: "support@vitecover.example",
   navigation: [
     { href: "/", label: "Home" },
