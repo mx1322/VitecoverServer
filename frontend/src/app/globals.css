@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #081018;
-  --surface: #0f1922;
-  --surface-2: #162532;
-  --ink: #061015;
-  --text: #edf4f7;
-  --muted: #9fb1bd;
-  --accent: #f0b54d;
-  --accent-2: #69d2c9;
-  --danger: #f17c67;
+  --background: #fffaf2;
+  --surface: #ffffff;
+  --surface-2: #fff0d8;
+  --ink: #16243a;
+  --text: #16243a;
+  --muted: #66758a;
+  --accent: #ffb347;
+  --accent-2: #1fb7a6;
+  --danger: #ea6f51;
 }
 
 * {
@@ -24,9 +24,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(240, 181, 77, 0.22), transparent 26%),
-    radial-gradient(circle at top right, rgba(105, 210, 201, 0.18), transparent 24%),
-    linear-gradient(180deg, #071018 0%, #0b1520 45%, #09111a 100%);
+    radial-gradient(circle at top left, rgba(255, 179, 71, 0.22), transparent 28%),
+    radial-gradient(circle at top right, rgba(31, 183, 166, 0.14), transparent 24%),
+    linear-gradient(180deg, #fffdf8 0%, #fff8ee 42%, #fff4e5 100%);
   color: var(--text);
   font-family: var(--font-body), sans-serif;
 }
@@ -45,11 +45,11 @@ a {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(22, 36, 58, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 36, 58, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
   content: "";
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent 85%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 88%);
   pointer-events: none;
 }
 

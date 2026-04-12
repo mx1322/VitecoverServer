@@ -4,9 +4,8 @@ export const siteConfig = {
     "Temporary vehicle insurance with a simple quote flow focused on auto only.",
   supportEmail: "support@vitecover.example",
   navigation: [
-    { href: "/", label: "Home" },
-    { href: "/quote", label: "Quote Flow" },
+    { href: "/quote", label: "Get insured" },
+    { href: "/policies", label: "My policy" },
     { href: "/account", label: "Account" },
-    { href: "/policies", label: "Policies" },
   ],
 } as const;

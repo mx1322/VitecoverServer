@@ -4,7 +4,7 @@ export default function PoliciesPage() {
   return (
     <main className="section-wrap py-16">
       <p className="eyebrow">Policy delivery</p>
-      <h1 className="mt-4 text-4xl font-semibold text-white">PDF policy handling</h1>
+      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">PDF policy handling</h1>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <InfoCard eyebrow="Delivery" title="Email is a distribution channel">

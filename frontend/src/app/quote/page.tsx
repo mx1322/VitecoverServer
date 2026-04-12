@@ -13,7 +13,7 @@ export default function QuotePage() {
   return (
     <main className="section-wrap py-16">
       <p className="eyebrow">Quote flow foundation</p>
-      <h1 className="mt-4 text-4xl font-semibold text-white">Quote flow skeleton</h1>
+      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">Quote flow skeleton</h1>
       <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">
         This route is the placeholder for the main insurance journey. The first production
         version should split this flow into smaller steps while keeping the same overall
