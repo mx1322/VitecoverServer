@@ -52,9 +52,9 @@ VitecoverServer/
 Before first startup:
 
 1. make sure `backend/.env` is correct
-2. keep `deploy/linux/.env.frontend.example` and `deploy/linux/.env.minio.example` as the committed reference templates
-3. let `up.sh` create `.env.frontend` and `.env.minio` automatically if they do not exist
-4. edit the generated files before the first successful startup
+2. keep `deploy/linux/.env.deploy.example` as the committed reference template
+3. let `up.sh` create `.env.deploy` automatically if it does not exist
+4. edit the generated file before the first successful startup (especially `MINIO_ROOT_PASSWORD`)
 
 Suggested frontend values:
 
@@ -65,10 +65,11 @@ Suggested backend note:
 
 - if Directus is meant to live behind `/directus`, update `backend/.env` so `PUBLIC_URL` matches that final public URL
 
-The repository keeps the example files as the initial committed reference.
-The real `.env.frontend` and `.env.minio` files should live only on the server and are ignored by Git.
-If a real env file is missing, `up.sh` will create it from the template.
-If a real env file still matches the template exactly, `up.sh` will stop and require you to edit it before startup.
+The repository keeps the example file as the initial committed reference.
+The real `.env.deploy` file should live only on the server and is ignored by Git.
+If the real env file is missing, `up.sh` will create it from the template.
+If the real env file still matches the template exactly, `up.sh` will stop and require you to edit it before startup.
+If you still have historical files like `.env.frontend` / `.env.minio`, they are now legacy and can be removed after confirming `.env.deploy` is correct.
 
 ## One-command startup
 
@@ -81,8 +82,9 @@ bash up.sh
 
 This will:
 
-- create missing env files from the example templates
-- stop if those env files still match the template content
+- create missing env file from the example template
+- stop if that env file still matches the template content
+- stop if `MINIO_ROOT_PASSWORD` is still default/placeholder
 - build the frontend image
 - start the full stack
 

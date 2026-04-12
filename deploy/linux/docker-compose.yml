@@ -30,7 +30,7 @@ services:
     container_name: vitecover_minio
     restart: unless-stopped
     env_file:
-      - .env.minio
+      - .env.deploy
     command: server /data --console-address ":9001"
     ports:
       - "9001:9001"
@@ -50,7 +50,7 @@ services:
         condition: service_started
     env_file:
       - ../../backend/.env
-      - .env.minio
+      - .env.deploy
     environment:
       DB_CLIENT: ${DB_CLIENT}
       DB_HOST: postgres
@@ -80,7 +80,7 @@ services:
     container_name: vitecover_frontend
     restart: unless-stopped
     env_file:
-      - .env.frontend
+      - .env.deploy
     environment:
       NODE_ENV: production
       PORT: 3000
