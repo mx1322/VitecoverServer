@@ -69,6 +69,7 @@ The repository keeps the example file as the initial committed reference.
 The real `.env.deploy` file should live only on the server and is ignored by Git.
 If the real env file is missing, `up.sh` will create it from the template.
 If the real env file still matches the template exactly, `up.sh` will stop and require you to edit it before startup.
+If you still have historical files like `.env.frontend` / `.env.minio`, they are now legacy and can be removed after confirming `.env.deploy` is correct.
 
 ## One-command startup
 
