@@ -63,7 +63,7 @@ Command behavior:
 - `push`
   Computes the schema diff from the live Directus instance to `schema-target.json`, previews it, and applies it after confirmation.
 
-## Local runtime
+## Local Runtime
 
 The current local backend stack includes:
 
@@ -80,21 +80,23 @@ The intended local development flow is:
 4. Push validated changes.
 5. Continue backend and frontend implementation on top of the synchronized schema.
 
-## Practical working mode
+## Deployment Flow
 
-The current practical workflow can be split across two machines:
+The deployment workflow is intentionally split into two phases:
 
-- development and code editing can continue in a cloud environment
-- the Linux server at `192.168.3.60` can pull the latest repository state and run the integrated deployment stack
+- validate and iterate locally in `backend/` and `frontend/`
+- apply the same repository state to AWS using the integrated deployment stack in `deploy/linux/`
 
 In practice, this means:
 
 1. update code in the repository
-2. push changes to Git
-3. pull the latest code on the Linux server
-4. run `deploy/linux/up.sh`
+2. run the local backend and frontend checks
+3. commit and push the validated changes
+4. pull the latest code on the AWS host
+5. edit `deploy/linux/.env.deploy` once for the target environment
+6. run `deploy/linux/up.sh`
 
-This fits the current project well because the Linux server is being used as a local EC2-style runtime target, while editing can happen elsewhere.
+This keeps the local development path and AWS runtime path aligned without requiring separate deployment stories for each service.
 
 ## Notes
 

@@ -51,19 +51,20 @@ VitecoverServer/
 
 Before first startup:
 
-1. make sure `backend/.env` is correct
-2. keep `deploy/linux/.env.deploy.example` as the committed reference template
-3. let `up.sh` create `.env.deploy` automatically if it does not exist
-4. edit the generated file before the first successful startup (especially `MINIO_ROOT_PASSWORD`)
+1. keep `deploy/linux/.env.deploy.example` as the committed reference template
+2. let `up.sh` create `.env.deploy` automatically if it does not exist
+3. edit the generated file before the first successful startup, especially `DB_PASSWORD`, `MINIO_ROOT_PASSWORD`, and the public URLs
 
 Suggested frontend values:
 
-- `NEXT_PUBLIC_SITE_URL=http://192.168.3.60`
-- `NEXT_PUBLIC_DIRECTUS_URL=http://192.168.3.60/directus`
+- `NEXT_PUBLIC_SITE_URL=http://your-host`
+- `NEXT_PUBLIC_DIRECTUS_URL=http://your-host/directus`
+- `EDGE_HTTP_PORT=80` for AWS, or another free local port such as `8088`
 
 Suggested backend note:
 
-- if Directus is meant to live behind `/directus`, update `backend/.env` so `PUBLIC_URL` matches that final public URL
+- if Directus is meant to live behind `/directus`, keep `PUBLIC_URL` aligned with that final public URL
+- replace `your-host` with the current machine's IP, a load balancer DNS name, or your actual domain when you deploy
 
 The repository keeps the example file as the initial committed reference.
 The real `.env.deploy` file should live only on the server and is ignored by Git.
@@ -84,6 +85,7 @@ This will:
 
 - create missing env file from the example template
 - stop if that env file still matches the template content
+- stop if required values are missing
 - stop if `MINIO_ROOT_PASSWORD` is still default/placeholder
 - build the frontend image
 - start the full stack
@@ -111,9 +113,9 @@ bash down.sh
 
 With the included Nginx config:
 
-- `http://192.168.3.60/` -> frontend
-- `http://192.168.3.60/directus/` -> Directus
-- `http://192.168.3.60:9001/` -> MinIO console
+- `http://your-host/` -> frontend
+- `http://your-host/directus/` -> Directus
+- `http://your-host:9001/` -> MinIO console
 
 ## MinIO role
 

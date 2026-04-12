@@ -18,9 +18,9 @@ export default async function HomePage() {
             Temporary vehicle insurance built for speed, review, and policy delivery.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-            This first frontend foundation is designed for short-term motor insurance,
-            with room for professional transport customers, overseas pricing, and future
-            VTC or taxi products.
+            This frontend foundation is designed to be validated locally first, then
+            deployed with the same configuration path to AWS, with room for professional
+            transport customers, overseas pricing, and future VTC or taxi products.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">

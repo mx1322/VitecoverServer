@@ -13,7 +13,10 @@ All commands in this README assume your working directory is `backend/`.
 
 ### 1. Prepare environment variables
 
-Make sure `backend/.env` exists and contains the correct local or server configuration.
+For local backend development, keep a `backend/.env` with the correct local configuration.
+This file is for the backend workspace only and is not used by the integrated Linux deployment.
+
+For the integrated Linux deployment, the stack now reads from `deploy/linux/.env.deploy` only.
 
 ### 2. Start the stack
 

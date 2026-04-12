@@ -62,6 +62,9 @@ Recommended approach:
 
 This frontend workspace is intended to run inside Docker for Linux deployment, so day-to-day development does not have to happen on the same machine that runs the server stack.
 
+For local frontend development, use `frontend/.env.example` as the template for your own `frontend/.env`.
+For the integrated Linux deployment, public URLs are supplied from `deploy/linux/.env.deploy`.
+
 When Node.js is available in a development environment, the local development commands are:
 
 ```bash

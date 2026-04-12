@@ -38,6 +38,32 @@ ensure_not_template_copy() {
   fi
 }
 
+ensure_required_values_set() {
+  local target="$1"
+  local required_keys=(
+    "DB_PASSWORD"
+    "MINIO_ROOT_USER"
+    "MINIO_ROOT_PASSWORD"
+    "MINIO_BUCKET"
+    "NEXT_PUBLIC_SITE_URL"
+    "NEXT_PUBLIC_DIRECTUS_URL"
+    "PUBLIC_URL"
+  )
+  local missing=0
+
+  for key in "${required_keys[@]}"; do
+    if ! grep -q "^${key}=.\+" "$target"; then
+      echo "Missing or empty required key: ${key}"
+      missing=1
+    fi
+  done
+
+  if [ "$missing" -eq 1 ]; then
+    echo "Please fill in the required values in $target before starting."
+    exit 1
+  fi
+}
+
 ensure_minio_password_not_default() {
   local target="$1"
   local default_password="minioadmin123"
@@ -56,6 +82,8 @@ warn_legacy_env_files() {
     ".env.frontend.example"
     ".env.minio"
     ".env.minio.example"
+    "../../backend/.env"
+    "../../frontend/.env"
   )
   local found=0
 
@@ -83,7 +111,8 @@ fi
 
 warn_legacy_env_files
 ensure_not_template_copy ".env.deploy" ".env.deploy.example"
+ensure_required_values_set ".env.deploy"
 ensure_minio_password_not_default ".env.deploy"
 
-docker compose up -d --build
-docker compose ps
+docker compose --env-file .env.deploy up -d --build
+docker compose --env-file .env.deploy ps

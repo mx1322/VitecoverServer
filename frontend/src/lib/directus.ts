@@ -11,7 +11,15 @@ export async function getActiveInsuranceProducts(): Promise<InsuranceProduct[]> 
   try {
     return await directus.request(
       readItems("insurance_products", {
-        fields: ["id", "code", "name", "description", "customer_segment", "product_family"],
+        fields: [
+          "id",
+          "code",
+          "name",
+          "description",
+          "customer_segment",
+          "product_family",
+          "status",
+        ],
         filter: {
           status: {
             _eq: "active",
