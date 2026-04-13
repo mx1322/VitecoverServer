@@ -13,6 +13,7 @@ import type {
 
 interface QuoteFormProps {
   products: QuoteProductOption[];
+  initialProductCode?: string;
 }
 
 type Step =
@@ -183,6 +184,10 @@ function formatDateCell(value?: string): string {
   }).format(date);
 }
 
+function formatCurrencyAmount(value: string | number): string {
+  return Number(value).toFixed(2);
+}
+
 function splitCoverageStart(value: string): { date: string; hour: string } {
   const [datePart, timePart = "00:00"] = value.split("T");
   return {
@@ -191,7 +196,7 @@ function splitCoverageStart(value: string): { date: string; hour: string } {
   };
 }
 
-export function QuoteForm({ products }: QuoteFormProps) {
+export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState<Step>("price");
   const [error, setError] = useState("");
@@ -201,7 +206,7 @@ export function QuoteForm({ products }: QuoteFormProps) {
   const [workspace, setWorkspace] = useState<CustomerWorkspace | null>(null);
   const [result, setResult] = useState<CompleteCheckoutResult | null>(null);
   const [priceForm, setPriceForm] = useState({
-    productCode: products[0]?.code ?? "AUTOMOBILE",
+    productCode: initialProductCode ?? products[0]?.code ?? "AUTOMOBILE",
     durationDays: "1",
     coverageStartAt: toDateTimeLocalValue(new Date(Date.now() + 24 * 60 * 60 * 1000)),
     fiscalPower: "6",
@@ -354,6 +359,26 @@ export function QuoteForm({ products }: QuoteFormProps) {
   const durationOptions = pricingOptions?.durationOptions ?? [];
   const fiscalPowerOptions =
     pricingOptions?.fiscalPowerOptionsByDuration[priceForm.durationDays]?.map(String) ?? [];
+  const vehicleFiscalPowerOptions = Array.from(
+    new Set([priceForm.fiscalPower, vehicleForm.fiscalPower, ...fiscalPowerOptions].filter(Boolean)),
+  );
+
+  useEffect(() => {
+    if (vehicleMode !== "new") {
+      return;
+    }
+
+    setVehicleForm((current) => {
+      if (current.fiscalPower === priceForm.fiscalPower) {
+        return current;
+      }
+
+      return {
+        ...current,
+        fiscalPower: priceForm.fiscalPower,
+      };
+    });
+  }, [priceForm.fiscalPower, vehicleMode]);
 
   useEffect(() => {
     let isActive = true;
@@ -662,7 +687,7 @@ export function QuoteForm({ products }: QuoteFormProps) {
         const fiscalPower =
           vehicleMode === "existing"
             ? selectedVehicle?.fiscalPower
-            : Number(vehicleForm.fiscalPower);
+            : Number(vehicleForm.fiscalPower || priceForm.fiscalPower);
 
         if (!fiscalPower || fiscalPower <= 0) {
           throw new Error("Choose a vehicle or provide a valid fiscal power.");
@@ -1003,6 +1028,15 @@ export function QuoteForm({ products }: QuoteFormProps) {
                   <p className="mt-3 text-4xl font-semibold text-[var(--ink)]">
                     {preview.totalPremium} {preview.currency}
                   </p>
+                  {preview.durationDays > 1 ? (
+                    <p className="mt-2 text-sm font-semibold text-[var(--ink)]">
+                      Average per day:{" "}
+                      {formatCurrencyAmount(
+                        Number(preview.totalPremium) / Number(preview.durationDays),
+                      )}{" "}
+                      {preview.currency} / day
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                     This is the current price for the selected duration and fiscal power.
                   </p>
@@ -1157,7 +1191,7 @@ export function QuoteForm({ products }: QuoteFormProps) {
                         onChange={(event) => updateVehicleField("fiscalPower", event.target.value)}
                         className={fieldClass}
                       >
-                        {fiscalPowerOptions.map((value) => (
+                        {vehicleFiscalPowerOptions.map((value) => (
                           <option key={value} value={value}>
                             {value} CV
                           </option>
