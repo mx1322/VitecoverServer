@@ -10,6 +10,13 @@ const initialProducts: QuoteProductOption[] = [
     maxDurationDays: 90,
   },
   {
+    code: "UTILITAIRE",
+    name: "Assurance vehicule utilitaire temporaire",
+    description: "Produit temporaire pour vehicule utilitaire de 3.5 tonnes ou moins.",
+    minDurationDays: 1,
+    maxDurationDays: 15,
+  },
+  {
     code: "POIDS_LOURDS",
     name: "Assurance poids lourds temporaire",
     description: "Produit temporaire pour poids lourds.",

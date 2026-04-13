@@ -25,7 +25,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
           {homeProductCards.map((product) => {
             const cardBody = (
               <article className="flex h-full flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_24px_70px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_30px_80px_rgba(22,36,58,0.12)]">

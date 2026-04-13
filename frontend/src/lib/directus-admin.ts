@@ -442,9 +442,11 @@ function requirePositiveInteger(value: number | undefined, label: string): numbe
 function getVehicleCategory(productCode: string): string {
   const vehicleCategoryMap: Record<string, string> = {
     AUTOMOBILE: "automobile",
+    UTILITAIRE: "utilitaire",
     POIDS_LOURDS: "poids_lourds",
     AUTOCAR_BUS: "autocar_bus",
     CAMPING_CAR: "camping_car",
+    REMORQUE: "remorque",
   };
 
   return vehicleCategoryMap[productCode] ?? "automobile";
