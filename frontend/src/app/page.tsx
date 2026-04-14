@@ -25,7 +25,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {homeProductCards.map((product) => {
             const cardBody = (
               <article className="flex h-full flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_24px_70px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_30px_80px_rgba(22,36,58,0.12)]">
@@ -33,6 +33,9 @@ export default function HomePage() {
                   {product.eyebrow}
                 </p>
                 <h2 className="mt-4 text-3xl font-semibold text-[var(--ink)]">{product.title}</h2>
+                <div className="mt-5 flex h-20 w-20 items-center justify-center rounded-[24px] bg-[rgba(255,179,71,0.14)]">
+                  <img src={product.iconPath} alt="" className="h-14 w-14 object-contain" />
+                </div>
                 <p className="mt-4 min-h-[72px] text-sm leading-6 text-[var(--muted)]">
                   {product.description}
                 </p>

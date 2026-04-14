@@ -6,6 +6,6 @@ export const siteConfig = {
   navigation: [
     { href: "/quote", label: "Get insured" },
     { href: "/policies", label: "My policy" },
-    { href: "/account", label: "Account" },
+    { href: "/auth", label: "Account" },
   ],
 } as const;

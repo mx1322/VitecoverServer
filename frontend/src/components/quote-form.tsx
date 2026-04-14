@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import type {
@@ -10,6 +11,7 @@ import type {
   QuotePreview,
   QuoteProductOption,
 } from "@/lib/directus-admin";
+import type { AuthenticatedAccount } from "@/lib/directus-auth";
 
 interface QuoteFormProps {
   products: QuoteProductOption[];
@@ -25,8 +27,8 @@ type Step =
   | "success";
 
 interface SessionResponse {
-  found: boolean;
-  workspace: CustomerWorkspace | null;
+  authenticated: boolean;
+  account: AuthenticatedAccount | null;
   error?: string;
 }
 
@@ -48,7 +50,6 @@ interface WorkspaceMutationResponse {
 }
 
 const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
-const localAccountStorageKey = "vitecover-local-account-email";
 const quoteDraftStorageKey = "vitecover-quote-draft";
 const primaryButtonClass =
   "rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)] transition duration-200 ease-out hover:scale-[1.03] hover:bg-[#f2a63a] hover:shadow-[0_16px_32px_rgba(255,179,71,0.28)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100 disabled:hover:bg-[var(--accent)]";
@@ -81,7 +82,7 @@ const stepDetails: Record<
   vehicle: {
     title: "Confirm the customer and vehicle",
     description:
-      "Before any vehicle can be selected, the customer must log in with the local account email. Once that is done, the page opens the saved vehicles or the new vehicle form.",
+      "Before any vehicle can be selected, the customer must sign in with the account module. Once authenticated, the page opens the saved vehicles or the new vehicle form.",
     next: ["Driver", "Payment", "Review"],
   },
   driver: {
@@ -196,9 +197,21 @@ function splitCoverageStart(value: string): { date: string; hour: string } {
   };
 }
 
+function toWorkspace(account: AuthenticatedAccount): CustomerWorkspace {
+  return {
+    customer: account.customer,
+    vehicles: account.vehicles,
+    drivers: account.drivers,
+    recentOrders: account.recentOrders,
+  };
+}
+
 export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState<Step>("price");
+  const [authResolved, setAuthResolved] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<QuotePreview | null>(null);
   const [isPreviewPending, setIsPreviewPending] = useState(false);
@@ -237,6 +250,21 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     licenseExpiryDate: "",
     licenseCountryCode: "FR",
   });
+  const requestedStep = (searchParams.get("step") as Step | null) ?? "price";
+
+  function buildQuoteHref(targetStep: Step): string {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("step", targetStep);
+    if (priceForm.productCode) {
+      params.set("product", priceForm.productCode);
+    }
+    const query = params.toString();
+    return query ? `/quote?${query}` : "/quote";
+  }
+
+  function redirectToAuth(targetStep: Step) {
+    router.push(`/auth?returnTo=${encodeURIComponent(buildQuoteHref(targetStep))}`);
+  }
 
   function setWorkspaceAndSelection(nextWorkspace: CustomerWorkspace) {
     setWorkspace(nextWorkspace);
@@ -261,7 +289,6 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
       return;
     }
 
-    const savedEmail = window.localStorage.getItem(localAccountStorageKey) ?? "";
     const savedDraft = window.localStorage.getItem(quoteDraftStorageKey);
     if (savedDraft) {
       try {
@@ -274,13 +301,6 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
         window.localStorage.removeItem(quoteDraftStorageKey);
       }
     }
-
-    if (savedEmail) {
-      setAccountForm((current) => ({
-        ...current,
-        email: current.email || savedEmail,
-      }));
-    }
   }, []);
 
   useEffect(() => {
@@ -292,34 +312,43 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
   }, [priceForm]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || workspace || !accountForm.email) {
-      return;
-    }
-
-    const savedEmail = window.localStorage.getItem(localAccountStorageKey) ?? "";
-    if (!savedEmail || savedEmail !== accountForm.email) {
-      return;
-    }
+    let isActive = true;
 
     startTransition(async () => {
       try {
-        const payload = await postJson<SessionResponse>("/api/checkout/session", {
-          email: savedEmail,
-          createIfMissing: false,
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
         });
+        const payload = (await response.json()) as SessionResponse;
 
-        if (!payload.found || !payload.workspace) {
-          window.localStorage.removeItem(localAccountStorageKey);
+        if (!isActive) {
           return;
         }
 
-        setWorkspaceAndSelection(payload.workspace);
+        if (!response.ok || !payload.authenticated || !payload.account) {
+          setWorkspace(null);
+          return;
+        }
+
+        setWorkspaceAndSelection(toWorkspace(payload.account));
         setError("");
       } catch {
-        window.localStorage.removeItem(localAccountStorageKey);
+        if (!isActive) {
+          return;
+        }
+
+        setWorkspace(null);
+      } finally {
+        if (isActive) {
+          setAuthResolved(true);
+        }
       }
     });
-  }, [accountForm.email, workspace]);
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!workspace) {
@@ -351,6 +380,27 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
       setSelectedDriverId(String(workspace.drivers[0]?.id ?? ""));
     }
   }, [selectedDriverId, selectedVehicleId, workspace]);
+
+  useEffect(() => {
+    if (!requestedStep || requestedStep === step) {
+      return;
+    }
+
+    if (requestedStep !== "price" && !authResolved) {
+      return;
+    }
+
+    if ((requestedStep === "vehicle" || requestedStep === "driver" || requestedStep === "payment") && !preview) {
+      return;
+    }
+
+    if (requestedStep !== "price" && !workspace) {
+      setStep("vehicle");
+      return;
+    }
+
+    setStep(requestedStep);
+  }, [authResolved, preview, requestedStep, step, workspace]);
 
   const selectedVehicle =
     workspace?.vehicles.find((item) => String(item.id) === selectedVehicleId) ?? null;
@@ -545,7 +595,9 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     setError("");
-    setStep(stepLabels[index - 1]!.id);
+    const previousStep = stepLabels[index - 1]!.id;
+    setStep(previousStep);
+    router.replace(buildQuoteHref(previousStep));
   }
 
   function canUseCurrentVehicle(): boolean {
@@ -573,23 +625,26 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
     if (target === "price") {
       setStep("price");
+      router.replace(buildQuoteHref("price"));
       return;
     }
 
     if (!workspace) {
-      setError("Log in first to open the next steps.");
-      setStep("vehicle");
+      setError("Sign in first to open the next steps.");
+      redirectToAuth(target);
       return;
     }
 
     if (!preview) {
       setError("Choose the product options and wait for the price first.");
       setStep("price");
+      router.replace(buildQuoteHref("price"));
       return;
     }
 
     if (target === "vehicle") {
       setStep("vehicle");
+      router.replace(buildQuoteHref("vehicle"));
       return;
     }
 
@@ -601,6 +656,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
     if (target === "driver") {
       setStep("driver");
+      router.replace(buildQuoteHref("driver"));
       return;
     }
 
@@ -618,6 +674,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
     if (target === "payment") {
       setStep("payment");
+      router.replace(buildQuoteHref("payment"));
       return;
     }
 
@@ -628,14 +685,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     setStep(target);
-  }
-
-  function saveLocalAccount(email: string) {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(localAccountStorageKey, email);
+    router.replace(buildQuoteHref(target));
   }
 
   function handleDeleteWorkspaceItem(kind: "vehicle" | "driver", id: number) {
@@ -647,13 +697,12 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
     startTransition(async () => {
       try {
-        const payload = await fetch("/api/checkout/workspace-item", {
+        const payload = await fetch("/api/auth/workspace-item", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: workspace.customer.email,
             kind,
             id,
           }),
@@ -675,8 +724,8 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
   function handleVehicleContinue() {
     if (!workspace) {
-      setError("Continue with a local account first.");
-      setStep("vehicle");
+      setError("Sign in before continuing to vehicle details.");
+      redirectToAuth("vehicle");
       return;
     }
 
@@ -714,6 +763,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
           fiscalPower: String(fiscalPower),
         }));
         setStep("driver");
+        router.replace(buildQuoteHref("driver"));
       } catch (requestError) {
         setError(
           requestError instanceof Error
@@ -738,6 +788,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     setStep("payment");
+    router.replace(buildQuoteHref("payment"));
   }
 
   function handleLocalPayment() {
@@ -748,8 +799,8 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     if (!workspace) {
-      setError("Continue with a local account first.");
-      setStep("vehicle");
+      setError("Sign in before payment.");
+      redirectToAuth("payment");
       return;
     }
 
@@ -786,7 +837,6 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                 },
         });
 
-        saveLocalAccount(payload.customer.email);
         setWorkspace((current) => {
           const currentVehicles = current?.vehicles ?? [];
           const currentDrivers = current?.drivers ?? [];
@@ -804,6 +854,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
         });
         setResult(payload);
         setStep("review");
+        router.replace(buildQuoteHref("review"));
       } catch (requestError) {
         setError(
           requestError instanceof Error
@@ -1066,10 +1117,10 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                 </p>
                 <div className="mt-6">
                   <Link
-                    href="/account/login?returnTo=%2Fquote"
+                    href={`/auth?returnTo=${encodeURIComponent(buildQuoteHref("vehicle"))}`}
                     className={`${primaryButtonClass} inline-flex items-center justify-center`}
                   >
-                    Open login page
+                    Open account login
                   </Link>
                 </div>
               </div>
@@ -1528,6 +1579,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                     setResult(null);
                     setPreview(null);
                     setStep("price");
+                    router.replace(buildQuoteHref("price"));
                   }}
                   className={secondaryButtonClass}
                 >
@@ -1560,7 +1612,15 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               <button
                 type="button"
                 disabled={!preview || isPreviewPending}
-                onClick={() => setStep("vehicle")}
+                onClick={() => {
+                  if (!workspace) {
+                    redirectToAuth("vehicle");
+                    return;
+                  }
+
+                  setStep("vehicle");
+                  router.replace(buildQuoteHref("vehicle"));
+                }}
                 className={primaryButtonClass}
               >
                 Continue to vehicle
@@ -1603,7 +1663,10 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
           {step === "review" ? (
             <button
               type="button"
-              onClick={() => setStep("success")}
+              onClick={() => {
+                setStep("success");
+                router.replace(buildQuoteHref("success"));
+              }}
               className={primaryButtonClass}
             >
               Continue to success

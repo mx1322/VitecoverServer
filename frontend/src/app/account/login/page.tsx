@@ -1,10 +1,11 @@
-import { LoginClient } from "./login-client";
+import { redirect } from "next/navigation";
 
-export default async function LoginPage({
+export default async function LegacyAccountLoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ returnTo?: string }>;
 }) {
   const params = await searchParams;
-  return <LoginClient returnTo={params.returnTo || "/quote"} />;
+  const returnTo = encodeURIComponent(params.returnTo || "/account");
+  redirect(`/auth?returnTo=${returnTo}`);
 }

@@ -1,8 +1,12 @@
 import Link from "next/link";
 
+import { readAuthSession } from "@/lib/auth-session";
 import { siteConfig } from "@/lib/site";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await readAuthSession();
+  const accountHref = session ? "/account" : "/auth";
+
   return (
     <header className="sticky top-0 z-20 border-b border-[rgba(22,36,58,0.08)] bg-[rgba(255,250,242,0.84)] backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
@@ -23,8 +27,8 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-6 text-sm text-[var(--muted)] md:flex">
           {siteConfig.navigation.map((item) => (
             <Link
-              key={item.href}
-              href={item.href}
+              key={item.label}
+              href={item.label === "Account" ? accountHref : item.href}
               className="transition hover:text-[var(--ink)]"
             >
               {item.label}
