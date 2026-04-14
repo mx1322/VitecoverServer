@@ -80,6 +80,23 @@ ensure_minio_password_not_default() {
   fi
 }
 
+ensure_minio_bucket_exists() {
+  local env_file="$1"
+
+  set -a
+  # shellcheck disable=SC1090
+  source "$env_file"
+  set +a
+
+  echo "Ensuring MinIO bucket exists: ${MINIO_BUCKET}"
+
+  docker exec vitecover_minio sh -lc '
+    set -e
+    mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null
+    mc mb -p "local/$MINIO_BUCKET" >/dev/null 2>&1 || true
+  '
+}
+
 warn_legacy_env_files() {
   local legacy_files=(
     ".env.frontend"
@@ -119,4 +136,5 @@ ensure_required_values_set ".env.deploy"
 ensure_minio_password_not_default ".env.deploy"
 
 docker compose --env-file .env.deploy up -d --build
+ensure_minio_bucket_exists ".env.deploy"
 docker compose --env-file .env.deploy ps
