@@ -4,108 +4,80 @@ import { homeProductCards } from "@/lib/home-product-cards";
 
 export default function HomePage() {
   const cardShellClass =
-    "group flex h-full min-h-[540px] flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_24px_70px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_30px_80px_rgba(22,36,58,0.12)]";
+    "group flex h-full min-h-[700px] flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)]";
   const categoryClass =
     "text-[11px] font-semibold uppercase tracking-[0.26em] text-[var(--muted)]";
   const titleClass =
-    "mt-4 min-h-[72px] text-[30px] font-semibold leading-[1.02] text-[var(--ink)]";
+    "text-[24px] font-semibold leading-[1.08] tracking-tight text-[var(--ink)]";
   const iconWrapClass =
-    "mt-5 flex h-[120px] w-[120px] items-center justify-center rounded-[28px] bg-[rgba(255,179,71,0.14)]";
-  const descriptionClass = "mt-4 min-h-[84px] text-sm leading-6 text-[var(--muted)]";
+    "mt-4 flex h-[250px] w-full items-center justify-center rounded-[26px] bg-[rgba(255,179,71,0.14)] px-4 py-6";
+  const descriptionClass =
+    "text-[15px] leading-7 text-[var(--muted)]";
   const priceBlockClass =
-    "mt-8 rounded-[24px] border border-[rgba(255,179,71,0.12)] bg-[rgba(255,179,71,0.14)] p-5";
+    "mt-4 rounded-[22px] border border-[rgba(255,179,71,0.12)] bg-[rgba(255,179,71,0.14)] px-5 py-4";
 
   return (
     <main>
-      <section className="section-wrap pb-10 pt-12 md:pb-14 md:pt-16">
+      <section className="section-wrap pb-1 pt-6 md:pb-6 md:pt-6">
         <div className="max-w-5xl">
-          <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.84)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
-            TEMPORARY AUTO INSURANCE
-          </div>
-
           <h1
-            className="mt-4 max-w-5xl text-[2.9rem] font-semibold leading-[0.96] tracking-tight text-[var(--ink)] md:text-[4.3rem]"
+            className="mt-2 max-w-none whitespace-nowrap text-[2.2rem] font-semibold leading-[1] tracking-tight text-[var(--ink)] md:text-[3.3rem]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Get temporary auto insurance in minutes.
           </h1>
 
-          <p className="mt-4 max-w-3xl text-lg leading-7 text-[rgba(22,36,58,0.72)] md:text-[1.15rem]">
-            Choose your cover online and receive your policy by email after review.
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Link
-              href="/quote"
-              className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-[var(--ink)] shadow-[0_14px_32px_rgba(255,179,71,0.24)] transition duration-200 ease-out hover:translate-y-[-1px] hover:shadow-[0_18px_40px_rgba(255,179,71,0.3)]"
-            >
-              Start Quote
-            </Link>
-            <Link
-              href="/#products"
-              className="inline-flex items-center justify-center rounded-full border border-[rgba(22,36,58,0.12)] bg-[rgba(255,255,255,0.84)] px-7 py-3.5 text-sm font-semibold text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] hover:bg-white"
-            >
-              Browse Products
-            </Link>
-          </div>
-
-          <p className="mt-4 text-sm font-medium text-[rgba(22,36,58,0.62)]">
-            Short-term cover · 100% online · Policy by email
-          </p>
         </div>
       </section>
 
       <section id="products" className="section-wrap pb-16 md:pb-24">
         <div className="max-w-3xl">
-          <h2
-            className="text-4xl font-semibold tracking-tight text-[var(--ink)] md:text-5xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Choose your cover
-          </h2>
           <p className="mt-4 text-lg leading-7 text-[var(--muted)]">
-            Temporary insurance products for different vehicle types.
+            Choose your temporary insurance products according to vehicle types.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {homeProductCards.map((product) => {
             const [priceMain, priceSuffix] = product.price.split(" / ");
             const cardBody = (
               <article className={cardShellClass}>
                 <p className={categoryClass}>{product.category}</p>
-                <h3 className={titleClass}>{product.title}</h3>
+                <div className="mt-4 min-h-[50px]">
+                  <h3 className={titleClass}>{product.title}</h3>
+                </div>
 
                 <div className={iconWrapClass}>
                   <img
                     src={product.iconPath}
                     alt={product.title}
-                    className="h-[76px] w-[76px] object-contain"
+                    className="h-auto w-full max-w-[320px] object-contain"
                   />
                 </div>
 
-                <p className={descriptionClass}>{product.description}</p>
+                <div className="mt-5 min-h-[72px] border-t border-[rgba(255,179,71,0.18)] pt-4">
+                  <p className={descriptionClass}>{product.description}</p>
+                </div>
 
                 <div className={priceBlockClass}>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
                     {product.priceLabel}
                   </p>
-                  <p className="mt-3 text-[32px] font-semibold leading-none tracking-tight text-[var(--ink)] whitespace-nowrap">
+                  <p className="mt-2 text-[28px] font-semibold leading-none tracking-tight text-[var(--ink)] whitespace-nowrap">
                     {priceMain}
                     {priceSuffix ? (
-                      <span className="text-[24px] font-medium"> / {priceSuffix}</span>
+                      <span className="text-[18px] font-medium"> / {priceSuffix}</span>
                     ) : null}
                   </p>
                 </div>
 
-                <div className="mt-auto pt-8">
+                <div className="mt-5">
                   {product.available && product.href ? (
                     <span className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)] transition duration-200 ease-out group-hover:scale-[1.03]">
                       {product.buttonLabel}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center justify-center rounded-full border border-[rgba(22,36,58,0.12)] bg-[rgba(255,255,255,0.82)] px-6 py-3 text-sm font-semibold text-[var(--ink)]">
+                    <span className="inline-flex items-center justify-center rounded-full border border-[rgba(22,36,58,0.12)] bg-white px-6 py-3 text-sm font-semibold text-[var(--ink)]">
                       {product.buttonLabel}
                     </span>
                   )}

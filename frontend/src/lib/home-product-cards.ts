@@ -40,7 +40,7 @@ export const homeProductCards: HomeProductCard[] = [
     code: "POIDS_LOURDS",
     title: "Heavy Goods Vehicle",
     category: "HEAVY GOODS VEHICLE",
-    description: "Temporary cover for goods vehicles above 3.5 tonnes.",
+    description: "Goods vehicles above 3.5 tonnes.",
     iconPath: "/directus/assets/d6aba802-39bd-438f-9e42-034d695f176f",
     href: "/quote?product=POIDS_LOURDS",
     available: true,
