@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { completeCheckoutFlow } from "@/lib/directus-admin";
+import { getAuthenticatedAccount } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -33,6 +34,11 @@ function requirePositiveInteger(value: unknown, label: string): number {
 
 export async function POST(request: Request) {
   try {
+    const authenticatedAccount = await getAuthenticatedAccount();
+    if (!authenticatedAccount) {
+      throw new Error("You must sign in before placing an order.");
+    }
+
     const body = (await request.json()) as Record<string, unknown>;
     const customer = (body.customer ?? {}) as Record<string, unknown>;
     const vehicle = (body.vehicle ?? {}) as Record<string, unknown>;
@@ -40,10 +46,13 @@ export async function POST(request: Request) {
 
     const result = await completeCheckoutFlow({
       customer: {
-        email: requireString(customer.email, "customer email"),
-        firstName: optionalString(customer.firstName),
-        lastName: optionalString(customer.lastName),
-        phone: optionalString(customer.phone),
+        email: authenticatedAccount.user.email,
+        firstName: optionalString(customer.firstName) || authenticatedAccount.user.firstName,
+        lastName: optionalString(customer.lastName) || authenticatedAccount.user.lastName,
+        phone: optionalString(customer.phone) || authenticatedAccount.customer.phone,
+        customerType: authenticatedAccount.customer.customerType,
+        preferredLanguage: authenticatedAccount.customer.preferredLanguage,
+        directusUserId: authenticatedAccount.user.id,
       },
       productCode: requireString(body.productCode, "product"),
       durationDays: requirePositiveInteger(body.durationDays, "duration"),
