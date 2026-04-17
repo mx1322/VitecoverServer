@@ -17,7 +17,7 @@ The intended workflow is:
 
 1. validate locally
 2. merge the deployment changes
-3. update AWS in one pass using the root `up.sh` entry point
+3. push to `dev` to auto-deploy on the self-hosted local machine runner
 
 ## Runtime layout
 
@@ -31,6 +31,17 @@ The intended workflow is:
   Root override that layers frontend, MinIO, and the shared edge config on top of `backend/docker-compose.yml`.
 - `up.sh`
   Single startup entry point from the repository root.
+
+## Dev Deployment
+
+- `.github/workflows/deploy-dev-local.yml`
+  Pushes to `dev` trigger deployment on a GitHub self-hosted runner running on this machine.
+- Deployment target path:
+  `/home/max/apps/VitecoverServer`
+- Deployment command:
+  `./up.sh`
+- Important:
+  This path is hard-reset to `origin/dev` during deployment, so it should be treated as a dedicated deployment checkout, not a place for uncommitted local work.
 
 ## Current focus
 

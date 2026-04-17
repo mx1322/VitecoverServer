@@ -64,6 +64,7 @@ This frontend workspace is intended to run inside Docker for Linux deployment, s
 
 For local frontend development, use `frontend/.env.example` as the template for your own `frontend/.env`.
 For the integrated Linux deployment, public URLs are supplied from `deploy/linux/.env.deploy`.
+Public file URLs should go through the file-service layer in `src/lib/file-service.ts`, so frontend code does not need to know whether files are ultimately served by Directus, MinIO, or S3.
 
 When Node.js is available in a development environment, the local development commands are:
 
