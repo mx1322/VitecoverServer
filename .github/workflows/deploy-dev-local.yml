@@ -1,0 +1,87 @@
+name: Deploy Dev To Local Machine
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev-local
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+    defaults:
+      run:
+        shell: bash
+    env:
+      REPO_DIR: /home/max/apps/VitecoverServer
+      TARGET_BRANCH: dev
+    steps:
+      - name: Verify local repo path
+        run: |
+          test -d "$REPO_DIR/.git"
+
+      - name: Verify deployment prerequisites
+        run: |
+          set -euo pipefail
+          cd "$REPO_DIR"
+
+          test -x ./up.sh
+          test -f deploy/linux/.env.deploy
+          test -f backend/docker-compose.yml
+          test -f docker-compose.override.yml
+          command -v docker >/dev/null
+          docker --version
+          docker compose version
+
+      - name: Validate workflow and shell syntax
+        run: |
+          set -euo pipefail
+          cd "$REPO_DIR"
+
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo rhysd/actionlint:1.7.7
+          bash -n ./up.sh ./deploy/linux/up.sh ./deploy/linux/down.sh
+
+      - name: Sync local repository to origin/dev
+        run: |
+          set -euo pipefail
+          cd "$REPO_DIR"
+
+          git fetch origin
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          git reset --hard "origin/$TARGET_BRANCH"
+
+      - name: Deploy latest dev branch
+        run: |
+          set -euo pipefail
+          cd "$REPO_DIR"
+
+          docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml config >/dev/null
+          docker build -f frontend/Dockerfile --target builder -t vitecover-frontend-buildcheck ./frontend >/dev/null
+
+          ./up.sh
+
+      - name: Show deployment failure details
+        if: failure()
+        run: |
+          set +e
+          cd "$REPO_DIR"
+
+          echo "== Git HEAD =="
+          git rev-parse --short HEAD
+
+          echo "== Docker Compose PS =="
+          docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml ps
+
+          echo "== Recent Docker Compose Logs =="
+          docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml logs --tail=120
+
+      - name: Show deployed revision
+        if: success()
+        run: |
+          cd "$REPO_DIR"
+          echo "Deployed commit: $(git rev-parse --short HEAD)"

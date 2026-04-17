@@ -85,21 +85,20 @@ The intended local development flow is:
 The deployment workflow is intentionally split into two phases:
 
 - validate and iterate locally in `backend/` and `frontend/`
-- apply the same repository state to AWS using the integrated deployment entry point from the repository root
+- apply the same repository state to the deployment checkout through the `dev` branch auto-deploy workflow
 
 In practice, this means:
 
 1. update code in the repository
 2. run the local backend and frontend checks
 3. commit and push the validated changes
-4. pull the latest code on the AWS host
-5. edit `deploy/linux/.env.deploy` once for the target environment
-6. run `./up.sh`
+4. push to `dev`
+5. let the self-hosted runner reset the deployment checkout and run `./up.sh`
 
-This keeps the local development path and AWS runtime path aligned without requiring separate deployment stories for each service.
+This keeps the local development path and deployment runtime path aligned without requiring separate deployment stories for each service.
 
 ## Notes
 
 - The backend is developed locally first.
-- The production target is AWS.
+- The current deployment target is the self-hosted local Linux machine through the `dev` auto-deploy workflow.
 - The schema files should remain in Git, except for `live-current.tmp.json`.

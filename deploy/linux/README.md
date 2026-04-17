@@ -65,6 +65,7 @@ Suggested frontend values:
 
 - `NEXT_PUBLIC_SITE_URL=http://your-host`
 - `NEXT_PUBLIC_DIRECTUS_URL=http://your-host/directus`
+- `NEXT_PUBLIC_FILE_SERVICE_BASE_URL=http://your-host/directus`
 - `EDGE_HTTP_PORT=80` for AWS, or another free local port such as `8088`
 
 Suggested backend note:
@@ -95,14 +96,27 @@ This will:
 
 ## Updating after new code is pushed
 
-On the Linux server, the normal update flow is:
+The recommended update flow is now automated through GitHub Actions on pushes to `dev`.
+
+The self-hosted runner on this machine:
+
+- fetches the latest `origin/dev`
+- hard-resets the deployment checkout to that revision
+- validates workflow syntax, shell syntax, compose rendering, and frontend buildability
+- runs `./up.sh`
+- uses the dedicated deployment checkout at `/home/max/apps/VitecoverServer`
+
+Manual fallback on the Linux server is still:
 
 ```bash
 git pull
 ./up.sh
 ```
 
-This matches the intended workflow where development can continue elsewhere and the Linux server simply pulls the latest repository state and restarts the integrated stack.
+Important:
+
+- the deployment checkout is hard-reset during the automated workflow
+- keep uncommitted local edits out of the deployment path
 
 ## Shutdown
 
@@ -117,6 +131,17 @@ With the included Nginx config:
 - `http://your-host/` -> frontend
 - `http://your-host/directus/` -> Directus
 - `http://your-host:9001/` -> MinIO console
+
+## Proxy and security defaults
+
+The shared Nginx layer now includes:
+
+- consistent `X-Forwarded-*` headers for frontend and Directus upstreams
+- `client_max_body_size 25m`
+- basic security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`)
+- same-origin protection for the Directus admin entry path
+
+For public production exposure, HTTPS should still terminate at the edge load balancer or reverse proxy in front of this stack.
 
 ## MinIO role
 
@@ -153,5 +178,5 @@ This supports:
 ## Notes
 
 - This deployment layer is meant for your Linux server that simulates an EC2-style environment.
-- It is a manual deployment path for now.
-- Later, this same structure can be automated with GitHub Actions.
+- It now supports automatic deployment from GitHub Actions on pushes to `dev`.
+- The deployment checkout should be dedicated to runtime deployment, not day-to-day uncommitted editing.
