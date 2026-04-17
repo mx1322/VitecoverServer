@@ -3,9 +3,13 @@
 This repository is now organized as a small monorepo:
 
 - `backend/`
-  Directus-based insurance backend, local Docker stack, schema sync script, and backend assets for the deployment path.
+  Directus-based insurance backend, backend Nginx config, extensions, schema sync script, and seed assets.
 - `frontend/`
-  Reserved for the website and customer/admin-facing frontend application.
+  Website and customer/admin-facing frontend application.
+- `compose/`
+  Shared compose-level assets, including the public Nginx config used by the integrated stack.
+- `deploy/`
+  Deployment scripts and deployment env templates.
 - `docs/`
   Product, schema, and local workflow documentation.
 
@@ -13,7 +17,20 @@ The intended workflow is:
 
 1. validate locally
 2. merge the deployment changes
-3. update AWS in one pass using the integrated deployment config under `deploy/linux/`
+3. update AWS in one pass using the root `up.sh` entry point
+
+## Runtime layout
+
+- `backend/directus/`
+  Directus extensions, schema files, and seed files.
+- `backend/nginx/`
+  Nginx config for the backend-only starter stack.
+- `compose/nginx/`
+  Nginx config for the integrated frontend + backend stack.
+- `docker-compose.override.yml`
+  Root override that layers frontend, MinIO, and the shared edge config on top of `backend/docker-compose.yml`.
+- `up.sh`
+  Single startup entry point from the repository root.
 
 ## Current focus
 

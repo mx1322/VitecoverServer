@@ -33,7 +33,7 @@ services:
       redis:
         condition: service_started
     env_file:
-      - .env
+      - ../.env
     environment:
       DB_CLIENT: ${DB_CLIENT}
       DB_HOST: postgres

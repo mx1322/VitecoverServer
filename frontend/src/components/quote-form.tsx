@@ -133,17 +133,19 @@ function stepNumber(step: Step): number {
 }
 
 function toDateTimeLocalValue(date = new Date()): string {
-  const roundedDate = new Date(date);
-  roundedDate.setMinutes(0, 0, 0);
-  if (roundedDate.getTime() < date.getTime()) {
-    roundedDate.setHours(roundedDate.getHours() + 1);
-  }
-
-  const year = roundedDate.getFullYear();
-  const month = String(roundedDate.getMonth() + 1).padStart(2, "0");
-  const day = String(roundedDate.getDate()).padStart(2, "0");
-  const hours = String(roundedDate.getHours()).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:00`;
+}
+
+function getDefaultCoverageStart(date = new Date()): string {
+  const nextHourTomorrow = new Date(date);
+  nextHourTomorrow.setDate(nextHourTomorrow.getDate() + 1);
+  nextHourTomorrow.setMinutes(0, 0, 0);
+  nextHourTomorrow.setHours(nextHourTomorrow.getHours() + 1);
+  return toDateTimeLocalValue(nextHourTomorrow);
 }
 
 function getCoverageWindow(startAt: string, durationDays: string) {
@@ -154,6 +156,7 @@ function getCoverageWindow(startAt: string, durationDays: string) {
 
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + Number(durationDays || "0"));
+  endDate.setHours(23, 59, 59, 0);
   return { startDate, endDate };
 }
 
@@ -221,7 +224,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
   const [priceForm, setPriceForm] = useState({
     productCode: initialProductCode ?? products[0]?.code ?? "AUTOMOBILE",
     durationDays: "1",
-    coverageStartAt: toDateTimeLocalValue(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+    coverageStartAt: getDefaultCoverageStart(),
     fiscalPower: "6",
   });
   const [accountForm, setAccountForm] = useState({
@@ -263,7 +266,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
   }
 
   function redirectToAuth(targetStep: Step) {
-    router.push(`/auth?returnTo=${encodeURIComponent(buildQuoteHref(targetStep))}`);
+    router.replace(`/auth?returnTo=${encodeURIComponent(buildQuoteHref(targetStep))}`);
   }
 
   function setWorkspaceAndSelection(nextWorkspace: CustomerWorkspace) {
@@ -396,6 +399,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
     if (requestedStep !== "price" && !workspace) {
       setStep("vehicle");
+      router.replace(buildQuoteHref("vehicle"));
       return;
     }
 
@@ -548,7 +552,14 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
       isActive = false;
       window.clearTimeout(timer);
     };
-  }, [priceForm.durationDays, priceForm.fiscalPower, priceForm.productCode, pricingOptions, step]);
+  }, [
+    priceForm.coverageStartAt,
+    priceForm.durationDays,
+    priceForm.fiscalPower,
+    priceForm.productCode,
+    pricingOptions,
+    step,
+  ]);
 
   function updatePriceField(name: string, value: string) {
     if (name === "productCode" || name === "durationDays" || name === "fiscalPower") {
@@ -1049,17 +1060,32 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-white p-5">
+            <div className="rounded-[24px] bg-[var(--surface-2)] p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                 Cover window
               </p>
               <div className="mt-3 space-y-2 text-sm text-[var(--ink)]">
-                <p>Duration: {priceForm.durationDays} day{Number(priceForm.durationDays) > 1 ? "s" : ""}</p>
-                <p>Starts: {formatCoverageDate(coverageWindow.startDate)}</p>
-                <p>Ends: {formatCoverageDate(coverageWindow.endDate)}</p>
+                <p>
+                  <span className="font-semibold text-[var(--ink)]">Duration:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">
+                    {priceForm.durationDays} day{Number(priceForm.durationDays) > 1 ? "s" : ""}
+                  </span>
+                </p>
+                <p>
+                  <span className="font-semibold text-[var(--ink)]">Starts:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">
+                    {formatCoverageDate(coverageWindow.startDate)}
+                  </span>
+                </p>
+                <p>
+                  <span className="font-semibold text-[var(--ink)]">Ends:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">
+                    {formatCoverageDate(coverageWindow.endDate)}
+                  </span>
+                </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Temporary cover starts on the selected hour and ends after the chosen number of days.
+                Temporary cover starts on the selected hour and ends at 23:59 on the final day.
               </p>
             </div>
 
