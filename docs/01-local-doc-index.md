@@ -85,7 +85,7 @@ The intended local development flow is:
 The deployment workflow is intentionally split into two phases:
 
 - validate and iterate locally in `backend/` and `frontend/`
-- apply the same repository state to AWS using the integrated deployment stack in `deploy/linux/`
+- apply the same repository state to AWS using the integrated deployment entry point from the repository root
 
 In practice, this means:
 
@@ -94,7 +94,7 @@ In practice, this means:
 3. commit and push the validated changes
 4. pull the latest code on the AWS host
 5. edit `deploy/linux/.env.deploy` once for the target environment
-6. run `deploy/linux/up.sh`
+6. run `./up.sh`
 
 This keeps the local development path and AWS runtime path aligned without requiring separate deployment stories for each service.
 

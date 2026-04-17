@@ -40,6 +40,9 @@ interface CustomerRecord {
   last_name?: string | null;
   phone?: string | null;
   account_status?: string | null;
+  customer_type?: string | null;
+  preferred_language?: string | null;
+  directus_user?: string | null;
 }
 
 interface VehicleRecord {
@@ -193,6 +196,9 @@ export interface CustomerWorkspace {
     lastName: string;
     phone: string;
     accountStatus: string;
+    customerType: string;
+    preferredLanguage: string;
+    directusUserId: string;
   };
   vehicles: CustomerWorkspaceVehicle[];
   drivers: CustomerWorkspaceDriver[];
@@ -204,6 +210,26 @@ export interface ContinueCustomerInput {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  customerType?: string;
+  preferredLanguage?: string;
+  directusUserId?: string;
+}
+
+export interface CreateWorkspaceVehicleInput {
+  registrationNumber: string;
+  manufacturer?: string;
+  model?: string;
+  fiscalPower: number;
+}
+
+export interface CreateWorkspaceDriverInput {
+  firstName: string;
+  lastName: string;
+  birthday?: string;
+  email?: string;
+  phone?: string;
+  licenseNumber?: string;
+  licenseCountryCode?: string;
 }
 
 export interface QuotePreviewInput {
@@ -460,6 +486,9 @@ function mapCustomerWorkspace(customer: CustomerRecord): CustomerWorkspace["cust
     lastName: normalizeText(customer.last_name),
     phone: normalizeText(customer.phone),
     accountStatus: normalizeText(customer.account_status) || "lead",
+    customerType: normalizeText(customer.customer_type) || "individual",
+    preferredLanguage: normalizeText(customer.preferred_language) || "fr-FR",
+    directusUserId: normalizeText(customer.directus_user),
   };
 }
 
@@ -626,7 +655,8 @@ async function findPricingRule(
 async function getCustomerByEmail(email: string): Promise<CustomerRecord | null> {
   const payload = await directusRequest<DirectusCollectionResponse<CustomerRecord>>(
     `/items/customers${buildQuery({
-      fields: "id,email,first_name,last_name,phone,account_status",
+      fields:
+        "id,email,first_name,last_name,phone,account_status,customer_type,preferred_language,directus_user",
       "filter[email][_eq]": normalizeEmail(email),
       limit: "1",
     })}`,
@@ -719,7 +749,7 @@ export async function continueCustomerWorkspace(
 
   if (!customer) {
     if (!normalizeText(input.firstName) || !normalizeText(input.lastName)) {
-      throw new Error("First name and last name are required for a new local account.");
+      throw new Error("First name and last name are required for a new customer account.");
     }
 
     customer = await createItem<CustomerRecord>("customers", {
@@ -729,7 +759,8 @@ export async function continueCustomerWorkspace(
       phone: normalizeText(input.phone) || null,
       first_name: normalizeText(input.firstName),
       last_name: normalizeText(input.lastName),
-      preferred_language: "fr-FR",
+      preferred_language: normalizeText(input.preferredLanguage) || "fr-FR",
+      directus_user: normalizeText(input.directusUserId) || null,
     });
   } else {
     const patch: Record<string, unknown> = {};
@@ -746,12 +777,105 @@ export async function continueCustomerWorkspace(
       patch.phone = normalizeText(input.phone);
     }
 
+    if (
+      normalizeText(input.customerType) &&
+      normalizeText(input.customerType) !== normalizeText(customer.customer_type)
+    ) {
+      patch.customer_type = normalizeText(input.customerType);
+    }
+
+    if (
+      normalizeText(input.preferredLanguage) &&
+      normalizeText(input.preferredLanguage) !== normalizeText(customer.preferred_language)
+    ) {
+      patch.preferred_language = normalizeText(input.preferredLanguage);
+    }
+
+    if (
+      normalizeText(input.directusUserId) &&
+      normalizeText(input.directusUserId) !== normalizeText(customer.directus_user)
+    ) {
+      patch.directus_user = normalizeText(input.directusUserId);
+    }
+
     if (Object.keys(patch).length > 0) {
       customer = await updateItem<CustomerRecord>("customers", customer.id, patch);
     }
   }
 
   return buildCustomerWorkspace(customer);
+}
+
+export async function registerCustomerWorkspace(
+  input: ContinueCustomerInput,
+): Promise<CustomerWorkspace> {
+  const email = normalizeEmail(input.email);
+  if (!email) {
+    throw new Error("Email is required.");
+  }
+
+  const existingCustomer = await getCustomerByEmail(email);
+  if (existingCustomer) {
+    throw new Error("An account already exists for this email.");
+  }
+
+  return continueCustomerWorkspace(input);
+}
+
+export async function updateCustomerProfile(
+  input: ContinueCustomerInput,
+): Promise<CustomerWorkspace> {
+  const email = normalizeEmail(input.email);
+  if (!email) {
+    throw new Error("Email is required.");
+  }
+
+  if (!normalizeText(input.firstName) || !normalizeText(input.lastName)) {
+    throw new Error("First name and last name are required.");
+  }
+
+  const customer = await getCustomerByEmail(email);
+  if (!customer) {
+    throw new Error("No account was found for this email.");
+  }
+
+  await updateItem<CustomerRecord>("customers", customer.id, {
+    first_name: normalizeText(input.firstName),
+    last_name: normalizeText(input.lastName),
+    phone: normalizeText(input.phone) || null,
+    customer_type: normalizeText(input.customerType) || "individual",
+    preferred_language: normalizeText(input.preferredLanguage) || "fr-FR",
+    directus_user: normalizeText(input.directusUserId) || null,
+  });
+
+  return continueCustomerWorkspace({
+    email,
+  });
+}
+
+export async function ensureCustomerWorkspaceForDirectusUser(input: {
+  directusUserId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}): Promise<CustomerWorkspace> {
+  return continueCustomerWorkspace({
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    directusUserId: input.directusUserId,
+  });
+}
+
+export async function closeCustomerAccount(email: string): Promise<void> {
+  const customer = await getCustomerByEmail(email);
+  if (!customer) {
+    return;
+  }
+
+  await updateItem<CustomerRecord>("customers", customer.id, {
+    account_status: "closed",
+  });
 }
 
 export async function getQuotePreview(input: QuotePreviewInput): Promise<QuotePreview> {
@@ -939,11 +1063,42 @@ export async function deleteWorkspaceVehicle(
 ): Promise<CustomerWorkspace> {
   const customer = await getCustomerByEmail(email);
   if (!customer) {
-    throw new Error("No local account was found for this email.");
+    throw new Error("No account was found for this email.");
   }
 
   await getVehicleByIdForCustomer(customer.id, vehicleId);
   await softDeleteItem("vehicles", vehicleId);
+  return buildCustomerWorkspace(customer);
+}
+
+export async function createWorkspaceVehicle(
+  email: string,
+  input: CreateWorkspaceVehicleInput,
+): Promise<CustomerWorkspace> {
+  const customer = await getCustomerByEmail(email);
+  if (!customer) {
+    throw new Error("No account was found for this email.");
+  }
+
+  if (!normalizeText(input.registrationNumber)) {
+    throw new Error("Registration number is required.");
+  }
+
+  const fiscalPower = requirePositiveInteger(input.fiscalPower, "vehicle fiscal power");
+
+  await createItem<VehicleRecord>("vehicles", {
+    customer: customer.id,
+    registration_number: normalizeRegistrationNumber(normalizeText(input.registrationNumber)),
+    registration_country_code: "FR",
+    vehicle_category: "automobile",
+    usage_type: "standard",
+    manufacturer: normalizeText(input.manufacturer) || null,
+    model: normalizeText(input.model) || null,
+    fiscal_power: fiscalPower,
+    is_active: true,
+    is_verified: false,
+  });
+
   return buildCustomerWorkspace(customer);
 }
 
@@ -953,11 +1108,40 @@ export async function deleteWorkspaceDriver(
 ): Promise<CustomerWorkspace> {
   const customer = await getCustomerByEmail(email);
   if (!customer) {
-    throw new Error("No local account was found for this email.");
+    throw new Error("No account was found for this email.");
   }
 
   await getDriverByIdForCustomer(customer.id, driverId);
   await softDeleteItem("drivers", driverId);
+  return buildCustomerWorkspace(customer);
+}
+
+export async function createWorkspaceDriver(
+  email: string,
+  input: CreateWorkspaceDriverInput,
+): Promise<CustomerWorkspace> {
+  const customer = await getCustomerByEmail(email);
+  if (!customer) {
+    throw new Error("No account was found for this email.");
+  }
+
+  if (!normalizeText(input.firstName) || !normalizeText(input.lastName)) {
+    throw new Error("First name and last name are required for a new driver.");
+  }
+
+  await createItem<DriverRecord>("drivers", {
+    customer: customer.id,
+    first_name: normalizeText(input.firstName),
+    last_name: normalizeText(input.lastName),
+    birthday: normalizeText(input.birthday) || null,
+    email: normalizeText(input.email) || customer.email,
+    phone: normalizeText(input.phone) || customer.phone || null,
+    license_number: normalizeText(input.licenseNumber) || null,
+    license_country_code: normalizeText(input.licenseCountryCode) || "FR",
+    is_active: true,
+    is_verified: false,
+  });
+
   return buildCustomerWorkspace(customer);
 }
 

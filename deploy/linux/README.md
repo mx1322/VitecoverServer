@@ -42,9 +42,15 @@ Reasons:
 ```text
 VitecoverServer/
   backend/
+    directus/
+    nginx/
+  compose/
+    nginx/
   frontend/
   docs/
   deploy/
+  docker-compose.override.yml
+  up.sh
 ```
 
 ## Environment files
@@ -70,15 +76,12 @@ The repository keeps the example file as the initial committed reference.
 The real `.env.deploy` file should live only on the server and is ignored by Git.
 If the real env file is missing, `up.sh` will create it from the template.
 If the real env file still matches the template exactly, `up.sh` will stop and require you to edit it before startup.
-If you still have historical files like `.env.frontend` / `.env.minio`, they are now legacy and can be removed after confirming `.env.deploy` is correct.
-
 ## One-command startup
 
 From the repository root:
 
 ```bash
-cd deploy/linux
-bash up.sh
+./up.sh
 ```
 
 This will:
@@ -96,8 +99,7 @@ On the Linux server, the normal update flow is:
 
 ```bash
 git pull
-cd deploy/linux
-bash up.sh
+./up.sh
 ```
 
 This matches the intended workflow where development can continue elsewhere and the Linux server simply pulls the latest repository state and restarts the integrated stack.
@@ -105,8 +107,7 @@ This matches the intended workflow where development can continue elsewhere and 
 ## Shutdown
 
 ```bash
-cd deploy/linux
-bash down.sh
+docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml down
 ```
 
 ## Public endpoints

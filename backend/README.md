@@ -7,16 +7,22 @@ This starter gives you a local Docker-based Directus backend with:
 - Redis
 - Nginx reverse proxy
 
-All commands in this README assume your working directory is `backend/`.
+Base-only commands assume your working directory is `backend/`.
+
+Directory note:
+
+- `backend/directus/` contains extensions, schema, and seed assets for the backend.
+- `backend/nginx/` contains the backend-only Nginx config used by `backend/docker-compose.yml`.
+- `compose/nginx/` at the repository root contains the shared public Nginx config used by the integrated stack.
 
 ## Quick start
 
 ### 1. Prepare environment variables
 
-For local backend development, keep a `backend/.env` with the correct local configuration.
-This file is for the backend workspace only and is not used by the integrated Linux deployment.
+For local backend development, keep the repo-root `.env` with the correct local configuration.
+This file is used by the backend base stack.
 
-For the integrated Linux deployment, the stack now reads from `deploy/linux/.env.deploy` only.
+For the integrated monorepo deployment, the override stack reads from `deploy/linux/.env.deploy`.
 
 ### 2. Start the stack
 
@@ -24,10 +30,26 @@ For the integrated Linux deployment, the stack now reads from `deploy/linux/.env
 docker compose up -d
 ```
 
+## Integrated monorepo start
+
+From the repository root, keep the official backend starter as the base file and layer local services with the override. The simplest entry point is:
+
+```bash
+./up.sh
+```
+
+Equivalent manual command:
+
+```bash
+docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml up -d --build
+```
+
 ### 3. Open Directus
 
-- Through Nginx: http://localhost:8080
-- Direct access: http://localhost:8055
+- Base starter through Nginx: http://localhost:8080
+- Base starter direct access: http://localhost:8055
+- Integrated monorepo edge: http://localhost
+- Integrated monorepo Directus: http://localhost/directus
 
 ## Stop the stack
 
@@ -35,9 +57,15 @@ docker compose up -d
 docker compose down
 ```
 
+Integrated monorepo stop:
+
+```bash
+docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml down
+```
+
 ## Schema files
 
-The schema workspace under `directus/schema` is intended to stay in Git, except for the temporary live snapshot file.
+The schema workspace under `backend/directus/schema` is intended to stay in Git, except for the temporary live snapshot file.
 
 - `schema-target.json`
   The editable target schema you want to push to Directus. This is the main schema file to review, change, and version.
@@ -88,7 +116,7 @@ To import or update the catalog in Directus:
 python3 scripts/directus_catalog_seed.py seed
 ```
 
-The script expects `DIRECTUS_TOKEN` or `ADMIN_TOKEN` in `backend/.env`.
+The script expects `DIRECTUS_TOKEN` or `ADMIN_TOKEN` in the repo-root `.env`.
 It upserts:
 
 - `geo_zones`
@@ -123,12 +151,12 @@ mkdir -p data/postgres uploads
 
 2. Move uploads to S3 when you deploy to AWS.
 3. Put production secrets only on the server, not in GitHub.
-4. Add custom logic under `directus/extensions`.
+4. Add custom logic under `backend/directus/extensions`.
 
 ## Notes
 
-- Keep `.env` out of Git.
-- Commit `docker-compose.yml`, `nginx/`, and `directus/extensions/`.
+- Keep `.env` and `deploy/linux/.env.deploy` out of Git.
+- Commit `docker-compose.yml`, `../docker-compose.override.yml`, `nginx/`, `../compose/nginx/`, and `directus/extensions/`.
 - Commit `directus/schema/schema-target.json` and `directus/schema/schema-remote-baseline.json`.
 - Ignore `directus/schema/live-current.tmp.json`.
 - For EC2 production, put Directus behind HTTPS and use RDS + S3.

@@ -1,72 +1,86 @@
 export type HomeProductCard = {
   code: string;
   title: string;
-  eyebrow: string;
+  category: string;
   description: string;
+  iconPath: string;
   href?: string;
   available: boolean;
-  primaryMetric: string;
-  secondaryMetric: string;
+  priceLabel: string;
+  price: string;
+  buttonLabel: string;
 };
 
 export const homeProductCards: HomeProductCard[] = [
   {
     code: "AUTOMOBILE",
-    title: "Light-duty vehicle",
-    eyebrow: "Automobile",
-    description: "Temporary cover for light passenger vehicles under 3.5 tonnes.",
+    title: "Passenger Car",
+    category: "AUTOMOBILE",
+    description: "Private cars under 3.5 tonnes.",
+    iconPath: "/directus/assets/c30a3007-fc25-4e24-bb0c-69582ab326f1",
     href: "/quote?product=AUTOMOBILE",
     available: true,
-    primaryMetric: "45,00 € / day",
-    secondaryMetric: "4,66 € / day over 90 days",
+    priceLabel: "From",
+    price: "45,00 € / day",
+    buttonLabel: "Choose cover",
   },
   {
     code: "UTILITAIRE",
-    title: "Light commercial van",
-    eyebrow: "Vehicule utilitaire",
-    description: "Temporary cover for utility vans and light commercial vehicles up to 3.5 tonnes.",
+    title: "Light Commercial Van",
+    category: "COMMERCIAL VEHICLE",
+    description: "Vans and light commercial vehicles up to 3.5 tonnes.",
+    iconPath: "/directus/assets/53b82e07-5ffe-4c95-931f-cd68559f9351",
     href: "/quote?product=UTILITAIRE",
     available: true,
-    primaryMetric: "69,00 € / day",
-    secondaryMetric: "From 1 to 15 days",
+    priceLabel: "From",
+    price: "69,00 € / day",
+    buttonLabel: "Choose cover",
   },
   {
     code: "POIDS_LOURDS",
-    title: "Heavy vehicle",
-    eyebrow: "Poids lourds",
-    description: "Temporary cover for heavy goods vehicles above 3.5 tonnes.",
+    title: "Heavy Goods Vehicle",
+    category: "HEAVY GOODS VEHICLE",
+    description: "Goods vehicles above 3.5 tonnes.",
+    iconPath: "/directus/assets/d6aba802-39bd-438f-9e42-034d695f176f",
     href: "/quote?product=POIDS_LOURDS",
     available: true,
-    primaryMetric: "103,00 € / day",
-    secondaryMetric: "From 1 to 15 days",
+    priceLabel: "From",
+    price: "103,00 € / day",
+    buttonLabel: "Choose cover",
   },
   {
     code: "AUTOCAR_BUS",
-    title: "Coach / bus",
-    eyebrow: "Autocar / bus",
-    description: "Short-term protection for passenger buses and coaches above 3.5 tonnes.",
+    category: "COACH / BUS",
+    title: "Coach / Bus",
+    description: "Buses and passenger coaches above 3.5 tonnes.",
+    iconPath: "/directus/assets/aaf3231c-1e1e-47e9-81fa-12f2e6d0c18a",
     href: "/quote?product=AUTOCAR_BUS",
     available: true,
-    primaryMetric: "129,00 € / day",
-    secondaryMetric: "From 1 to 15 days",
+    priceLabel: "From",
+    price: "129,00 € / day",
+    buttonLabel: "Choose cover",
   },
   {
     code: "CAMPING_CAR",
+    category: "MOTORHOME",
     title: "Motorhome",
-    eyebrow: "Camping-car",
-    description: "Temporary insurance for camping-cars and leisure vehicles.",
+    description: "Motorhomes and leisure vehicles.",
+    iconPath: "/directus/assets/fcb30dc5-063d-418e-9260-f5ac41287a8c",
     href: "/quote?product=CAMPING_CAR",
     available: true,
-    primaryMetric: "58,00 € / day",
-    secondaryMetric: "5,28 € / day over 90 days",
+    priceLabel: "From",
+    price: "58,00 € / day",
+    buttonLabel: "Choose cover",
   },
   {
     code: "REMORQUE",
+    category: "TRAILER",
     title: "Trailer",
-    eyebrow: "Remorque",
-    description: "Temporary cover for trailers as a standalone insurance product.",
+    description: "Standalone temporary trailer cover.",
+    iconPath: "/directus/assets/3f787ccf-0a49-4235-a9f6-b03fb9875478",
     available: false,
-    primaryMetric: "Pricing on request",
-    secondaryMetric: "Tariffs will appear here once the remorque table is loaded",
+    priceLabel: "Price",
+    price: "On request",
+    buttonLabel: "Request pricing",
   },
 ];
