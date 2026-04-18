@@ -97,7 +97,7 @@ What each command does:
 
 The repository now includes a seed file for the product catalog and pricing grid:
 
-- [product-catalog.json](/home/max/devwork/VitecoverServer/backend/directus/seed/product-catalog.json)
+- [product-catalog.json](directus/seed/product-catalog.json)
 
 This catalog is designed for:
 

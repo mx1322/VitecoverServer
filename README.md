@@ -37,7 +37,7 @@ The intended workflow is:
 - `.github/workflows/deploy-dev-local.yml`
   Pushes to `dev` trigger deployment on a GitHub self-hosted runner running on this machine.
 - Deployment target path:
-  `/home/max/apps/VitecoverServer`
+  configured via repository variable `DEPLOY_REPO_DIR` (for example `apps/VitecoverServer`)
 - Deployment command:
   `./up.sh`
 - Important:
@@ -107,10 +107,10 @@ The backend is already initialized around the temporary vehicle insurance workfl
 
 ## Where to start
 
-- Backend runtime and schema workflow: [backend/README.md](/home/max/devwork/VitecoverServer/backend/README.md)
-- Documentation index: [docs/README.md](/home/max/devwork/VitecoverServer/docs/README.md)
-- Local workflow and repository usage: [docs/01-local-doc-index.md](/home/max/devwork/VitecoverServer/docs/01-local-doc-index.md)
-- Business scope: [docs/02-business-plan.md](/home/max/devwork/VitecoverServer/docs/02-business-plan.md)
-- Technical roadmap: [docs/03-technical-roadmap.md](/home/max/devwork/VitecoverServer/docs/03-technical-roadmap.md)
-- Frontend plan: [docs/04-frontend-plan.md](/home/max/devwork/VitecoverServer/docs/04-frontend-plan.md)
-- Backend plan: [docs/05-backend-plan.md](/home/max/devwork/VitecoverServer/docs/05-backend-plan.md)
+- Backend runtime and schema workflow: [backend/README.md](backend/README.md)
+- Documentation index: [docs/README.md](docs/README.md)
+- Local workflow and repository usage: [docs/01-local-doc-index.md](docs/01-local-doc-index.md)
+- Business scope: [docs/02-business-plan.md](docs/02-business-plan.md)
+- Technical roadmap: [docs/03-technical-roadmap.md](docs/03-technical-roadmap.md)
+- Frontend plan: [docs/04-frontend-plan.md](docs/04-frontend-plan.md)
+- Backend plan: [docs/05-backend-plan.md](docs/05-backend-plan.md)

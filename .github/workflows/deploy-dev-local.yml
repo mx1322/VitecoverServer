@@ -18,11 +18,12 @@ jobs:
       run:
         shell: bash
     env:
-      REPO_DIR: /home/max/apps/VitecoverServer
+      REPO_DIR: ${{ vars.DEPLOY_REPO_DIR }}
       TARGET_BRANCH: dev
     steps:
       - name: Verify local repo path
         run: |
+          test -n "$REPO_DIR"
           test -d "$REPO_DIR/.git"
 
       - name: Verify deployment prerequisites
