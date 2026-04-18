@@ -20,13 +20,13 @@ function shouldUseSecureCookies(): boolean {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? "";
 
   if (!siteUrl) {
-    return process.env.NODE_ENV === "production";
+    return false;
   }
 
   try {
     return new URL(siteUrl).protocol === "https:";
   } catch {
-    return process.env.NODE_ENV === "production";
+    return false;
   }
 }
 
