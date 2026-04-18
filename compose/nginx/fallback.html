@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>服务重启中</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4efe6;
+      --card: #fffaf2;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #c2410c;
+      --border: #e5d7c3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      background:
+        radial-gradient(circle at top, #fff7ed 0%, transparent 35%),
+        linear-gradient(180deg, var(--bg) 0%, #efe7db 100%);
+      color: var(--ink);
+    }
+
+    .card {
+      width: min(560px, 100%);
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: color-mix(in srgb, var(--card) 94%, white 6%);
+      box-shadow: 0 18px 50px rgba(31, 41, 55, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 5vw, 40px);
+      line-height: 1.05;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-block;
+      margin-bottom: 18px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(194, 65, 12, 0.1);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="badge">TEMPORARY STATUS</div>
+    <h1>服务正在重启</h1>
+    <p>后端正在短暂更新，请稍后刷新页面。反向代理仍然在线，服务恢复后会自动继续提供访问。</p>
+  </main>
+</body>
+</html>
