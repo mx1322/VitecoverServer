@@ -21,5 +21,5 @@ export function directusAssetUrl(assetId: string): string {
     return `${configuredFileServiceBaseUrl}/assets/${assetId}`;
   }
 
-  return `/directus/assets/${assetId}`;
+  return `/api/assets/${assetId}`;
 }
