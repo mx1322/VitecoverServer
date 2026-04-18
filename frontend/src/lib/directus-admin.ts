@@ -97,6 +97,13 @@ interface OrderRecord {
   admin_review_status?: string | null;
 }
 
+interface PolicyRecord {
+  id: number;
+  order: number;
+  pdf_file?: string | null;
+  pdf_generated_at?: string | null;
+}
+
 interface PaymentRecord {
   id: number;
   amount: string;
@@ -186,6 +193,7 @@ export interface CustomerWorkspaceOrder {
   coverageStartAt: string;
   coverageEndAt: string;
   paidAt?: string | null;
+  contractFileUrl?: string;
 }
 
 export interface CustomerWorkspace {
@@ -329,6 +337,10 @@ const directusAdminEmail = process.env.DIRECTUS_ADMIN_EMAIL;
 const directusAdminPassword = process.env.DIRECTUS_ADMIN_PASSWORD;
 const defaultGeoZoneCode =
   process.env.DIRECTUS_DEFAULT_GEO_ZONE_CODE ?? "FRANCE_METROPOLE";
+const publicDirectusUrl =
+  process.env.NEXT_PUBLIC_DIRECTUS_URL?.replace(/\/$/, "") ??
+  process.env.DIRECTUS_PUBLIC_URL?.replace(/\/$/, "") ??
+  directusInternalUrl;
 
 function normalizeCoverageStartAt(value: string): string {
   const date = new Date(value);
@@ -457,6 +469,148 @@ function asCurrencyString(value: string | number): string {
   return Number(value).toFixed(2);
 }
 
+function formatDisplayDate(value?: string | null): string {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString("fr-FR", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildContractAssetUrl(fileId: string): string {
+  return `${publicDirectusUrl}/assets/${fileId}?download`;
+}
+
+function buildContractHtmlTemplate(input: {
+  order: OrderRecord;
+  customer: CustomerRecord;
+  vehicle: VehicleRecord;
+  driver: DriverRecord;
+  productName: string;
+}): string {
+  const { order, customer, vehicle, driver, productName } = input;
+
+  return `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contrat ${escapeHtml(order.order_number)}</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; color: #16243a; margin: 0; padding: 24px; }
+      .sheet { max-width: 820px; margin: 0 auto; border: 1px solid #d9e1eb; border-radius: 12px; padding: 28px; }
+      h1 { margin: 0 0 8px 0; font-size: 26px; }
+      h2 { margin: 24px 0 10px 0; font-size: 18px; }
+      .muted { color: #5f7289; font-size: 13px; }
+      table { width: 100%; border-collapse: collapse; }
+      td { border-bottom: 1px solid #e8edf3; padding: 10px 0; vertical-align: top; }
+      td:first-child { width: 40%; color: #5f7289; }
+      .footer { margin-top: 26px; font-size: 12px; color: #5f7289; }
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      <h1>Attestation provisoire (maquette)</h1>
+      <p class="muted">Commande ${escapeHtml(order.order_number)} · Produit ${escapeHtml(productName)}</p>
+
+      <h2>Informations contrat</h2>
+      <table>
+        <tr><td>Statut</td><td>${escapeHtml(order.status)}</td></tr>
+        <tr><td>Date de début</td><td>${escapeHtml(formatDisplayDate(order.coverage_start_at))}</td></tr>
+        <tr><td>Date de fin</td><td>${escapeHtml(formatDisplayDate(order.coverage_end_at))}</td></tr>
+        <tr><td>Montant total</td><td>${escapeHtml(asCurrencyString(order.total_amount))} ${escapeHtml(order.currency)}</td></tr>
+        <tr><td>Payé le</td><td>${escapeHtml(formatDisplayDate(order.paid_at))}</td></tr>
+      </table>
+
+      <h2>Véhicule</h2>
+      <table>
+        <tr><td>Immatriculation</td><td>${escapeHtml(vehicle.registration_number)}</td></tr>
+        <tr><td>Constructeur / modèle</td><td>${escapeHtml(`${normalizeText(vehicle.manufacturer)} ${normalizeText(vehicle.model)}`.trim() || "-")}</td></tr>
+        <tr><td>Catégorie</td><td>${escapeHtml(vehicle.vehicle_category)}</td></tr>
+      </table>
+
+      <h2>Conducteur</h2>
+      <table>
+        <tr><td>Nom</td><td>${escapeHtml(`${driver.first_name} ${driver.last_name}`)}</td></tr>
+        <tr><td>Email</td><td>${escapeHtml(normalizeText(driver.email) || customer.email)}</td></tr>
+        <tr><td>Téléphone</td><td>${escapeHtml(normalizeText(driver.phone) || normalizeText(customer.phone) || "-")}</td></tr>
+        <tr><td>Pays du permis</td><td>${escapeHtml(normalizeText(driver.license_country_code) || "-")}</td></tr>
+      </table>
+
+      <p class="footer">
+        Document généré automatiquement pour la phase de démonstration. Remplacer ce HTML par une vraie génération PDF.
+      </p>
+    </main>
+  </body>
+</html>`;
+}
+
+async function getDirectusAccessToken(): Promise<string> {
+  return directusStaticToken || directusLogin();
+}
+
+async function uploadContractTemplateFile(filename: string, html: string): Promise<string> {
+  const formData = new FormData();
+  formData.append("title", filename);
+  formData.append("filename_download", filename);
+  formData.append("type", "text/html");
+  formData.append("file", new Blob([html], { type: "text/html;charset=utf-8" }), filename);
+
+  const token = await getDirectusAccessToken();
+  let response = await fetch(`${directusInternalUrl}/files`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+    cache: "no-store",
+  });
+
+  if ((response.status === 401 || response.status === 403) && directusStaticToken) {
+    const refreshedToken = await directusLogin();
+    response = await fetch(`${directusInternalUrl}/files`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${refreshedToken}`,
+      },
+      body: formData,
+      cache: "no-store",
+    });
+  }
+
+  const payload = (await response.json()) as {
+    data?: { id?: string };
+    errors?: Array<{ message?: string }>;
+  };
+
+  if (!response.ok || !payload.data?.id) {
+    const message = payload.errors?.[0]?.message ?? "Unable to upload contract file.";
+    throw new Error(message);
+  }
+
+  return payload.data.id;
+}
+
 function requirePositiveInteger(value: number | undefined, label: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
     throw new Error(`Invalid ${label}.`);
@@ -531,6 +685,40 @@ function mapOrderRecord(order: OrderRecord): CustomerWorkspaceOrder {
     coverageEndAt: order.coverage_end_at,
     paidAt: order.paid_at,
   };
+}
+
+function buildPolicyNumber(orderNumber: string): string {
+  return orderNumber.replace(/^ORD-/, "POL-");
+}
+
+async function mapContractLinksByOrderId(orderIds: number[]): Promise<Map<number, string>> {
+  if (!orderIds.length) {
+    return new Map();
+  }
+
+  const payload = await directusRequest<DirectusCollectionResponse<PolicyRecord>>(
+    `/items/policies${buildQuery({
+      fields: "id,order,pdf_file,pdf_generated_at",
+      "filter[order][_in]": orderIds.join(","),
+      sort: "-id",
+      limit: "200",
+    })}`,
+  );
+
+  const linksByOrderId = new Map<number, string>();
+
+  for (const policy of payload.data) {
+    if (linksByOrderId.has(policy.order)) {
+      continue;
+    }
+
+    const fileId = normalizeText(policy.pdf_file);
+    if (fileId) {
+      linksByOrderId.set(policy.order, buildContractAssetUrl(fileId));
+    }
+  }
+
+  return linksByOrderId;
 }
 
 async function createItem<T>(collection: string, payload: Record<string, unknown>): Promise<T> {
@@ -707,7 +895,13 @@ async function getRecentOrdersByCustomerId(customerId: number): Promise<Customer
     })}`,
   );
 
-  return payload.data.map(mapOrderRecord);
+  const orders = payload.data.map(mapOrderRecord);
+  const linksByOrderId = await mapContractLinksByOrderId(orders.map((order) => order.id));
+
+  return orders.map((order) => ({
+    ...order,
+    contractFileUrl: linksByOrderId.get(order.id),
+  }));
 }
 
 async function buildCustomerWorkspace(customer: CustomerRecord): Promise<CustomerWorkspace> {
@@ -1274,6 +1468,44 @@ export async function completeCheckoutFlow(
     status: "approved",
     admin_review_status: "approved",
     internal_notes: "Local demo flow approved automatically.",
+  });
+
+  const contractFilename = `${order.order_number.toLowerCase()}-contract.html`;
+  const contractHtml = buildContractHtmlTemplate({
+    order,
+    customer: {
+      id: workspace.customer.id,
+      email: workspace.customer.email,
+      first_name: workspace.customer.firstName,
+      last_name: workspace.customer.lastName,
+      phone: workspace.customer.phone,
+    },
+    vehicle,
+    driver,
+    productName: product.name,
+  });
+  const contractFileId = await uploadContractTemplateFile(contractFilename, contractHtml);
+
+  await createItem<PolicyRecord>("policies", {
+    policy_number: buildPolicyNumber(order.order_number),
+    order: order.id,
+    customer: workspace.customer.id,
+    product: product.id,
+    vehicle: vehicle.id,
+    driver: driver.id,
+    geo_zone: geoZone.id,
+    status: "issued",
+    issued_at: paidAt,
+    coverage_start_at: summary.coverageStartAt,
+    coverage_end_at: summary.coverageEndAt,
+    premium_amount: summary.totalPremium,
+    tax_amount: "0.00",
+    total_amount: summary.totalPremium,
+    currency: summary.currency,
+    circulation_countries: "FR",
+    pdf_file: contractFileId,
+    pdf_generated_at: paidAt,
+    document_version: "template-v1",
   });
 
   await Promise.all([
