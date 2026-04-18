@@ -62,10 +62,27 @@ jobs:
             cp "$STATE_DIR/.env.deploy" deploy/linux/.env.deploy
           fi
 
-          test -x ./up.sh
-          test -f deploy/linux/.env.deploy
-          test -f backend/docker-compose.yml
-          test -f docker-compose.override.yml
+          if [ ! -x ./up.sh ]; then
+            echo "Missing executable deploy script: $REPO_DIR/up.sh"
+            exit 1
+          fi
+
+          if [ ! -f deploy/linux/.env.deploy ]; then
+            echo "Missing deploy env file in checkout: $REPO_DIR/deploy/linux/.env.deploy"
+            echo "Place a persistent copy at: $STATE_DIR/.env.deploy"
+            exit 1
+          fi
+
+          if [ ! -f backend/docker-compose.yml ]; then
+            echo "Missing compose file: $REPO_DIR/backend/docker-compose.yml"
+            exit 1
+          fi
+
+          if [ ! -f docker-compose.override.yml ]; then
+            echo "Missing compose override: $REPO_DIR/docker-compose.override.yml"
+            exit 1
+          fi
+
           command -v docker >/dev/null
           docker --version
           docker compose version
