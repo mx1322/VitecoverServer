@@ -3,7 +3,7 @@ import { createDirectus, readItems, rest } from "@directus/sdk";
 import type { DirectusSchema, InsuranceProduct } from "@/types/directus-schema";
 
 const directusUrl =
-  process.env.NEXT_PUBLIC_DIRECTUS_URL ?? "http://localhost:8055";
+  process.env.NEXT_PUBLIC_DIRECTUS_URL?.replace(/\/$/, "") || "/directus";
 
 export const directus = createDirectus<DirectusSchema>(directusUrl).with(rest());
 

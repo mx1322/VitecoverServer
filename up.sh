@@ -30,8 +30,7 @@ ensure_not_template_copy() {
   if cmp -s "$target" "$template"; then
     echo "$target still matches $template"
     echo "Please update these values before first startup:"
-    echo "- NEXT_PUBLIC_SITE_URL"
-    echo "- NEXT_PUBLIC_DIRECTUS_URL"
+    echo "- PUBLIC_URL"
     echo "- MINIO_ROOT_USER"
     echo "- MINIO_ROOT_PASSWORD"
     echo "- MINIO_BUCKET"
@@ -51,8 +50,6 @@ ensure_required_values_set() {
     "MINIO_ROOT_USER"
     "MINIO_ROOT_PASSWORD"
     "MINIO_BUCKET"
-    "NEXT_PUBLIC_SITE_URL"
-    "NEXT_PUBLIC_DIRECTUS_URL"
     "PUBLIC_URL"
   )
   local missing=0
