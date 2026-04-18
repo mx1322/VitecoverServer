@@ -95,7 +95,13 @@ interface OrderRecord {
   currency: string;
   paid_at?: string | null;
   admin_review_status?: string | null;
-  internal_notes?: string | null;
+}
+
+interface PolicyRecord {
+  id: number;
+  order: number;
+  pdf_file?: string | null;
+  pdf_generated_at?: string | null;
 }
 
 interface PaymentRecord {
@@ -492,20 +498,6 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function appendContractFileIdNote(
-  existingNotes: string | null | undefined,
-  fileId: string,
-): string {
-  const notes = normalizeText(existingNotes).replace(/\[contract_file_id=[^\]]+\]/g, "").trim();
-  const marker = `[contract_file_id=${fileId}]`;
-  return notes ? `${notes}\n${marker}` : marker;
-}
-
-function extractContractFileId(notes: string | null | undefined): string {
-  const match = normalizeText(notes).match(/\[contract_file_id=([a-z0-9-]+)\]/i);
-  return match?.[1] ?? "";
-}
-
 function buildContractAssetUrl(fileId: string): string {
   return `${publicDirectusUrl}/assets/${fileId}?download`;
 }
@@ -682,7 +674,6 @@ function mapDriverRecord(driver: DriverRecord): CustomerWorkspaceDriver {
 }
 
 function mapOrderRecord(order: OrderRecord): CustomerWorkspaceOrder {
-  const contractFileId = extractContractFileId(order.internal_notes);
   return {
     id: order.id,
     orderNumber: order.order_number,
@@ -693,8 +684,41 @@ function mapOrderRecord(order: OrderRecord): CustomerWorkspaceOrder {
     coverageStartAt: order.coverage_start_at,
     coverageEndAt: order.coverage_end_at,
     paidAt: order.paid_at,
-    contractFileUrl: contractFileId ? buildContractAssetUrl(contractFileId) : undefined,
   };
+}
+
+function buildPolicyNumber(orderNumber: string): string {
+  return orderNumber.replace(/^ORD-/, "POL-");
+}
+
+async function mapContractLinksByOrderId(orderIds: number[]): Promise<Map<number, string>> {
+  if (!orderIds.length) {
+    return new Map();
+  }
+
+  const payload = await directusRequest<DirectusCollectionResponse<PolicyRecord>>(
+    `/items/policies${buildQuery({
+      fields: "id,order,pdf_file,pdf_generated_at",
+      "filter[order][_in]": orderIds.join(","),
+      sort: "-id",
+      limit: "200",
+    })}`,
+  );
+
+  const linksByOrderId = new Map<number, string>();
+
+  for (const policy of payload.data) {
+    if (linksByOrderId.has(policy.order)) {
+      continue;
+    }
+
+    const fileId = normalizeText(policy.pdf_file);
+    if (fileId) {
+      linksByOrderId.set(policy.order, buildContractAssetUrl(fileId));
+    }
+  }
+
+  return linksByOrderId;
 }
 
 async function createItem<T>(collection: string, payload: Record<string, unknown>): Promise<T> {
@@ -864,14 +888,20 @@ async function getRecentOrdersByCustomerId(customerId: number): Promise<Customer
   const payload = await directusRequest<DirectusCollectionResponse<OrderRecord>>(
     `/items/orders${buildQuery({
       fields:
-        "id,order_number,status,coverage_start_at,coverage_end_at,total_amount,premium_amount,currency,paid_at,admin_review_status,internal_notes",
+        "id,order_number,status,coverage_start_at,coverage_end_at,total_amount,premium_amount,currency,paid_at,admin_review_status",
       "filter[customer][_eq]": String(customerId),
       sort: "-id",
       limit: "10",
     })}`,
   );
 
-  return payload.data.map(mapOrderRecord);
+  const orders = payload.data.map(mapOrderRecord);
+  const linksByOrderId = await mapContractLinksByOrderId(orders.map((order) => order.id));
+
+  return orders.map((order) => ({
+    ...order,
+    contractFileUrl: linksByOrderId.get(order.id),
+  }));
 }
 
 async function buildCustomerWorkspace(customer: CustomerRecord): Promise<CustomerWorkspace> {
@@ -1456,8 +1486,26 @@ export async function completeCheckoutFlow(
   });
   const contractFileId = await uploadContractTemplateFile(contractFilename, contractHtml);
 
-  order = await updateItem<OrderRecord>("orders", order.id, {
-    internal_notes: appendContractFileIdNote(order.internal_notes, contractFileId),
+  await createItem<PolicyRecord>("policies", {
+    policy_number: buildPolicyNumber(order.order_number),
+    order: order.id,
+    customer: workspace.customer.id,
+    product: product.id,
+    vehicle: vehicle.id,
+    driver: driver.id,
+    geo_zone: geoZone.id,
+    status: "issued",
+    issued_at: paidAt,
+    coverage_start_at: summary.coverageStartAt,
+    coverage_end_at: summary.coverageEndAt,
+    premium_amount: summary.totalPremium,
+    tax_amount: "0.00",
+    total_amount: summary.totalPremium,
+    currency: summary.currency,
+    circulation_countries: "FR",
+    pdf_file: contractFileId,
+    pdf_generated_at: paidAt,
+    document_version: "template-v1",
   });
 
   await Promise.all([
