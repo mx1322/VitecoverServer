@@ -37,7 +37,7 @@ The intended workflow is:
 - `.github/workflows/deploy-dev-local.yml`
   Pushes to `dev` trigger deployment on a GitHub self-hosted runner running on this machine.
 - Deployment target path:
-  configured via repository variable `DEPLOY_REPO_DIR` (for example `apps/VitecoverServer`)
+  `${RUNNER_WORKSPACE}/deploy-checkout`
 - Deployment command:
   `./up.sh`
 - Important:

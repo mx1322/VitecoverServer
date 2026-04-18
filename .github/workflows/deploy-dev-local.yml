@@ -18,27 +18,32 @@ jobs:
       run:
         shell: bash
     env:
-      REPO_DIR: ${{ vars.DEPLOY_REPO_DIR }}
+      DEPLOY_REPO_DIRNAME: deploy-checkout
       TARGET_BRANCH: dev
     steps:
-      - name: Verify local repo path
+      - name: Prepare deployment checkout
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
 
-          if [ -z "${REPO_DIR:-}" ]; then
-            echo "DEPLOY_REPO_DIR is not configured."
-            echo "Set repository variable DEPLOY_REPO_DIR to your deployment checkout path."
+          mkdir -p "$REPO_DIR"
+
+          if [ -d "$REPO_DIR/.git" ]; then
+            echo "Using existing deployment checkout: $REPO_DIR"
+            exit 0
+          fi
+
+          if [ -n "$(find "$REPO_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+            echo "Deployment directory exists but is not a git repository: $REPO_DIR"
             exit 1
           fi
 
-          if [ ! -d "$REPO_DIR/.git" ]; then
-            echo "Deployment checkout is missing or is not a git repository: $REPO_DIR"
-            exit 1
-          fi
+          git clone --branch "$TARGET_BRANCH" "https://github.com/${GITHUB_REPOSITORY}.git" "$REPO_DIR"
 
       - name: Verify deployment prerequisites
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
           test -x ./up.sh
@@ -52,6 +57,7 @@ jobs:
       - name: Sync local repository to origin/dev
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
           git fetch origin
@@ -61,6 +67,7 @@ jobs:
       - name: Validate workflow and shell syntax
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
           test -d .github/workflows
@@ -70,6 +77,7 @@ jobs:
       - name: Deploy latest dev branch
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
           docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml config >/dev/null
@@ -81,11 +89,7 @@ jobs:
         if: failure()
         run: |
           set +e
-
-          if [ -z "${REPO_DIR:-}" ]; then
-            echo "DEPLOY_REPO_DIR is not configured; skipping deployment directory diagnostics."
-            exit 0
-          fi
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
 
           if [ ! -d "$REPO_DIR" ]; then
             echo "Deployment directory not found: $REPO_DIR"
@@ -122,5 +126,6 @@ jobs:
       - name: Show deployed revision
         if: success()
         run: |
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
           echo "Deployed commit: $(git rev-parse --short HEAD)"

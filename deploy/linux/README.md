@@ -104,7 +104,7 @@ The self-hosted runner on this machine:
 - hard-resets the deployment checkout to that revision
 - validates workflow syntax, shell syntax, compose rendering, and frontend buildability
 - runs `./up.sh`
-- uses the dedicated deployment checkout configured by `DEPLOY_REPO_DIR` (for example `apps/VitecoverServer`)
+- uses the dedicated deployment checkout at `${RUNNER_WORKSPACE}/deploy-checkout`
 
 Manual fallback on the Linux server is still:
 
