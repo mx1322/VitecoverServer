@@ -36,10 +36,6 @@ services:
       STORAGE_MINIO_ENDPOINT: http://minio:9000
       STORAGE_MINIO_REGION: ${MINIO_REGION}
       STORAGE_MINIO_FORCE_PATH_STYLE: "true"
-    ports:
-      # Keep Directus default port for backend/dev debugging, but bind to localhost only.
-      # Public/LAN traffic should go through the edge reverse proxy (`nginx` service).
-      - "${DIRECTUS_DEV_BIND:-127.0.0.1}:${DIRECTUS_DEV_PORT:-8055}:8055"
     expose:
       - "8055"
 

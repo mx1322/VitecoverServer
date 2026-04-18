@@ -22,8 +22,7 @@ Why:
 
 Directus direct port for debugging is intentionally kept, but local-only by default:
 
-- `DIRECTUS_DEV_BIND=127.0.0.1`
-- `DIRECTUS_DEV_PORT=8055`
+- Directus stays internal to the Docker network in the integrated stack
 
 ---
 
@@ -79,4 +78,3 @@ For auth/order/policy document changes, verify at least:
 - If you need a temporary debug port, bind to `127.0.0.1` first.
 - When reporting test results, state exactly which URL was tested
   (edge URL vs direct service URL).
-

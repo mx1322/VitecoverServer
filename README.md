@@ -51,16 +51,12 @@ For integrated frontend + backend runs (`./up.sh`), use **one public entrypoint*
 - Frontend app is reachable only behind this edge proxy
 - Directus public API/assets are exposed through `/directus/*` on the same edge host
 
-Directus keeps its default backend port for debugging/testing, but it is bound to localhost by
-default in `docker-compose.override.yml`:
-
-- `DIRECTUS_DEV_BIND=127.0.0.1`
-- `DIRECTUS_DEV_PORT=8055`
+Directus is kept internal to the Docker network in the integrated stack.
 
 That means:
 
-- on the server itself you can still test Directus directly at `http://127.0.0.1:8055`
-- LAN/mobile clients should use the edge URL only, preventing multi-channel access confusion
+- LAN/mobile clients should use the edge URL only
+- backend/admin traffic still reaches Directus through the shared reverse proxy
 
 ## Optional local browser test container
 
