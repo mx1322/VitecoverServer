@@ -76,6 +76,14 @@ export function AccountControlClient() {
     confirmPassword: "",
   });
   const [deletePhrase, setDeletePhrase] = useState("");
+  const menuItems = [
+    "Overview",
+    "My Policies",
+    "Drivers",
+    "Vehicles",
+    "Documents",
+    "Account Settings",
+  ];
 
   function syncAccount(nextAccount: AuthenticatedAccount) {
     setAccount(nextAccount);
@@ -309,7 +317,7 @@ export function AccountControlClient() {
   }
 
   const cardClass =
-    "rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_24px_70px_rgba(22,36,58,0.08)]";
+    "rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]";
   const fieldClass =
     "mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] focus:border-[rgba(255,179,71,0.8)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,179,71,0.22)]";
   const primaryButtonClass =
@@ -328,66 +336,59 @@ export function AccountControlClient() {
   }
 
   return (
-    <main className="section-wrap py-16">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.8)] px-5 py-4 shadow-[0_16px_40px_rgba(22,36,58,0.06)]">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Session
-          </p>
-          <p className="mt-1 text-sm text-[var(--ink)]">
-            Signed in as {account.user.email}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={signOut}
-          disabled={isPending}
-          className="rounded-full border border-[rgba(22,36,58,0.12)] bg-white px-5 py-3 text-sm font-semibold text-[var(--ink)] transition duration-200 ease-out hover:scale-[1.03] hover:border-[rgba(22,36,58,0.2)] hover:bg-[rgba(22,36,58,0.04)]"
-        >
-          Logout
-        </button>
-      </div>
-
-      <div className="grid gap-8 xl:grid-cols-[280px_1fr]">
-        <aside className="rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[linear-gradient(180deg,rgba(22,36,58,0.96),rgba(13,27,43,0.96))] p-6 text-white shadow-[0_28px_80px_rgba(22,36,58,0.18)]">
-          <p className="eyebrow text-[var(--accent)]">My account</p>
-          <h1 className="mt-4 text-3xl font-semibold">
-            {account.user.firstName} {account.user.lastName}
-          </h1>
-          <p className="mt-3 text-sm text-[rgba(255,255,255,0.72)]">{account.user.email}</p>
-          <div className="mt-6 space-y-3 text-sm text-[rgba(255,255,255,0.78)]">
-            <div>Profile and login credentials</div>
-            <div>Email verification status</div>
-            <div>Orders, vehicles, and drivers</div>
-            <div>Self-service sign out and account closure</div>
+    <main className="section-wrap py-10 md:py-12">
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
+          <div className="border-b border-[rgba(22,36,58,0.08)] pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Account Center
+            </p>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
+              My Account
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              Signed in as {account.user.email}
+            </p>
           </div>
+
+          <nav className="mt-4 space-y-2">
+            {menuItems.map((item, index) => (
+              <button
+                key={item}
+                type="button"
+                className={
+                  index === 0
+                    ? "flex w-full items-center rounded-full bg-[rgba(255,179,71,0.16)] px-4 py-3 text-sm font-semibold text-[var(--ink)]"
+                    : "flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[var(--muted)] transition hover:bg-[rgba(22,36,58,0.04)] hover:text-[var(--ink)]"
+                }
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
+
           <button
             type="button"
             onClick={signOut}
             disabled={isPending}
-            className="mt-8 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--ink)]"
+            className="mt-5 flex w-full items-center justify-center rounded-full border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm font-semibold text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.04)]"
           >
             Logout
           </button>
         </aside>
 
-        <section className="space-y-4">
+        <section className="space-y-6">
           <div className={cardClass}>
-            <p className="eyebrow">Status</p>
-            <div className="mt-5 grid gap-3 md:grid-cols-4">
-              <div className="rounded-[24px] bg-[var(--surface-2)] p-4 text-sm text-[var(--ink)]">
-                Email: {account.user.isEmailVerified ? "verified" : account.user.status}
-              </div>
-              <div className="rounded-[24px] bg-[var(--surface-2)] p-4 text-sm text-[var(--ink)]">
-                Orders: {account.recentOrders.length}
-              </div>
-              <div className="rounded-[24px] bg-[var(--surface-2)] p-4 text-sm text-[var(--ink)]">
-                Vehicles: {account.vehicles.length}
-              </div>
-              <div className="rounded-[24px] bg-[var(--surface-2)] p-4 text-sm text-[var(--ink)]">
-                Drivers: {account.drivers.length}
-              </div>
-            </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Overview
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">
+              Welcome back{account.user.firstName ? `, ${account.user.firstName}` : ""}
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+              View your recent policies, manage saved drivers and vehicles, and keep your profile
+              ready for faster checkout.
+            </p>
             {error ? (
               <p className="mt-5 rounded-2xl border border-[rgba(234,111,81,0.2)] bg-[rgba(234,111,81,0.08)] px-4 py-3 text-sm text-[var(--danger)]">
                 {error}
@@ -398,6 +399,114 @@ export function AccountControlClient() {
                 {notice}
               </p>
             ) : null}
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Active Policies", String(account.recentOrders.length)],
+              ["Saved Drivers", String(account.drivers.length)],
+              ["Saved Vehicles", String(account.vehicles.length)],
+              [
+                "Email Status",
+                account.user.isEmailVerified ? "Verified" : account.user.status,
+              ],
+            ].map(([label, value]) => (
+              <article
+                key={label}
+                className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+                  {label}
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-[var(--ink)]">
+                  {value}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+            <div className={cardClass}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+                    Recent Policies
+                  </p>
+                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
+                    Latest activity
+                  </h3>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {account.recentOrders.length ? (
+                  account.recentOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between gap-4 rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.82)] px-4 py-4"
+                    >
+                      <div>
+                        <p className="font-semibold text-[var(--ink)]">{order.orderNumber}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          Starts {new Date(order.coverageStartAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[rgba(255,179,71,0.16)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                        {order.status}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.82)] px-4 py-4 text-sm text-[var(--muted)]">
+                    No policies yet.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={cardClass}>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+                Quick Actions
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
+                Manage faster
+              </h3>
+
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => createWorkspaceItem("driver")}
+                  disabled={isPending}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-[rgba(22,36,58,0.08)] px-4 py-4 text-left text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
+                  Add a new driver
+                </button>
+                <button
+                  type="button"
+                  onClick={() => createWorkspaceItem("vehicle")}
+                  disabled={isPending}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-[rgba(22,36,58,0.08)] px-4 py-4 text-left text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
+                  Add a new vehicle
+                </button>
+                <button
+                  type="button"
+                  onClick={saveProfile}
+                  disabled={isPending}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-[rgba(22,36,58,0.08)] px-4 py-4 text-left text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
+                  Save account details
+                </button>
+                <button
+                  type="button"
+                  onClick={changePassword}
+                  disabled={isPending}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-[rgba(22,36,58,0.08)] px-4 py-4 text-left text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
+                  Update password
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
@@ -523,7 +632,7 @@ export function AccountControlClient() {
           </div>
 
           <div className={cardClass}>
-            <p className="eyebrow">Orders</p>
+            <p className="eyebrow">My Policies</p>
             <div className="mt-5 grid gap-4">
               {account.recentOrders.length ? (
                 account.recentOrders.map((order) => (
