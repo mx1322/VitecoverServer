@@ -550,6 +550,16 @@ export function AccountControlClient() {
                       <p>Starts: {new Date(order.coverageStartAt).toLocaleString()}</p>
                       <p>Ends: {new Date(order.coverageEndAt).toLocaleString()}</p>
                     </div>
+                    {order.contractFileUrl ? (
+                      <a
+                        href={order.contractFileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-flex rounded-full border border-[rgba(22,36,58,0.12)] bg-[rgba(255,255,255,0.82)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.24)] hover:bg-white"
+                      >
+                        View contract template
+                      </a>
+                    ) : null}
                   </article>
                 ))
               ) : (

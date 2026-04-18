@@ -14,6 +14,8 @@ This directory contains the main project documentation for VitecoverServer.
   Frontend product scope, page architecture, user flows, and implementation recommendations.
 - `05-backend-plan.md`
   Backend domain model, collection design, schema logic, and operational workflow.
+- `06-ai-agent-runbook.md`
+  Agent-focused runbook for local integrated testing, reverse-proxy access discipline, and smoke-check workflow.
 
 ## Reading order
 
@@ -24,3 +26,4 @@ If someone is new to the project, the recommended reading order is:
 3. `05-backend-plan.md`
 4. `04-frontend-plan.md`
 5. `01-local-doc-index.md`
+6. `06-ai-agent-runbook.md`
