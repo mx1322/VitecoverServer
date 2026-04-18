@@ -103,3 +103,4 @@ This keeps the local development path and AWS runtime path aligned without requi
 - The backend is developed locally first.
 - The production target is AWS.
 - The schema files should remain in Git, except for `live-current.tmp.json`.
+- For AI-agent execution conventions and smoke checks, see `docs/06-ai-agent-runbook.md`.

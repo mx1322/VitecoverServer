@@ -32,6 +32,51 @@ The intended workflow is:
 - `up.sh`
   Single startup entry point from the repository root.
 
+## Reverse proxy access model (recommended)
+
+For integrated frontend + backend runs (`./up.sh`), use **one public entrypoint**:
+
+- Public/LAN URL: `http://<host>[:EDGE_HTTP_PORT]` via `vitecover_edge` (Nginx)
+- Frontend app is reachable only behind this edge proxy
+- Directus public API/assets are exposed through `/directus/*` on the same edge host
+
+Directus keeps its default backend port for debugging/testing, but it is bound to localhost by
+default in `docker-compose.override.yml`:
+
+- `DIRECTUS_DEV_BIND=127.0.0.1`
+- `DIRECTUS_DEV_PORT=8055`
+
+That means:
+
+- on the server itself you can still test Directus directly at `http://127.0.0.1:8055`
+- LAN/mobile clients should use the edge URL only, preventing multi-channel access confusion
+
+## Optional local browser test container
+
+When you need to quickly validate frontend/backend integration flows (for example: Google account
+login management, self-service order creation, PDF/contract attachment access), you can run the
+optional browser tooling container:
+
+```bash
+docker compose -f docker-compose.browser.yml up -d
+docker exec -it vitecover_browser_tools bash
+```
+
+Then inside the container, you can run Playwright one-off checks against the reverse-proxy URL:
+
+```bash
+npx -y playwright@1.53.0 open http://127.0.0.1:${EDGE_HTTP_PORT:-80}
+```
+
+For CI-like headless smoke checks and screenshots:
+
+```bash
+npx -y playwright@1.53.0 screenshot --browser=chromium http://127.0.0.1:${EDGE_HTTP_PORT:-80} /tmp/home.png
+```
+
+The browser container uses host networking so it can access your local reverse-proxy endpoint and
+the local-only Directus debug endpoint when needed.
+
 ## Current focus
 
 The backend is already initialized around the temporary vehicle insurance workflow:
