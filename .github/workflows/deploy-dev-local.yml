@@ -19,6 +19,7 @@ jobs:
         shell: bash
     env:
       DEPLOY_REPO_DIRNAME: deploy-checkout
+      DEPLOY_STATE_DIRNAME: deploy-secrets
       TARGET_BRANCH: dev
     steps:
       - name: Prepare deployment checkout
@@ -44,7 +45,22 @@ jobs:
         run: |
           set -euo pipefail
           REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          STATE_DIR="${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}"
           cd "$REPO_DIR"
+
+          git fetch origin
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          git reset --hard "origin/$TARGET_BRANCH"
+
+          mkdir -p "$STATE_DIR"
+
+          if [ -f deploy/linux/.env.deploy ] && [ ! -f "$STATE_DIR/.env.deploy" ]; then
+            cp deploy/linux/.env.deploy "$STATE_DIR/.env.deploy"
+          fi
+
+          if [ -f "$STATE_DIR/.env.deploy" ]; then
+            cp "$STATE_DIR/.env.deploy" deploy/linux/.env.deploy
+          fi
 
           test -x ./up.sh
           test -f deploy/linux/.env.deploy
@@ -53,16 +69,6 @@ jobs:
           command -v docker >/dev/null
           docker --version
           docker compose version
-
-      - name: Sync local repository to origin/dev
-        run: |
-          set -euo pipefail
-          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
-          cd "$REPO_DIR"
-
-          git fetch origin
-          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
-          git reset --hard "origin/$TARGET_BRANCH"
 
       - name: Validate workflow and shell syntax
         run: |
@@ -114,6 +120,7 @@ jobs:
             docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml ps
           else
             echo "Missing deploy/linux/.env.deploy in deployment checkout."
+            echo "Expected persistent env file at: ${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}/.env.deploy"
           fi
 
           echo "== Recent Docker Compose Logs =="
@@ -121,6 +128,7 @@ jobs:
             docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml logs --tail=120
           else
             echo "Skipping logs because deploy/linux/.env.deploy is missing."
+            echo "Expected persistent env file at: ${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}/.env.deploy"
           fi
 
       - name: Show deployed revision
