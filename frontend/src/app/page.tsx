@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import { homeProductCards } from "@/lib/home-product-cards";
+import { getHomeProductCards } from "@/lib/home-product-cards";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const homeProductCards = await getHomeProductCards();
   const cardShellClass =
     "group flex h-full min-h-[700px] flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)]";
   const categoryClass =

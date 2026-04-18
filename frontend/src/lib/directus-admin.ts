@@ -125,6 +125,13 @@ interface DirectusUserRecord {
   id: string;
 }
 
+interface DirectusFileRecord {
+  id: string;
+  title?: string | null;
+  filename_download?: string | null;
+  type?: string | null;
+}
+
 export interface QuoteProductOption {
   code: string;
   name: string;
@@ -768,6 +775,18 @@ export async function listOrderableProducts(): Promise<QuoteProductOption[]> {
     minDurationDays: item.min_duration_days,
     maxDurationDays: item.max_duration_days,
   }));
+}
+
+export async function listDirectusFiles(): Promise<DirectusFileRecord[]> {
+  const payload = await directusRequest<DirectusCollectionResponse<DirectusFileRecord>>(
+    `/files${buildQuery({
+      fields: "id,title,filename_download,type",
+      limit: "100",
+      sort: "title",
+    })}`,
+  );
+
+  return payload.data;
 }
 
 async function getActiveProductByCode(productCode: string): Promise<InsuranceProductRecord> {
