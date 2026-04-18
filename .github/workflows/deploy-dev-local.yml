@@ -21,6 +21,7 @@ jobs:
       DEPLOY_REPO_DIRNAME: deploy-checkout
       DEPLOY_STATE_DIRNAME: deploy-secrets
       TARGET_BRANCH: dev
+      DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE }}
     steps:
       - name: Prepare deployment checkout
         run: |
@@ -54,6 +55,11 @@ jobs:
 
           mkdir -p "$STATE_DIR"
 
+          if [ ! -f "$STATE_DIR/.env.deploy" ] && [ -n "${DEPLOY_ENV_FILE:-}" ]; then
+            printf '%s\n' "$DEPLOY_ENV_FILE" > "$STATE_DIR/.env.deploy"
+            chmod 600 "$STATE_DIR/.env.deploy"
+          fi
+
           if [ -f deploy/linux/.env.deploy ] && [ ! -f "$STATE_DIR/.env.deploy" ]; then
             cp deploy/linux/.env.deploy "$STATE_DIR/.env.deploy"
           fi
@@ -70,6 +76,7 @@ jobs:
           if [ ! -f deploy/linux/.env.deploy ]; then
             echo "Missing deploy env file in checkout: $REPO_DIR/deploy/linux/.env.deploy"
             echo "Place a persistent copy at: $STATE_DIR/.env.deploy"
+            echo "Or set GitHub Actions secret DEPLOY_ENV_FILE with the full deploy/linux/.env.deploy content."
             exit 1
           fi
 
