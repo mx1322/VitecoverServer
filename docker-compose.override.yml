@@ -9,7 +9,7 @@ services:
     ports:
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - ../data/minio:/data
+      - ${MINIO_DATA_DIR:-../data/minio}:/data
 
   directus:
     container_name: vitecover_directus
