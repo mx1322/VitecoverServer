@@ -24,12 +24,6 @@ const recentOrders = [
   },
 ];
 
-const quickActions = [
-  "Start new quote",
-  "Add a new driver",
-  "Add a new vehicle",
-];
-
 function StatusBadge({ status }: { status: string }) {
   const expired = status === "Expired";
 
@@ -53,25 +47,13 @@ export default function AccountOverviewPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
           Overview
         </p>
-        <div className="mt-3 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold tracking-tight text-[var(--ink)] md:text-4xl">
-              Welcome back
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Manage orders, drivers, vehicles and account settings from one place.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {quickActions.slice(0, 3).map((action) => (
-              <button
-                key={action}
-                className="rounded-full border border-[rgba(22,36,58,0.08)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-              >
-                {action}
-              </button>
-            ))}
-          </div>
+        <div className="mt-3 max-w-2xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-[var(--ink)] md:text-4xl">
+            Welcome back
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+            Manage orders, drivers, vehicles and account settings from one place.
+          </p>
         </div>
       </section>
 
@@ -81,7 +63,7 @@ export default function AccountOverviewPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+      <section>
         <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Recent Orders
@@ -106,26 +88,6 @@ export default function AccountOverviewPage() {
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-            Quick Actions
-          </p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
-            Manage faster
-          </h3>
-          <div className="mt-6 space-y-3">
-            {quickActions.map((action) => (
-              <button
-                key={action}
-                className="flex w-full items-center justify-between rounded-[18px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.82)] px-4 py-4 text-left text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-              >
-                <span>{action}</span>
-                <span className="text-lg text-[var(--muted)]">›</span>
-              </button>
             ))}
           </div>
         </article>

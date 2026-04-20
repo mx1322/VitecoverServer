@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { LogoutButton } from "@/components/account/logout-button";
+
 const menuItems = [
   { label: "Overview", href: "/account" },
   { label: "My Orders", href: "/account/orders" },
@@ -46,6 +48,7 @@ export function AccountSidebar() {
           );
         })}
       </nav>
+      <LogoutButton />
     </aside>
   );
 }
