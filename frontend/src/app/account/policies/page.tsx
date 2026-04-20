@@ -110,8 +110,8 @@ export default function PoliciesPage() {
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">My Policies</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Policies</h2>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">My Orders</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Orders</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
               View your recent orders and download policy PDFs when available.
             </p>
@@ -128,11 +128,11 @@ export default function PoliciesPage() {
 
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
         {loading ? (
-          <p className="text-sm text-[var(--muted)]">Loading policies...</p>
+          <p className="text-sm text-[var(--muted)]">Loading orders...</p>
         ) : error ? (
           <p className="text-sm text-[var(--muted)]">{error}</p>
         ) : !hasOrders ? (
-          <p className="text-sm text-[var(--muted)]">No policies found for this account yet.</p>
+          <p className="text-sm text-[var(--muted)]">No orders found for this account yet.</p>
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (

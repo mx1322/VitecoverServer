@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const menuItems = [
   { label: "Overview", href: "/account" },
-  { label: "My Policies", href: "/account/policies" },
+  { label: "My Orders", href: "/account/orders" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
   { label: "Documents", href: "/account/documents" },

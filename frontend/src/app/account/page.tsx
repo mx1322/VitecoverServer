@@ -1,13 +1,13 @@
 import { AccountSummaryCard } from "@/components/account/account-summary-card";
 
 const summaryCards = [
-  { label: "Active Policies", value: "2" },
+  { label: "Active Orders", value: "2" },
   { label: "Saved Drivers", value: "3" },
   { label: "Saved Vehicles", value: "4" },
   { label: "Pending Documents", value: "1" },
 ];
 
-const recentPolicies = [
+const recentOrders = [
   {
     product: "Passenger Car",
     status: "Active",
@@ -86,13 +86,13 @@ export default function AccountOverviewPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
         <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-            Recent Policies
+            Recent Orders
           </p>
           <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
             Latest activity
           </h3>
           <div className="mt-6 space-y-4">
-            {recentPolicies.map((item) => (
+            {recentOrders.map((item) => (
               <div
                 key={`${item.product}-${item.status}`}
                 className="flex flex-col gap-3 rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.82)] px-4 py-4 md:flex-row md:items-center md:justify-between"

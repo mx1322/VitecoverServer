@@ -51,7 +51,9 @@ function DocumentStatusBadge({
 
 export default function DocumentsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
+  const [replaceTargetId, setReplaceTargetId] = useState<string | null>(null);
 
   function handleUploadClick() {
     fileInputRef.current?.click();
@@ -77,6 +79,38 @@ export default function DocumentsPage() {
 
     setDocuments((current) => [...nextDocs, ...current]);
     event.target.value = "";
+  }
+
+  function handleReplaceClick(id: string) {
+    setReplaceTargetId(id);
+    replaceInputRef.current?.click();
+  }
+
+  function handleReplaceChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !replaceTargetId) {
+      return;
+    }
+
+    const uploadedAt = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date());
+
+    setDocuments((current) =>
+      current.map((doc) =>
+        doc.id === replaceTargetId
+          ? { ...doc, name: file.name, status: "Uploaded", uploadedAt }
+          : doc,
+      ),
+    );
+    setReplaceTargetId(null);
+    event.target.value = "";
+  }
+
+  function removeDocument(id: string) {
+    setDocuments((current) => current.filter((doc) => doc.id !== id));
   }
 
   const counts = useMemo(
@@ -113,6 +147,12 @@ export default function DocumentsPage() {
               className="hidden"
               onChange={handleFileChange}
             />
+            <input
+              ref={replaceInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleReplaceChange}
+            />
           </div>
         </div>
       </section>
@@ -148,10 +188,16 @@ export default function DocumentsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <DocumentStatusBadge status={doc.status} />
-                <button className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]">
+                <button
+                  onClick={() => handleReplaceClick(doc.id)}
+                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
                   Replace
                 </button>
-                <button className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]">
+                <button
+                  onClick={() => removeDocument(doc.id)}
+                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                >
                   Remove
                 </button>
               </div>

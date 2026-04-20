@@ -785,6 +785,22 @@ async function getPolicyByOrderId(orderId: number): Promise<PolicyRecord | null>
   return payload.data[0] ?? null;
 }
 
+async function getDirectusFileMeta(fileId: string): Promise<DirectusFileRecord> {
+  const payload = await directusRequest<DirectusFileItemResponse>(
+    `/files/${fileId}${buildQuery({ fields: "id,filename_download,type,title" })}`,
+  );
+
+  return payload.data;
+}
+
+async function isPdfAsset(fileId: string): Promise<boolean> {
+  const fileMeta = await getDirectusFileMeta(fileId);
+  const contentType = normalizeText(fileMeta.type).toLowerCase();
+  const filename = normalizeText(fileMeta.filename_download || fileMeta.title).toLowerCase();
+
+  return contentType.includes("pdf") || filename.endsWith(".pdf");
+}
+
 async function getRecordById<T>(
   collection: string,
   id: number,
@@ -803,8 +819,9 @@ async function ensurePolicyPdfForOrder(orderId: number, customerId: number): Pro
     throw new Error("Order not found for this customer.");
   }
 
-  const existingPolicy = await getPolicyByOrderId(order.id);
-  if (normalizeText(existingPolicy?.pdf_file)) {
+  let existingPolicy = await getPolicyByOrderId(order.id);
+  const existingFileId = normalizeText(existingPolicy?.pdf_file);
+  if (existingFileId && (await isPdfAsset(existingFileId))) {
     return false;
   }
 
@@ -849,7 +866,7 @@ async function ensurePolicyPdfForOrder(orderId: number, customerId: number): Pro
   );
 
   if (existingPolicy) {
-    await updateItem<PolicyRecord>("policies", existingPolicy.id, {
+    existingPolicy = await updateItem<PolicyRecord>("policies", existingPolicy.id, {
       pdf_file: pdfFileId,
       pdf_generated_at: new Date().toISOString(),
       document_version: "template-pdf-v1",
@@ -1130,6 +1147,7 @@ export async function getPolicyPdfAssetIdForCustomerOrder(
     return null;
   }
 
+  await ensurePolicyPdfForOrder(orderId, customerId);
   const policy = await getPolicyByOrderId(orderId);
   return normalizeText(policy?.pdf_file) || null;
 }
@@ -1140,7 +1158,7 @@ export async function fetchDirectusAssetFile(fileId: string): Promise<{
   filename: string;
 }> {
   const [fileMeta, token] = await Promise.all([
-    directusRequest<DirectusFileItemResponse>(`/files/${fileId}${buildQuery({ fields: "id,filename_download,type,title" })}`),
+    getDirectusFileMeta(fileId),
     getDirectusAccessToken(),
   ]);
 
@@ -1157,10 +1175,10 @@ export async function fetchDirectusAssetFile(fileId: string): Promise<{
 
   return {
     bytes: await response.arrayBuffer(),
-    contentType: response.headers.get("content-type") || fileMeta.data.type || "application/pdf",
+    contentType: response.headers.get("content-type") || fileMeta.type || "application/pdf",
     filename:
-      normalizeText(fileMeta.data.filename_download) ||
-      normalizeText(fileMeta.data.title) ||
+      normalizeText(fileMeta.filename_download) ||
+      normalizeText(fileMeta.title) ||
       `${fileId}.pdf`,
   };
 }
