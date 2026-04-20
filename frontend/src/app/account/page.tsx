@@ -4,7 +4,6 @@ const summaryCards = [
   { label: "Active Orders", value: "2" },
   { label: "Saved Drivers", value: "3" },
   { label: "Saved Vehicles", value: "4" },
-  { label: "Pending Documents", value: "1" },
 ];
 
 const recentOrders = [
@@ -29,7 +28,6 @@ const quickActions = [
   "Start new quote",
   "Add a new driver",
   "Add a new vehicle",
-  "Upload supporting documents",
 ];
 
 function StatusBadge({ status }: { status: string }) {
@@ -61,7 +59,7 @@ export default function AccountOverviewPage() {
               Welcome back
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Manage policies, drivers, vehicles and supporting documents from one place.
+              Manage orders, drivers, vehicles and account settings from one place.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

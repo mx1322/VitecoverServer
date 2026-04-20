@@ -8,7 +8,6 @@ const menuItems = [
   { label: "My Orders", href: "/account/orders" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
-  { label: "Documents", href: "/account/documents" },
   { label: "Account Settings", href: "/account/settings" },
 ];
 
