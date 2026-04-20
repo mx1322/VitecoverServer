@@ -1,3 +1,5 @@
+import { AccountSummaryCard } from "@/components/account/account-summary-card";
+
 const summaryCards = [
   { label: "Active Policies", value: "2" },
   { label: "Saved Drivers", value: "3" },
@@ -24,10 +26,10 @@ const recentPolicies = [
 ];
 
 const quickActions = [
+  "Start new quote",
   "Add a new driver",
   "Add a new vehicle",
   "Upload supporting documents",
-  "Start a new quote",
 ];
 
 function StatusBadge({ status }: { status: string }) {
@@ -63,30 +65,21 @@ export default function AccountOverviewPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button className="rounded-full border border-[rgba(22,36,58,0.08)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]">
-              Start new quote
-            </button>
-            <button className="rounded-full border border-[rgba(22,36,58,0.08)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]">
-              Add driver
-            </button>
-            <button className="rounded-full border border-[rgba(22,36,58,0.08)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]">
-              Add vehicle
-            </button>
+            {quickActions.slice(0, 3).map((action) => (
+              <button
+                key={action}
+                className="rounded-full border border-[rgba(22,36,58,0.08)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+              >
+                {action}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
-          <article
-            key={card.label}
-            className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]"
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-              {card.label}
-            </p>
-            <p className="mt-4 text-4xl font-semibold tracking-tight text-[var(--ink)]">{card.value}</p>
-          </article>
+          <AccountSummaryCard key={card.label} label={card.label} value={card.value} />
         ))}
       </section>
 

@@ -29,11 +29,9 @@ export function AccountSidebar() {
           <p className="mt-1 text-sm font-medium text-[var(--ink)]">max@example.com</p>
         </div>
       </div>
-
       <nav className="mt-4 space-y-2">
         {menuItems.map((item) => {
           const active = pathname === item.href;
-
           return (
             <Link
               key={item.href}
