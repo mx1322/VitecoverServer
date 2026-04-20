@@ -1539,7 +1539,11 @@ export async function deleteWorkspaceVehicle(
     throw new Error("No account was found for this email.");
   }
 
-  await getVehicleByIdForCustomer(customer.id, vehicleId);
+  const vehicle = await getVehicleByIdForCustomer(customer.id, vehicleId);
+  if (vehicle.is_verified) {
+    throw new Error("Approved vehicles cannot be deleted from the customer portal.");
+  }
+
   await softDeleteItem("vehicles", vehicleId);
   return buildCustomerWorkspace(customer);
 }

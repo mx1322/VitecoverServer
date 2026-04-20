@@ -49,6 +49,11 @@ function StatusBadge({ status }: { status?: string | null }) {
   return <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${className}`}>{status || "Unknown"}</span>;
 }
 
+function isCompletedOrder(order: AccountOrder): boolean {
+  const status = (order.status || "").toLowerCase();
+  return ["approved", "issued"].includes(status) && Boolean(order.paidAt);
+}
+
 export default function PoliciesPage() {
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,12 +155,16 @@ export default function PoliciesPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <StatusBadge status={order.status} />
-                  <a
-                    href={`/api/account/orders/${order.id}/pdf`}
-                    className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-                  >
-                    Download PDF
-                  </a>
+                  {isCompletedOrder(order) ? (
+                    <a
+                      href={`/api/account/orders/${order.id}/pdf`}
+                      className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                    >
+                      Download PDF
+                    </a>
+                  ) : (
+                    <span className="text-sm text-[var(--muted)]">PDF available after completion</span>
+                  )}
                 </div>
               </div>
             ))}
