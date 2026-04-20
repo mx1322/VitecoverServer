@@ -1584,7 +1584,11 @@ export async function deleteWorkspaceDriver(
     throw new Error("No account was found for this email.");
   }
 
-  await getDriverByIdForCustomer(customer.id, driverId);
+  const driver = await getDriverByIdForCustomer(customer.id, driverId);
+  if (driver.is_verified) {
+    throw new Error("Approved drivers cannot be deleted from the customer portal.");
+  }
+
   await softDeleteItem("drivers", driverId);
   return buildCustomerWorkspace(customer);
 }
