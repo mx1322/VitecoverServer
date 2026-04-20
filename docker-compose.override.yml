@@ -64,6 +64,7 @@ services:
 
   nginx:
     container_name: vitecover_edge
+    restart: unless-stopped
     depends_on:
       frontend:
         condition: service_started

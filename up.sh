@@ -107,14 +107,8 @@ ensure_not_template_copy "$ENV_FILE" "$ENV_TEMPLATE"
 ensure_required_values_set "$ENV_FILE"
 ensure_minio_password_not_default "$ENV_FILE"
 
-remove_conflicting_named_containers() {
+remove_legacy_named_containers() {
   local names=(
-    "vitecover_minio"
-    "vitecover_directus"
-    "vitecover_frontend"
-    "vitecover_edge"
-    "directus_postgres"
-    "directus_redis"
     "directus_app"
     "directus_nginx"
   )
@@ -126,7 +120,7 @@ remove_conflicting_named_containers() {
   done
 }
 
-remove_conflicting_named_containers
+remove_legacy_named_containers
 docker compose --env-file "$ENV_FILE" -f backend/docker-compose.yml -f docker-compose.override.yml up -d --build
 ensure_minio_bucket_exists "$ENV_FILE"
 docker compose --env-file "$ENV_FILE" -f backend/docker-compose.yml -f docker-compose.override.yml ps
