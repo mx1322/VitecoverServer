@@ -76,37 +76,37 @@ const stepDetails: Record<
   price: {
     title: "Choose the product and cover window",
     description:
-      "Choose the temporary automobile product, the duration, and the start hour. The customer should clearly see the premium, the cover start, and the cover end before moving forward.",
+      "Select product, duration, and start hour. We immediately show premium, start, and end times.",
     next: ["Vehicle", "Driver", "Overview"],
   },
   vehicle: {
     title: "Confirm the customer and vehicle",
     description:
-      "Before any vehicle can be selected, the customer must sign in with the account module. Once authenticated, the page opens the saved vehicles or the new vehicle form.",
+      "Sign in, then pick a saved vehicle or add a new one.",
     next: ["Driver", "Overview", "Review"],
   },
   driver: {
     title: "Confirm the driver",
     description:
-      "This step is only about the driver. Once the driver is confirmed, the customer can continue directly to overview.",
+      "Pick a saved driver or add one new driver.",
     next: ["Overview", "Review", "Covered"],
   },
   payment: {
     title: "Overview",
     description:
-      "Review the order recap before confirming local payment for the demo flow.",
+      "Check the recap and confirm payment.",
     next: ["Review", "Covered"],
   },
   review: {
     title: "Manual review",
     description:
-      "This insurance product requires a human review before coverage. In the local demo, the review is still approved automatically after payment.",
+      "Some products require a short manual check before coverage starts.",
     next: ["Covered"],
   },
   success: {
     title: "Covered",
     description:
-      "The order is approved. Contract delivery by email is the next milestone, and the customer can already go to Orders to review the record.",
+      "Order approved. Your policy is sent by email and stored in your history.",
     next: [],
   },
 };

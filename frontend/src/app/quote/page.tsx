@@ -1,4 +1,6 @@
+import { FaqLinkPanel } from "@/components/faq-link-panel";
 import { QuoteForm } from "@/components/quote-form";
+import { getFaqByTag } from "@/lib/faq";
 import type { QuoteProductOption } from "@/lib/directus-admin";
 
 const initialProducts: QuoteProductOption[] = [
@@ -53,16 +55,22 @@ export default async function QuotePage({
   return (
     <main className="section-wrap py-16">
       <p className="eyebrow">Temporary auto checkout</p>
-      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">
-        Build the temporary insurance order one step at a time.
-      </h1>
+      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">Get insured in 4 simple steps.</h1>
       <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">
-        We start with the cover and the tariff, then move through the vehicle, driver, payment,
-        review, and final order success state.
+        Choose product and duration, fill in vehicle and driver details, confirm payment, then
+        receive your policy by email after review.
       </p>
 
       <div className="mt-10">
         <QuoteForm products={initialProducts} initialProductCode={initialProductCode} />
+      </div>
+
+      <div className="mt-10">
+        <FaqLinkPanel
+          title="Need help before payment?"
+          intro="Use these quick answers to avoid drop-off during checkout and find full details when needed."
+          items={getFaqByTag("quote").slice(0, 3)}
+        />
       </div>
     </main>
   );
