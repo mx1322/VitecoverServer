@@ -7,11 +7,13 @@ export const siteConfig = {
     { href: "/#products", label: "Product" },
     { href: "/auth", label: "Account" },
     { href: "/quote", label: "Quote" },
+    { href: "/faq", label: "FAQ" },
   ],
   footerLinks: [
     { href: "/#products", label: "Product" },
     { href: "/auth", label: "Account" },
     { href: "/quote", label: "Quote" },
+    { href: "/faq", label: "FAQ" },
     { href: "/terms", label: "Terms & Conditions" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/contact", label: "Contact" },

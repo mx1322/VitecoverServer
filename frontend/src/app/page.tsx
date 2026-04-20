@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { FaqLinkPanel } from "@/components/faq-link-panel";
+import { getFaqByTag } from "@/lib/faq";
 import { getHomeProductCards } from "@/lib/home-product-cards";
 
 export default async function HomePage() {
@@ -130,6 +132,16 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+
+
+      <section className="section-wrap pb-16 md:pb-24">
+        <FaqLinkPanel
+          title="Common questions before you order"
+          intro="To reduce friction, we keep key answers short and link directly to the right FAQ entries."
+          items={getFaqByTag("home").slice(0, 3)}
+        />
       </section>
 
       <section className="section-wrap pb-16 md:pb-24">
