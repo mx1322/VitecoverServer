@@ -7,7 +7,6 @@ import { LogoutButton } from "@/components/account/logout-button";
 
 const menuItems = [
   { label: "Overview", href: "/account" },
-  { label: "My Orders", href: "/account/orders" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
   { label: "Account Settings", href: "/account/settings" },

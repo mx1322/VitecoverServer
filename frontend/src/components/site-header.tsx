@@ -35,15 +35,6 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
-
-        <div className="hidden items-center gap-4 md:flex">
-          <Link
-            href="/quote"
-            className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_12px_28px_rgba(255,179,71,0.2)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_34px_rgba(255,179,71,0.28)]"
-          >
-            Start Quote
-          </Link>
-        </div>
       </div>
     </header>
   );

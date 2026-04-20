@@ -4,14 +4,14 @@ export const siteConfig = {
     "Temporary auto insurance products with an online quote, payment, and policy delivery flow.",
   supportEmail: "support@vitecover.example",
   navigation: [
-    { href: "/#products", label: "Products" },
-    { href: "/policies", label: "My Policies" },
+    { href: "/#products", label: "Product" },
     { href: "/auth", label: "Account" },
+    { href: "/quote", label: "Quote" },
   ],
   footerLinks: [
-    { href: "/#products", label: "Products" },
-    { href: "/policies", label: "My Policies" },
+    { href: "/#products", label: "Product" },
     { href: "/auth", label: "Account" },
+    { href: "/quote", label: "Quote" },
     { href: "/terms", label: "Terms & Conditions" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/contact", label: "Contact" },
