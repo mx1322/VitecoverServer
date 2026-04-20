@@ -1643,6 +1643,13 @@ export async function setWorkspaceItemVerification(
   });
 }
 
+export async function archiveWorkspaceItem(
+  kind: "vehicle" | "driver",
+  id: number,
+): Promise<void> {
+  await softDeleteItem(kind === "vehicle" ? "vehicles" : "drivers", id);
+}
+
 async function getCurrentAdminUserId(): Promise<string | null> {
   try {
     const payload = await directusRequest<DirectusItemResponse<DirectusUserRecord>>(

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { setWorkspaceItemVerification } from "@/lib/directus-admin";
+import {
+  archiveWorkspaceItem,
+  setWorkspaceItemVerification,
+} from "@/lib/directus-admin";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -63,6 +66,31 @@ export async function PATCH(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to update the review state.";
+
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    ensureAdminAccess(request);
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const kind = requireString(body.kind, "kind");
+    const id = requirePositiveInteger(body.id, "id");
+
+    if (kind !== "vehicle" && kind !== "driver") {
+      throw new Error("Unsupported workspace item type.");
+    }
+
+    await archiveWorkspaceItem(kind, id);
+
+    return NextResponse.json({
+      ok: true,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to archive this workspace item.";
 
     return NextResponse.json({ error: message }, { status: 400 });
   }
