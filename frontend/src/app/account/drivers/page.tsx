@@ -9,11 +9,25 @@ type Driver = {
   dob: string;
   licence: string;
   status: "approved" | "under_review";
+  licenseFrontFileName?: string;
+  licenseBackFileName?: string;
+  identityFrontFileName?: string;
+  identityBackFileName?: string;
 };
 
 const initialDrivers: Driver[] = [
-  { id: "1", name: "Maxime Bai", dob: "01 Jan 1988", licence: "FR-XXXX-1234", status: "under_review" },
-  { id: "2", name: "Alex Martin", dob: "18 Apr 1991", licence: "FR-XXXX-5678", status: "approved" },
+  {
+    id: "1",
+    name: "Maxime Bai",
+    dob: "01 Jan 1988",
+    licence: "FR-XXXX-1234",
+    status: "under_review",
+    licenseFrontFileName: "licence-front.jpg",
+    licenseBackFileName: "licence-back.jpg",
+    identityFrontFileName: "passport-front.jpg",
+    identityBackFileName: "passport-back.jpg",
+  },
+  { id: "2", name: "Alex Martin", dob: "18 Apr 1991", licence: "FR-XXXX-5678", status: "approved", licenseFrontFileName: "alex-licence-front.png", licenseBackFileName: "alex-licence-back.png", identityFrontFileName: "alex-id-front.png", identityBackFileName: "alex-id-back.png" },
 ];
 
 const emptyDriver: Driver = {
@@ -22,6 +36,10 @@ const emptyDriver: Driver = {
   dob: "",
   licence: "",
   status: "under_review",
+  licenseFrontFileName: "",
+  licenseBackFileName: "",
+  identityFrontFileName: "",
+  identityBackFileName: "",
 };
 
 function DriverStatusBadge({ status }: { status: Driver["status"] }) {
@@ -40,18 +58,35 @@ function DriverStatusBadge({ status }: { status: Driver["status"] }) {
   );
 }
 
+function hasAllDriverDocs(driver: Driver): boolean {
+  return Boolean(
+    driver.licenseFrontFileName?.trim() &&
+      driver.licenseBackFileName?.trim() &&
+      driver.identityFrontFileName?.trim() &&
+      driver.identityBackFileName?.trim(),
+  );
+}
+
 export default function DriversPage() {
   const [drivers, setDrivers] = useState(initialDrivers);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyDriver);
+  const [message, setMessage] = useState<string>("");
 
   function startEdit(driver?: Driver) {
     setEditingId(driver?.id || "new");
     setForm(driver || emptyDriver);
+    setMessage("");
   }
 
   function saveDriver(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!hasAllDriverDocs(form)) {
+      setMessage("请上传驾照正反面 + 身份证/护照正反面后再提交。\n");
+      return;
+    }
+
     const nextDriver = {
       ...form,
       id: form.id || `driver-${Date.now()}`,
@@ -62,10 +97,19 @@ export default function DriversPage() {
     );
     setEditingId(null);
     setForm(emptyDriver);
+    setMessage("");
   }
 
   function removeDriver(id: string) {
+    const target = drivers.find((driver) => driver.id === id);
+
+    if (target?.status === "approved") {
+      setMessage("驾驶员资料已确认，不能在当前界面删除。请联系管理员后台处理。");
+      return;
+    }
+
     setDrivers((current) => current.filter((driver) => driver.id !== id));
+    setMessage("");
   }
 
   const isAdding = editingId === "new";
@@ -78,7 +122,7 @@ export default function DriversPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Drivers</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Drivers</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Save driver profiles to speed up future orders.
+              请上传驾驶员证件：驾照正反面，以及身份证或护照正反面。
             </p>
           </div>
           <button
@@ -89,6 +133,10 @@ export default function DriversPage() {
           </button>
         </div>
       </section>
+
+      {message ? (
+        <p className="rounded-2xl border border-[rgba(234,111,81,0.2)] bg-[rgba(234,111,81,0.08)] px-4 py-3 text-sm text-[var(--danger)]">{message}</p>
+      ) : null}
 
       <section className="space-y-4">
         {isAdding ? (
@@ -124,6 +172,7 @@ export default function DriversPage() {
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
                     <span>Date of birth: {driver.dob}</span>
                     <span>Licence: {driver.licence}</span>
+                    <span>资料: {hasAllDriverDocs(driver) ? "已上传" : "未完整上传"}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -163,7 +212,7 @@ function DriverForm({
   onCancel: () => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-3">
+    <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
       <label className="text-sm font-medium text-[var(--ink)]">
         Name
         <input
@@ -182,7 +231,7 @@ function DriverForm({
           className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
         />
       </label>
-      <label className="text-sm font-medium text-[var(--ink)]">
+      <label className="text-sm font-medium text-[var(--ink)] md:col-span-2">
         Licence
         <input
           required
@@ -191,7 +240,23 @@ function DriverForm({
           className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
         />
       </label>
-      <div className="flex gap-3 md:col-span-3">
+      <DocumentUpload
+        label="驾照正面"
+        onSelect={(name) => onChange((current) => ({ ...current, licenseFrontFileName: name }))}
+      />
+      <DocumentUpload
+        label="驾照反面"
+        onSelect={(name) => onChange((current) => ({ ...current, licenseBackFileName: name }))}
+      />
+      <DocumentUpload
+        label="身份证/护照正面"
+        onSelect={(name) => onChange((current) => ({ ...current, identityFrontFileName: name }))}
+      />
+      <DocumentUpload
+        label="身份证/护照反面"
+        onSelect={(name) => onChange((current) => ({ ...current, identityBackFileName: name }))}
+      />
+      <div className="flex gap-3 md:col-span-2">
         <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">
           Save driver
         </button>
@@ -204,5 +269,20 @@ function DriverForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function DocumentUpload({ label, onSelect }: { label: string; onSelect: (filename: string) => void }) {
+  return (
+    <label className="text-sm font-medium text-[var(--ink)]">
+      {label}
+      <input
+        required
+        type="file"
+        accept="image/*,.pdf"
+        onChange={(event) => onSelect(event.target.files?.[0]?.name || "")}
+        className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
+      />
+    </label>
   );
 }

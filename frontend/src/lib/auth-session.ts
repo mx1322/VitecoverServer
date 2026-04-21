@@ -2,11 +2,14 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { cookies } from "next/headers";
 
+export type AccountRole = "customer" | "product_manager" | "admin";
+
 export interface AuthSession {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
   email: string;
+  role?: AccountRole;
 }
 
 const sessionCookieName = "vitecover-auth-session";
