@@ -76,6 +76,11 @@ export default function ManagerOrdersPage() {
           return order;
         }
 
+        if ((order.vehicleVerified || order.driverVerified) && patch.reviewStatus !== undefined) {
+          setMessage("资料已确认的订单审核状态已锁定，需管理员后台更改。");
+          return order;
+        }
+
         const next = { ...order, ...patch };
 
         if (next.reviewStatus === "pending_confirmation" && next.paymentStatus !== "paid") {
@@ -142,8 +147,9 @@ export default function ManagerOrdersPage() {
                 审核状态
                 <select
                   value={order.reviewStatus}
+                  disabled={locked}
                   onChange={(event) => updateOrder(order.id, { reviewStatus: event.target.value as ManagerOrder["reviewStatus"] })}
-                  className="mt-2 w-full rounded-xl border px-3 py-2 text-sm"
+                  className="mt-2 w-full rounded-xl border px-3 py-2 text-sm disabled:bg-[rgba(235,235,235,0.6)]"
                 >
                   <option value="pending_confirmation">pending_confirmation</option>
                   <option value="approved">approved</option>
@@ -154,8 +160,9 @@ export default function ManagerOrdersPage() {
 
             <div className="mt-4 flex flex-wrap gap-3">
               <button
+                disabled={locked}
                 onClick={() => updateOrder(order.id, { reviewStatus: "cancelled" })}
-                className="rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm"
+                className="rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[rgba(235,235,235,0.6)] disabled:text-[var(--muted)]"
               >
                 取消订单
               </button>

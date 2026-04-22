@@ -242,18 +242,22 @@ function DriverForm({
       </label>
       <DocumentUpload
         label="驾照正面"
+        existingFileName={form.licenseFrontFileName}
         onSelect={(name) => onChange((current) => ({ ...current, licenseFrontFileName: name }))}
       />
       <DocumentUpload
         label="驾照反面"
+        existingFileName={form.licenseBackFileName}
         onSelect={(name) => onChange((current) => ({ ...current, licenseBackFileName: name }))}
       />
       <DocumentUpload
         label="身份证/护照正面"
+        existingFileName={form.identityFrontFileName}
         onSelect={(name) => onChange((current) => ({ ...current, identityFrontFileName: name }))}
       />
       <DocumentUpload
         label="身份证/护照反面"
+        existingFileName={form.identityBackFileName}
         onSelect={(name) => onChange((current) => ({ ...current, identityBackFileName: name }))}
       />
       <div className="flex gap-3 md:col-span-2">
@@ -272,17 +276,28 @@ function DriverForm({
   );
 }
 
-function DocumentUpload({ label, onSelect }: { label: string; onSelect: (filename: string) => void }) {
+function DocumentUpload({
+  label,
+  existingFileName,
+  onSelect,
+}: {
+  label: string;
+  existingFileName?: string;
+  onSelect: (filename: string) => void;
+}) {
+  const hasExistingFile = Boolean(existingFileName?.trim());
+
   return (
     <label className="text-sm font-medium text-[var(--ink)]">
       {label}
       <input
-        required
+        required={!hasExistingFile}
         type="file"
         accept="image/*,.pdf"
-        onChange={(event) => onSelect(event.target.files?.[0]?.name || "")}
+        onChange={(event) => onSelect(event.target.files?.[0]?.name || existingFileName || "")}
         className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
       />
+      {hasExistingFile ? <p className="mt-1 text-xs text-[var(--muted)]">已上传：{existingFileName}</p> : null}
     </label>
   );
 }
