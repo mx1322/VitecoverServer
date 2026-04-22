@@ -19,8 +19,10 @@ type SessionResponse = {
 
 const customerMenuItems = [
   { label: "Overview", href: "/account" },
+  { label: "My Policies", href: "/account/policies" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
+  { label: "Documents", href: "/account/documents" },
   { label: "Account Settings", href: "/account/settings" },
 ];
 
@@ -28,10 +30,20 @@ const managerMenuItems = [
   { label: "Overview", href: "/account" },
   { label: "用户资料审核", href: "/account/manager" },
   { label: "订单管理", href: "/account/manager/orders" },
+  { label: "My Policies", href: "/account/policies" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
+  { label: "Documents", href: "/account/documents" },
   { label: "Account Settings", href: "/account/settings" },
 ];
+
+function isActivePath(pathname: string, href: string) {
+  if (href === "/account") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AccountSidebar() {
   const pathname = usePathname();
@@ -93,7 +105,7 @@ export function AccountSidebar() {
       </div>
       <nav className="mt-4 space-y-2">
         {menuItems.map((item) => {
-          const active = pathname === item.href;
+          const active = isActivePath(pathname, item.href);
           return (
             <Link
               key={item.href}
