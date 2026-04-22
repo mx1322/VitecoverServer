@@ -67,6 +67,13 @@ function normalizeText(value?: string | null): string {
   return value?.trim() ?? "";
 }
 
+function normalizeRoleToken(value?: string | null): string {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 async function directusPublicRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${directusInternalUrl}${path}`, {
     ...init,
@@ -209,13 +216,36 @@ export async function getValidAuthSession(): Promise<AuthSession | null> {
 }
 
 function resolveAccountRoleFromUser(user: DirectusUserRecord): AccountRole {
-  const roleName = normalizeText(user.role?.name).toLowerCase();
+  const roleName = normalizeRoleToken(user.role?.name);
+  const roleId = normalizeRoleToken(user.role?.id);
 
-  if (["admin", "administrator", "super admin", "superadmin"].includes(roleName)) {
+  if (
+    ["admin", "administrator", "super_admin", "superadmin"].includes(roleName) ||
+    ["admin", "administrator", "super_admin", "superadmin"].includes(roleId)
+  ) {
     return "admin";
   }
 
-  if (["product_manager", "product manager", "manager", "pm"].includes(roleName)) {
+  if (
+    [
+      "product_manager",
+      "product_managers",
+      "manager",
+      "managers",
+      "pm",
+      "review_manager",
+      "account_manager",
+    ].includes(roleName) ||
+    [
+      "product_manager",
+      "product_managers",
+      "manager",
+      "managers",
+      "pm",
+      "review_manager",
+      "account_manager",
+    ].includes(roleId)
+  ) {
     return "product_manager";
   }
 

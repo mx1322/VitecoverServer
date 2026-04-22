@@ -45,7 +45,7 @@ function isActivePath(pathname: string, href: string) {
 export function AccountSidebar() {
   const pathname = usePathname();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<AccountRole>("customer");
+  const [role, setRole] = useState<AccountRole | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +69,7 @@ export function AccountSidebar() {
           setRole(nextRole);
         }
       } catch {
-        // Keep default fallback for demo mode.
+        setRole("customer");
       }
     }
 
@@ -91,7 +91,7 @@ export function AccountSidebar() {
           <p className="text-sm text-[var(--muted)]">Welcome back</p>
           <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email || "Signed in"}</p>
           <p className="mt-1 text-xs font-medium text-[var(--muted)]">
-            Role: {role === "product_manager" ? "Product Manager" : role === "admin" ? "Admin" : "Customer"}
+            Role: {role === null ? "Loading..." : role === "product_manager" ? "Product Manager" : role === "admin" ? "Admin" : "Customer"}
           </p>
         </div>
       </div>
