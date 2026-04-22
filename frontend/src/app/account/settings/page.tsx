@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type SettingsState = {
   email: string;
@@ -11,7 +11,7 @@ type SettingsState = {
 };
 
 const initialSettings: SettingsState = {
-  email: "max@example.com",
+  email: "",
   password: "••••••••••••",
   phone: "+33 6 00 00 00 00",
   address: "Paris, France",
@@ -29,7 +29,32 @@ export default function SettingsPage() {
   const [editingKey, setEditingKey] = useState<keyof SettingsState | null>(null);
   const [draftValue, setDraftValue] = useState("");
 
+  useEffect(() => {
+    async function loadSessionEmail() {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          authenticated?: boolean;
+          account?: { user?: { email?: string } };
+        };
+        const nextEmail = payload.account?.user?.email?.trim();
+
+        if (payload.authenticated && nextEmail) {
+          setSettings((current) => ({ ...current, email: nextEmail }));
+        }
+      } catch {
+        // Keep local fallback.
+      }
+    }
+
+    loadSessionEmail();
+  }, []);
+
   function startEdit(key: keyof SettingsState) {
+    if (key === "email") {
+      return;
+    }
+
     setEditingKey(key);
     setDraftValue(settings[key]);
   }
@@ -90,13 +115,16 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm text-[var(--muted)]">{labels[key]}</p>
-                  <p className="mt-1 font-semibold text-[var(--ink)]">{settings[key]}</p>
+                  <p className="mt-1 font-semibold text-[var(--ink)]">
+                    {key === "email" ? settings[key] || "Signed in" : settings[key]}
+                  </p>
                 </div>
                 <button
+                  disabled={key === "email"}
                   onClick={() => startEdit(key)}
-                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
+                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)] disabled:cursor-not-allowed disabled:bg-[rgba(235,235,235,0.6)] disabled:text-[var(--muted)]"
                 >
-                  Edit
+                  {key === "email" ? "Locked" : "Edit"}
                 </button>
               </div>
             )}

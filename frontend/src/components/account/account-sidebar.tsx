@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LogoutButton } from "@/components/account/logout-button";
 import type { AccountRole } from "@/lib/auth-session";
@@ -17,23 +17,11 @@ type SessionResponse = {
   } | null;
 };
 
-const customerMenuItems = [
+const menuItems = [
   { label: "Overview", href: "/account" },
-  { label: "My Policies", href: "/account/policies" },
+  { label: "Orders", href: "/account/orders" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
-  { label: "Documents", href: "/account/documents" },
-  { label: "Account Settings", href: "/account/settings" },
-];
-
-const managerMenuItems = [
-  { label: "Overview", href: "/account" },
-  { label: "用户资料审核", href: "/account/manager" },
-  { label: "订单管理", href: "/account/manager/orders" },
-  { label: "My Policies", href: "/account/policies" },
-  { label: "Drivers", href: "/account/drivers" },
-  { label: "Vehicles", href: "/account/vehicles" },
-  { label: "Documents", href: "/account/documents" },
   { label: "Account Settings", href: "/account/settings" },
 ];
 
@@ -47,7 +35,7 @@ function isActivePath(pathname: string, href: string) {
 
 export function AccountSidebar() {
   const pathname = usePathname();
-  const [email, setEmail] = useState("max@example.com");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState<AccountRole>("customer");
 
   useEffect(() => {
@@ -83,11 +71,6 @@ export function AccountSidebar() {
     };
   }, []);
 
-  const menuItems = useMemo(
-    () => (role === "product_manager" || role === "admin" ? managerMenuItems : customerMenuItems),
-    [role],
-  );
-
   return (
     <aside className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
       <div className="border-b border-[rgba(22,36,58,0.08)] pb-4">
@@ -97,9 +80,9 @@ export function AccountSidebar() {
         <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">My Account</h1>
         <div className="mt-5 rounded-[22px] bg-[rgba(250,246,240,1)] px-4 py-4">
           <p className="text-sm text-[var(--muted)]">Welcome back</p>
-          <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email}</p>
+          <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email || "Signed in"}</p>
           <p className="mt-1 text-xs font-medium text-[var(--muted)]">
-            当前身份：{role === "product_manager" ? "产品经理" : role === "admin" ? "管理员" : "普通用户"}
+            Role: {role === "product_manager" ? "Product Manager" : role === "admin" ? "Admin" : "Customer"}
           </p>
         </div>
       </div>
