@@ -52,9 +52,14 @@ export function AccountSidebar() {
 
     async function loadSession() {
       try {
-        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const response = await fetch("/api/auth/session?scope=identity", { cache: "no-store" });
         const payload = (await response.json()) as SessionResponse;
-        if (cancelled || !payload.authenticated) {
+        if (cancelled) {
+          return;
+        }
+
+        if (!payload.authenticated) {
+          setRole("customer");
           return;
         }
 

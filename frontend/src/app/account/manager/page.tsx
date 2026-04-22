@@ -41,7 +41,7 @@ export default function ManagerWorkspaceReviewPage() {
   useEffect(() => {
     async function loadSession() {
       try {
-        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const response = await fetch("/api/auth/session?scope=identity", { cache: "no-store" });
         const payload = (await response.json()) as {
           account?: { user?: { role?: AccountRole } };
         };

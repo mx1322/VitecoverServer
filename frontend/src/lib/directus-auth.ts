@@ -47,6 +47,10 @@ export interface AuthenticatedAccount {
   recentOrders: CustomerWorkspace["recentOrders"];
 }
 
+export interface AuthenticatedIdentity {
+  user: AuthenticatedAccount["user"];
+}
+
 const directusInternalUrl =
   process.env.DIRECTUS_INTERNAL_URL?.replace(/\/$/, "") ??
   process.env.NEXT_PUBLIC_DIRECTUS_URL?.replace(/\/$/, "") ??
@@ -300,6 +304,40 @@ export async function getAuthenticatedAccount(): Promise<AuthenticatedAccount | 
   });
 
   return mapAuthenticatedAccount(user, workspace);
+}
+
+export async function getAuthenticatedIdentity(): Promise<AuthenticatedIdentity | null> {
+  const session = await getValidAuthSession();
+  if (!session) {
+    return null;
+  }
+
+  const user = await getDirectusUser(session.accessToken);
+  const role = resolveAccountRoleFromUser(user);
+
+  if (session.role !== role || session.email !== user.email) {
+    await writeAuthSession(mapSession(
+      {
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken,
+        expires: Math.max(session.expiresAt - Date.now(), 0),
+      },
+      user.email,
+      role,
+    ));
+  }
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: normalizeText(user.first_name),
+      lastName: normalizeText(user.last_name),
+      status: normalizeText(user.status) || "draft",
+      isEmailVerified: (normalizeText(user.status) || "draft") === "active",
+      role,
+    },
+  };
 }
 
 export async function logoutDirectusAccount(): Promise<void> {
