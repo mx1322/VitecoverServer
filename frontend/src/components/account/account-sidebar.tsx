@@ -17,8 +17,17 @@ type SessionResponse = {
   } | null;
 };
 
-const menuItems = [
+const customerMenuItems = [
   { label: "Overview", href: "/account" },
+  { label: "Orders", href: "/account/orders" },
+  { label: "Drivers", href: "/account/drivers" },
+  { label: "Vehicles", href: "/account/vehicles" },
+  { label: "Account Settings", href: "/account/settings" },
+];
+
+const managerMenuItems = [
+  { label: "Overview", href: "/account" },
+  { label: "Approvals", href: "/account/manager" },
   { label: "Orders", href: "/account/orders" },
   { label: "Drivers", href: "/account/drivers" },
   { label: "Vehicles", href: "/account/vehicles" },
@@ -87,7 +96,7 @@ export function AccountSidebar() {
         </div>
       </div>
       <nav className="mt-4 space-y-2">
-        {menuItems.map((item) => {
+        {(role === "product_manager" || role === "admin" ? managerMenuItems : customerMenuItems).map((item) => {
           const active = isActivePath(pathname, item.href);
           return (
             <Link

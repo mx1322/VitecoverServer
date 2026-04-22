@@ -222,6 +222,15 @@ export interface CustomerWorkspaceOrder {
   contractFileUrl?: string;
 }
 
+export interface WorkspaceReviewItem {
+  id: number;
+  kind: "vehicle" | "driver";
+  ownerEmail: string;
+  title: string;
+  detail: string;
+  isVerified: boolean;
+}
+
 export interface CustomerWorkspace {
   customer: {
     id: number;
@@ -1070,6 +1079,83 @@ async function getDriversByCustomerId(customerId: number): Promise<CustomerWorks
   return payload.data
     .filter((item) => item.is_active !== false)
     .map(mapDriverRecord);
+}
+
+async function getCustomersByIds(customerIds: number[]): Promise<Map<number, CustomerRecord>> {
+  if (customerIds.length === 0) {
+    return new Map();
+  }
+
+  const payload = await directusRequest<DirectusCollectionResponse<CustomerRecord>>(
+    `/items/customers${buildQuery({
+      fields: "id,email,first_name,last_name,phone,account_status,customer_type,preferred_language,directus_user",
+      "filter[id][_in]": customerIds.join(","),
+      limit: "100",
+    })}`,
+  );
+
+  return new Map(payload.data.map((customer) => [customer.id, customer]));
+}
+
+export async function listWorkspaceReviewItems(): Promise<WorkspaceReviewItem[]> {
+  const [vehiclesPayload, driversPayload] = await Promise.all([
+    directusRequest<DirectusCollectionResponse<VehicleRecord>>(
+      `/items/vehicles${buildQuery({
+        fields: "id,customer,registration_number,manufacturer,model,fiscal_power,vehicle_category,usage_type,is_active,is_verified",
+        "filter[is_active][_neq]": "false",
+        sort: "-id",
+        limit: "100",
+      })}`,
+    ),
+    directusRequest<DirectusCollectionResponse<DriverRecord>>(
+      `/items/drivers${buildQuery({
+        fields: "id,customer,first_name,last_name,birthday,email,phone,license_number,license_country_code,license_issue_date,is_active,is_verified",
+        "filter[is_active][_neq]": "false",
+        sort: "-id",
+        limit: "100",
+      })}`,
+    ),
+  ]);
+
+  const vehicles = vehiclesPayload.data.filter((vehicle) => !vehicle.is_verified);
+  const drivers = driversPayload.data.filter((driver) => !driver.is_verified);
+  const customerIds = Array.from(
+    new Set([...vehicles.map((vehicle) => vehicle.customer), ...drivers.map((driver) => driver.customer)]),
+  );
+  const customersById = await getCustomersByIds(customerIds);
+
+  return [
+    ...vehicles.map((vehicle): WorkspaceReviewItem => {
+      const customer = customersById.get(vehicle.customer);
+      const model = [normalizeText(vehicle.manufacturer), normalizeText(vehicle.model)]
+        .filter(Boolean)
+        .join(" ");
+
+      return {
+        id: vehicle.id,
+        kind: "vehicle",
+        ownerEmail: normalizeText(customer?.email),
+        title: vehicle.registration_number,
+        detail: model || vehicle.vehicle_category,
+        isVerified: Boolean(vehicle.is_verified),
+      };
+    }),
+    ...drivers.map((driver): WorkspaceReviewItem => {
+      const customer = customersById.get(driver.customer);
+      const name = [normalizeText(driver.first_name), normalizeText(driver.last_name)]
+        .filter(Boolean)
+        .join(" ");
+
+      return {
+        id: driver.id,
+        kind: "driver",
+        ownerEmail: normalizeText(customer?.email),
+        title: name || normalizeText(driver.email) || `Driver #${driver.id}`,
+        detail: normalizeText(driver.license_number) || normalizeText(driver.license_country_code),
+        isVerified: Boolean(driver.is_verified),
+      };
+    }),
+  ];
 }
 
 async function getRecentOrdersByCustomerId(customerId: number): Promise<CustomerWorkspaceOrder[]> {

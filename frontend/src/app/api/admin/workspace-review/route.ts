@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 
 import {
   archiveWorkspaceItem,
+  listWorkspaceReviewItems,
   setWorkspaceItemVerification,
 } from "@/lib/directus-admin";
+import { getAuthenticatedAccount } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -32,22 +34,39 @@ function requireBoolean(value: unknown, label: string): boolean {
   return value;
 }
 
-function ensureAdminAccess(request: Request) {
+async function ensureManagerAccess(request: Request) {
+  const account = await getAuthenticatedAccount();
+  if (account?.user.role === "product_manager" || account?.user.role === "admin") {
+    return;
+  }
+
   const configuredKey = process.env.ADMIN_REVIEW_API_KEY;
   const requestKey = request.headers.get("x-admin-review-key") ?? "";
 
   if (!configuredKey) {
-    throw new Error("ADMIN_REVIEW_API_KEY is not configured.");
+    throw new Error("Manager access denied.");
   }
 
   if (requestKey !== configuredKey) {
-    throw new Error("Admin access denied.");
+    throw new Error("Manager access denied.");
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    await ensureManagerAccess(request);
+    const items = await listWorkspaceReviewItems();
+
+    return NextResponse.json({ items });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load review items.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    ensureAdminAccess(request);
+    await ensureManagerAccess(request);
 
     const body = (await request.json()) as Record<string, unknown>;
     const kind = requireString(body.kind, "kind");
@@ -73,7 +92,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    ensureAdminAccess(request);
+    await ensureManagerAccess(request);
 
     const body = (await request.json()) as Record<string, unknown>;
     const kind = requireString(body.kind, "kind");
