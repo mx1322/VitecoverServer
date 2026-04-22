@@ -9,11 +9,19 @@ type Vehicle = {
   model: string;
   type: string;
   status: "approved" | "under_review";
+  greyCardFileName?: string;
 };
 
 const initialVehicles: Vehicle[] = [
-  { id: "1", registration: "AB-123-CD", model: "Peugeot 308", type: "Passenger Car", status: "under_review" },
-  { id: "2", registration: "EF-456-GH", model: "Renault Trafic", type: "Light Commercial Van", status: "approved" },
+  {
+    id: "1",
+    registration: "AB-123-CD",
+    model: "Peugeot 308",
+    type: "Passenger Car",
+    status: "under_review",
+    greyCardFileName: "carte-grise-maxime-bai.pdf",
+  },
+  { id: "2", registration: "EF-456-GH", model: "Renault Trafic", type: "Light Commercial Van", status: "approved", greyCardFileName: "carte-grise-renault.jpg" },
 ];
 
 const emptyVehicle: Vehicle = {
@@ -22,6 +30,7 @@ const emptyVehicle: Vehicle = {
   model: "",
   type: "",
   status: "under_review",
+  greyCardFileName: "",
 };
 
 function VehicleStatusBadge({ status }: { status: Vehicle["status"] }) {
@@ -44,14 +53,22 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState(initialVehicles);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyVehicle);
+  const [message, setMessage] = useState<string>("");
 
   function startEdit(vehicle?: Vehicle) {
     setEditingId(vehicle?.id || "new");
     setForm(vehicle || emptyVehicle);
+    setMessage("");
   }
 
   function saveVehicle(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!form.greyCardFileName?.trim()) {
+      setMessage("请上传车辆行驶证（法国灰卡）后再提交。");
+      return;
+    }
+
     const nextVehicle = {
       ...form,
       id: form.id || `vehicle-${Date.now()}`,
@@ -62,10 +79,19 @@ export default function VehiclesPage() {
     );
     setEditingId(null);
     setForm(emptyVehicle);
+    setMessage("");
   }
 
   function removeVehicle(id: string) {
+    const target = vehicles.find((vehicle) => vehicle.id === id);
+
+    if (target?.status === "approved") {
+      setMessage("车辆资料已确认，不能在当前界面删除。请联系管理员后台处理。");
+      return;
+    }
+
     setVehicles((current) => current.filter((vehicle) => vehicle.id !== id));
+    setMessage("");
   }
 
   const isAdding = editingId === "new";
@@ -78,7 +104,7 @@ export default function VehiclesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Vehicles</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Vehicles</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              Save vehicle details for faster checkout next time.
+              普通用户可上传车辆资料。请上传法国灰卡（Carte Grise）图片后提交审核。
             </p>
           </div>
           <button
@@ -89,6 +115,10 @@ export default function VehiclesPage() {
           </button>
         </div>
       </section>
+
+      {message ? (
+        <p className="rounded-2xl border border-[rgba(234,111,81,0.2)] bg-[rgba(234,111,81,0.08)] px-4 py-3 text-sm text-[var(--danger)]">{message}</p>
+      ) : null}
 
       <section className="space-y-4">
         {isAdding ? (
@@ -124,6 +154,7 @@ export default function VehiclesPage() {
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
                     <span>{vehicle.model}</span>
                     <span>{vehicle.type}</span>
+                    <span>灰卡文件：{vehicle.greyCardFileName || "未上传"}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -190,6 +221,22 @@ function VehicleForm({
           onChange={(event) => onChange((current) => ({ ...current, type: event.target.value }))}
           className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
         />
+      </label>
+      <label className="text-sm font-medium text-[var(--ink)] md:col-span-3">
+        车辆行驶证（法国灰卡）
+        <input
+          required
+          type="file"
+          accept="image/*,.pdf"
+          onChange={(event) =>
+            onChange((current) => ({
+              ...current,
+              greyCardFileName: event.target.files?.[0]?.name || current.greyCardFileName || "",
+            }))
+          }
+          className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
+        />
+        <p className="mt-1 text-xs text-[var(--muted)]">支持图片或 PDF，仅用于审核车辆资料。</p>
       </label>
       <div className="flex gap-3 md:col-span-3">
         <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">

@@ -3,6 +3,7 @@ import {
   readAuthSession,
   writeAuthSession,
   type AuthSession,
+  type AccountRole,
 } from "@/lib/auth-session";
 import {
   ensureCustomerWorkspaceForDirectusUser,
@@ -24,6 +25,10 @@ interface DirectusUserRecord {
   first_name?: string | null;
   last_name?: string | null;
   status?: string | null;
+  role?: {
+    id?: string | null;
+    name?: string | null;
+  } | null;
 }
 
 export interface AuthenticatedAccount {
@@ -34,6 +39,7 @@ export interface AuthenticatedAccount {
     lastName: string;
     status: string;
     isEmailVerified: boolean;
+    role: AccountRole;
   };
   customer: CustomerWorkspace["customer"];
   vehicles: CustomerWorkspace["vehicles"];
@@ -126,12 +132,13 @@ async function directusAdminRequest<T>(path: string, init?: RequestInit): Promis
   return directusAuthedRequest<T>(path, token, init);
 }
 
-function mapSession(payload: DirectusAuthPayload, email: string): AuthSession {
+function mapSession(payload: DirectusAuthPayload, email: string, role: AccountRole = "customer"): AuthSession {
   return {
     accessToken: payload.access_token,
     refreshToken: payload.refresh_token,
     expiresAt: Date.now() + payload.expires,
     email,
+    role,
   };
 }
 
@@ -154,16 +161,19 @@ export async function registerDirectusAccount(input: {
 }
 
 export async function loginDirectusAccount(email: string, password: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
   const payload = await directusPublicRequest<{ data: DirectusAuthPayload }>("/auth/login", {
     method: "POST",
     body: JSON.stringify({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       mode: "json",
     }),
   });
 
-  await writeAuthSession(mapSession(payload.data, email));
+  const user = await getDirectusUser(payload.data.access_token);
+  const role = resolveAccountRoleFromUser(user);
+  await writeAuthSession(mapSession(payload.data, normalizedEmail, role));
 }
 
 async function refreshDirectusSession(session: AuthSession): Promise<AuthSession | null> {
@@ -176,7 +186,7 @@ async function refreshDirectusSession(session: AuthSession): Promise<AuthSession
       }),
     });
 
-    const refreshed = mapSession(payload.data, session.email);
+    const refreshed = mapSession(payload.data, session.email, session.role ?? "customer");
     await writeAuthSession(refreshed);
     return refreshed;
   } catch {
@@ -198,9 +208,23 @@ export async function getValidAuthSession(): Promise<AuthSession | null> {
   return refreshDirectusSession(session);
 }
 
+function resolveAccountRoleFromUser(user: DirectusUserRecord): AccountRole {
+  const roleName = normalizeText(user.role?.name).toLowerCase();
+
+  if (["admin", "administrator", "super admin", "superadmin"].includes(roleName)) {
+    return "admin";
+  }
+
+  if (["product_manager", "product manager", "manager", "pm"].includes(roleName)) {
+    return "product_manager";
+  }
+
+  return "customer";
+}
+
 async function getDirectusUser(accessToken: string): Promise<DirectusUserRecord> {
   const payload = await directusAuthedRequest<{ data: DirectusUserRecord }>(
-    "/users/me?fields=id,email,first_name,last_name,status",
+    "/users/me?fields=id,email,first_name,last_name,status,role.id,role.name",
     accessToken,
   );
 
@@ -212,6 +236,8 @@ function mapAuthenticatedAccount(
   workspace: CustomerWorkspace,
 ): AuthenticatedAccount {
   const status = normalizeText(user.status) || "draft";
+  const role = resolveAccountRoleFromUser(user);
+
   return {
     user: {
       id: user.id,
@@ -220,6 +246,7 @@ function mapAuthenticatedAccount(
       lastName: normalizeText(user.last_name),
       status,
       isEmailVerified: status === "active",
+      role,
     },
     customer: workspace.customer,
     vehicles: workspace.vehicles,
