@@ -1,12 +1,9 @@
-import Link from "next/link";
-
 import { AccountSummaryCard } from "@/components/account/account-summary-card";
 
 const summaryCards = [
-  { label: "Active Policies", value: 2 },
+  { label: "Active Orders", value: 2 },
   { label: "Saved Drivers", value: 3 },
   { label: "Saved Vehicles", value: 4 },
-  { label: "Pending Documents", value: 1 },
 ];
 
 const recentActivity = [
@@ -27,13 +24,6 @@ const recentActivity = [
   },
 ];
 
-const quickActions = [
-  { label: "View Policies", href: "/account/policies" },
-  { label: "Manage Drivers", href: "/account/drivers" },
-  { label: "Manage Vehicles", href: "/account/vehicles" },
-  { label: "Upload Documents", href: "/account/documents" },
-];
-
 export default function AccountOverviewPage() {
   return (
     <div className="space-y-6">
@@ -46,7 +36,7 @@ export default function AccountOverviewPage() {
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
           Here&apos;s a quick snapshot of your account. Use the sidebar to open full details for
-          policies, drivers, vehicles, documents, and settings.
+          orders, drivers, vehicles, and settings.
         </p>
       </section>
 
@@ -56,7 +46,7 @@ export default function AccountOverviewPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section>
         <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Recent Activity
@@ -78,25 +68,6 @@ export default function AccountOverviewPage() {
                   <span className="text-xs font-medium text-[var(--muted)]">{activity.date}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-            Quick Actions
-          </p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">Shortcuts</h3>
-          <div className="mt-5 space-y-2">
-            {quickActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="flex w-full items-center justify-between rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-              >
-                <span>{action.label}</span>
-                <span aria-hidden>→</span>
-              </Link>
             ))}
           </div>
         </article>
