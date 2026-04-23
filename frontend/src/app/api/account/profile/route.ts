@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { updateCustomerProfile } from "@/lib/directus-admin";
+import { updateAuthenticatedProfile } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -13,15 +13,18 @@ function requireString(value: unknown, label: string): string {
 export async function PATCH(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const workspace = await updateCustomerProfile({
+    const account = await updateAuthenticatedProfile({
       email: requireString(body.email, "email"),
       firstName: requireString(body.firstName, "firstName"),
       lastName: requireString(body.lastName, "lastName"),
       phone: typeof body.phone === "string" ? body.phone.trim() : "",
+      customerType: typeof body.customerType === "string" ? body.customerType.trim() : "individual",
+      preferredLanguage:
+        typeof body.preferredLanguage === "string" ? body.preferredLanguage.trim() : "fr-FR",
     });
 
     return NextResponse.json({
-      workspace,
+      account,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to update this profile.";

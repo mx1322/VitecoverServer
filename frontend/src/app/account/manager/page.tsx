@@ -81,27 +81,8 @@ export default function ManagerWorkspaceReviewPage() {
     }
   }
 
-  async function archiveItem(item: WorkspaceReviewItem) {
-    setMessage("");
-
-    try {
-      const response = await fetch("/api/admin/workspace-review", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: item.kind, id: item.id }),
-      });
-      const payload = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Unable to reject item.");
-      }
-
-      setItems((current) => current.filter((entry) => entry.id !== item.id || entry.kind !== item.kind));
-      setMessage(`${item.kind === "vehicle" ? "Vehicle" : "Driver"} rejected.`);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to reject item.");
-    }
-  }
+  const vehicleItems = items.filter((item) => item.kind === "vehicle");
+  const driverItems = items.filter((item) => item.kind === "driver");
 
   if (role !== "product_manager" && role !== "admin") {
     return (
@@ -122,7 +103,7 @@ export default function ManagerWorkspaceReviewPage() {
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Approvals</h2>
         <p className="mt-3 text-sm text-[var(--muted)]">
-          Review submitted vehicles and drivers from Directus. Approved records are locked from customer edits.
+          Review submitted vehicles and drivers from Directus. Approved records are removed from this queue to save space.
         </p>
       </section>
 
@@ -144,33 +125,63 @@ export default function ManagerWorkspaceReviewPage() {
         </p>
       ) : null}
 
-      {items.map((item) => (
-        <article key={`${item.kind}-${item.id}`} className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="font-semibold text-[var(--ink)]">
-                {item.kind === "vehicle" ? "Vehicle" : "Driver"}: {item.title}
-              </p>
-              <p className="mt-1 text-sm text-[var(--muted)]">Customer: {item.ownerEmail || "Unknown"}</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">{item.detail || "No additional details"}</p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => updateItem(item, true)}
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--ink)]"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => archiveItem(item)}
-                className="rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </article>
-      ))}
+      {!loading ? (
+        <section className="space-y-6">
+          <article className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5">
+            <h3 className="text-lg font-semibold text-[var(--ink)]">Vehicle approvals</h3>
+            {vehicleItems.length === 0 ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">No pending vehicle approvals.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {vehicleItems.map((item) => (
+                  <article key={`${item.kind}-${item.id}`} className="rounded-[18px] border border-[rgba(22,36,58,0.08)] px-4 py-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="font-semibold text-[var(--ink)]">Vehicle: {item.title}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">Customer: {item.ownerEmail || "Unknown"}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">{item.detail || "No additional details"}</p>
+                      </div>
+                      <button
+                        onClick={() => updateItem(item, true)}
+                        className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--ink)]"
+                      >
+                        Approve
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5">
+            <h3 className="text-lg font-semibold text-[var(--ink)]">Driver approvals</h3>
+            {driverItems.length === 0 ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">No pending driver approvals.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {driverItems.map((item) => (
+                  <article key={`${item.kind}-${item.id}`} className="rounded-[18px] border border-[rgba(22,36,58,0.08)] px-4 py-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="font-semibold text-[var(--ink)]">Driver: {item.title}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">Customer: {item.ownerEmail || "Unknown"}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">{item.detail || "No additional details"}</p>
+                      </div>
+                      <button
+                        onClick={() => updateItem(item, true)}
+                        className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--ink)]"
+                      >
+                        Approve
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </article>
+        </section>
+      ) : null}
     </div>
   );
 }
