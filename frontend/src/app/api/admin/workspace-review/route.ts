@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 
-import {
-  archiveWorkspaceItem,
-  listWorkspaceReviewItems,
-  setWorkspaceItemVerification,
-} from "@/lib/directus-admin";
+import { listWorkspaceReviewItems, setWorkspaceItemVerification } from "@/lib/directus-admin";
 import { getAuthenticatedAccount } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
@@ -34,27 +30,18 @@ function requireBoolean(value: unknown, label: string): boolean {
   return value;
 }
 
-async function ensureManagerAccess(request: Request) {
+async function ensureManagerAccess() {
   const account = await getAuthenticatedAccount();
   if (account?.user.role === "product_manager" || account?.user.role === "admin") {
     return;
   }
 
-  const configuredKey = process.env.ADMIN_REVIEW_API_KEY;
-  const requestKey = request.headers.get("x-admin-review-key") ?? "";
-
-  if (!configuredKey) {
-    throw new Error("Manager access denied.");
-  }
-
-  if (requestKey !== configuredKey) {
-    throw new Error("Manager access denied.");
-  }
+  throw new Error("Manager access denied.");
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    await ensureManagerAccess(request);
+    await ensureManagerAccess();
     const items = await listWorkspaceReviewItems();
 
     return NextResponse.json({ items });
@@ -66,7 +53,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    await ensureManagerAccess(request);
+    await ensureManagerAccess();
 
     const body = (await request.json()) as Record<string, unknown>;
     const kind = requireString(body.kind, "kind");
@@ -90,27 +77,9 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
-  try {
-    await ensureManagerAccess(request);
-
-    const body = (await request.json()) as Record<string, unknown>;
-    const kind = requireString(body.kind, "kind");
-    const id = requirePositiveInteger(body.id, "id");
-
-    if (kind !== "vehicle" && kind !== "driver") {
-      throw new Error("Unsupported workspace item type.");
-    }
-
-    await archiveWorkspaceItem(kind, id);
-
-    return NextResponse.json({
-      ok: true,
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to archive this workspace item.";
-
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+export async function DELETE() {
+  return NextResponse.json(
+    { error: "Managers cannot delete workspace items from the review queue." },
+    { status: 403 },
+  );
 }

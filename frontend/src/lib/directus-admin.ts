@@ -1625,10 +1625,7 @@ export async function deleteWorkspaceVehicle(
     throw new Error("No account was found for this email.");
   }
 
-  const vehicle = await getVehicleByIdForCustomer(customer.id, vehicleId);
-  if (vehicle.is_verified) {
-    throw new Error("Approved vehicles cannot be deleted from the customer portal.");
-  }
+  await getVehicleByIdForCustomer(customer.id, vehicleId);
 
   await softDeleteItem("vehicles", vehicleId);
   return buildCustomerWorkspace(customer);
@@ -1674,10 +1671,7 @@ export async function deleteWorkspaceDriver(
     throw new Error("No account was found for this email.");
   }
 
-  const driver = await getDriverByIdForCustomer(customer.id, driverId);
-  if (driver.is_verified) {
-    throw new Error("Approved drivers cannot be deleted from the customer portal.");
-  }
+  await getDriverByIdForCustomer(customer.id, driverId);
 
   await softDeleteItem("drivers", driverId);
   return buildCustomerWorkspace(customer);
