@@ -56,8 +56,19 @@ async function requestRoute(route) {
 
       clearTimeout(timeout);
 
+      const body = await response.text();
+      const hasFallback = body.includes("网站正在更新中") || body.includes("__fallback.html");
+      const hasNextError = body.includes('id="__next_error__"');
+
       if (response.status >= 200 && response.status < 300) {
+        if (hasFallback || hasNextError) {
+          return { route, status: response.status, finalUrl: response.url, error: "Error page rendered" };
+        }
         return { route, status: response.status, finalUrl: response.url };
+      }
+
+      if (response.status >= 300 && response.status < 400 && !hasFallback && !hasNextError) {
+        return { route, status: response.status, finalUrl: response.headers.get("location") ?? response.url };
       }
 
       if (attempt === retries) {

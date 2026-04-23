@@ -211,10 +211,8 @@ async function refreshDirectusSession(session: AuthSession): Promise<AuthSession
     });
 
     const refreshed = mapSession(payload.data, session.email, session.role ?? "customer");
-    await writeAuthSession(refreshed);
     return refreshed;
   } catch {
-    await clearAuthSession();
     return null;
   }
 }
@@ -328,18 +326,6 @@ export async function getAuthenticatedIdentity(): Promise<AuthenticatedIdentity 
 
   const user = await getDirectusUser(session.accessToken);
   const role = resolveAccountRoleFromUser(user);
-
-  if (session.role !== role || session.email !== user.email) {
-    await writeAuthSession(mapSession(
-      {
-        access_token: session.accessToken,
-        refresh_token: session.refreshToken,
-        expires: Math.max(session.expiresAt - Date.now(), 0),
-      },
-      user.email,
-      role,
-    ));
-  }
 
   return {
     user: {
