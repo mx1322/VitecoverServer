@@ -207,6 +207,10 @@ jobs:
             -e SMOKE_BASE_URL="${SMOKE_TARGET_BASE_URL}" \
             -e DIRECTUS_ADMIN_EMAIL="${DIRECTUS_ADMIN_EMAIL}" \
             -e DIRECTUS_ADMIN_PASSWORD="${DIRECTUS_ADMIN_PASSWORD}" \
+            -e SMOKE_MANAGER_EMAIL="${SMOKE_MANAGER_EMAIL:-}" \
+            -e SMOKE_MANAGER_PASSWORD="${SMOKE_MANAGER_PASSWORD:-}" \
+            -e SMOKE_CUSTOMER_EMAIL="${SMOKE_CUSTOMER_EMAIL:-}" \
+            -e SMOKE_CUSTOMER_PASSWORD="${SMOKE_CUSTOMER_PASSWORD:-}" \
             mcr.microsoft.com/playwright:v1.53.0-jammy \
             sh -lc 'mkdir -p /tmp/pw && cp /repo/scripts/smoke-auth-flow.spec.js /tmp/pw/ && cd /tmp/pw && npm init -y >/dev/null && npm install @playwright/test@1.53.0 >/dev/null && npx playwright test smoke-auth-flow.spec.js --reporter=line --workers=1'
 

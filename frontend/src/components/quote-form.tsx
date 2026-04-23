@@ -398,8 +398,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     if (requestedStep !== "price" && !workspace) {
-      setStep("vehicle");
-      router.replace(buildQuoteHref("vehicle"));
+      redirectToAuth(requestedStep);
       return;
     }
 
@@ -1133,23 +1132,9 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
         {step === "vehicle" ? (
           <div className="mt-8 space-y-6">
             {!workspace ? (
-              <div className="mx-auto max-w-xl rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-white p-8 shadow-[0_18px_50px_rgba(22,36,58,0.08)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Login required
-                </p>
-                <h2 className="mt-3 text-3xl font-semibold text-[var(--ink)]">Sign in to continue</h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                  Vehicle, driver, overview, and review are only available after login.
-                </p>
-                <div className="mt-6">
-                  <Link
-                    href={`/auth?returnTo=${encodeURIComponent(buildQuoteHref("vehicle"))}`}
-                    className={`${primaryButtonClass} inline-flex items-center justify-center`}
-                  >
-                    Open account login
-                  </Link>
-                </div>
-              </div>
+              <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+                Redirecting to login...
+              </p>
             ) : (
               <>
                 <div className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[var(--surface-2)] p-5">

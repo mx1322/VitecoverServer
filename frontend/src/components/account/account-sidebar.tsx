@@ -72,6 +72,8 @@ export function AccountSidebar() {
 
         if (nextRole) {
           setRole(nextRole);
+        } else {
+          setRole("customer");
         }
       } catch {
         setRole("customer");
