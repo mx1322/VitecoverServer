@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
@@ -21,7 +20,6 @@ async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
 }
 
 export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [email, setEmail] = useState("");
@@ -31,6 +29,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/account";
 
   useEffect(() => {
     startTransition(async () => {
@@ -42,13 +41,13 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
         });
 
         if (payload.authenticated) {
-          router.replace(returnTo || "/account");
+          window.location.replace(safeReturnTo);
         }
       } catch {
         // Ignore session probe errors on the public entry.
       }
     });
-  }, [returnTo, router]);
+  }, [safeReturnTo]);
 
   function handleSubmit() {
     setError("");
@@ -113,7 +112,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
           }),
         });
 
-        router.push(returnTo || "/account");
+        window.location.assign(safeReturnTo);
       } catch (requestError) {
         setError(requestError instanceof Error ? requestError.message : "Unable to continue.");
       }
