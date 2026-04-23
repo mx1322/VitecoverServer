@@ -71,6 +71,19 @@ function normalizeText(value?: string | null): string {
   return value?.trim() ?? "";
 }
 
+function getNameFallbackFromEmail(email: string): { firstName: string; lastName: string } {
+  const localPart = email.split("@")[0]?.trim() || "Customer";
+  const nameParts = localPart
+    .split(/[._-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    firstName: nameParts[0] || "Customer",
+    lastName: nameParts.slice(1).join(" ") || "Account",
+  };
+}
+
 function normalizeRoleToken(value?: string | null): string {
   return normalizeText(value)
     .toLowerCase()
@@ -296,11 +309,12 @@ export async function getAuthenticatedAccount(): Promise<AuthenticatedAccount | 
   }
 
   const user = await getDirectusUser(session.accessToken);
+  const fallbackName = getNameFallbackFromEmail(user.email);
   const workspace = await ensureCustomerWorkspaceForDirectusUser({
     directusUserId: user.id,
     email: user.email,
-    firstName: normalizeText(user.first_name),
-    lastName: normalizeText(user.last_name),
+    firstName: normalizeText(user.first_name) || fallbackName.firstName,
+    lastName: normalizeText(user.last_name) || fallbackName.lastName,
   });
 
   return mapAuthenticatedAccount(user, workspace);

@@ -37,7 +37,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
       try {
         const payload = await requestJson<{
           authenticated: boolean;
-        }>("/api/auth/session", {
+        }>("/api/auth/session?scope=identity", {
           method: "GET",
         });
 

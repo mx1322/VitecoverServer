@@ -108,6 +108,7 @@ jobs:
 
           test -d .github/workflows
           docker run --rm -v "$REPO_DIR:/repo" -w /repo rhysd/actionlint:1.7.7 .github/workflows/*.yml
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-pages.mjs
           bash -n ./up.sh ./deploy/linux/up.sh ./deploy/linux/down.sh
 
       - name: Deploy latest dev branch
@@ -120,6 +121,25 @@ jobs:
           docker build -f frontend/Dockerfile --target builder -t vitecover-frontend-buildcheck ./frontend >/dev/null
 
           ./up.sh
+
+      - name: Smoke test deployed pages
+        run: |
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          cd "$REPO_DIR"
+
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/linux/.env.deploy
+          set +a
+
+          docker run --rm \
+            --network host \
+            -v "$REPO_DIR:/repo" \
+            -w /repo \
+            -e SMOKE_BASE_URL="http://127.0.0.1:${EDGE_HTTP_PORT:-80}" \
+            node:22-alpine \
+            node scripts/smoke-pages.mjs
 
       - name: Show deployment failure details
         if: failure()

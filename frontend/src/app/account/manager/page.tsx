@@ -14,7 +14,7 @@ type WorkspaceReviewItem = {
 };
 
 export default function ManagerWorkspaceReviewPage() {
-  const [role, setRole] = useState<AccountRole>("customer");
+  const [role, setRole] = useState<AccountRole | null>(null);
   const [items, setItems] = useState<WorkspaceReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -49,6 +49,8 @@ export default function ManagerWorkspaceReviewPage() {
 
         if (nextRole) {
           setRole(nextRole);
+        } else {
+          setRole("customer");
         }
       } catch {
         setRole("customer");
@@ -83,6 +85,14 @@ export default function ManagerWorkspaceReviewPage() {
 
   const vehicleItems = items.filter((item) => item.kind === "vehicle");
   const driverItems = items.filter((item) => item.kind === "driver");
+
+  if (role === null) {
+    return (
+      <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+        Loading manager access...
+      </p>
+    );
+  }
 
   if (role !== "product_manager" && role !== "admin") {
     return (

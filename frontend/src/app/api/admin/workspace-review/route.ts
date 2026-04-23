@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { listWorkspaceReviewItems, setWorkspaceItemVerification } from "@/lib/directus-admin";
-import { getAuthenticatedAccount } from "@/lib/directus-auth";
+import { getAuthenticatedIdentity } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -31,8 +31,8 @@ function requireBoolean(value: unknown, label: string): boolean {
 }
 
 async function ensureManagerAccess() {
-  const account = await getAuthenticatedAccount();
-  if (account?.user.role === "product_manager" || account?.user.role === "admin") {
+  const identity = await getAuthenticatedIdentity();
+  if (identity?.user.role === "product_manager" || identity?.user.role === "admin") {
     return;
   }
 
