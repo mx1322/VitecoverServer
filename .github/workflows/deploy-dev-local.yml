@@ -110,7 +110,7 @@ jobs:
           docker run --rm -v "$REPO_DIR:/repo" -w /repo rhysd/actionlint:1.7.7 .github/workflows/*.yml
           docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-pages.mjs
           docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-api-proxy.mjs
-          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-auth-flow.mjs
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-auth-flow.spec.js
           bash -n ./up.sh ./deploy/linux/up.sh ./deploy/linux/down.sh
 
       - name: Deploy latest dev branch
@@ -208,7 +208,7 @@ jobs:
             -e DIRECTUS_ADMIN_EMAIL="${DIRECTUS_ADMIN_EMAIL}" \
             -e DIRECTUS_ADMIN_PASSWORD="${DIRECTUS_ADMIN_PASSWORD}" \
             mcr.microsoft.com/playwright:v1.53.0-jammy \
-            node scripts/smoke-auth-flow.mjs
+            sh -lc 'mkdir -p /tmp/pw && cp /repo/scripts/smoke-auth-flow.spec.js /tmp/pw/ && cd /tmp/pw && npm init -y >/dev/null && npm install @playwright/test@1.53.0 >/dev/null && npx playwright test smoke-auth-flow.spec.js --reporter=line --workers=1'
 
       - name: Show deployment failure details
         if: failure()
