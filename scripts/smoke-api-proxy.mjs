@@ -4,6 +4,8 @@ const email = process.env.SMOKE_AUTH_EMAIL || process.env.DIRECTUS_ADMIN_EMAIL;
 const password = process.env.SMOKE_AUTH_PASSWORD || process.env.DIRECTUS_ADMIN_PASSWORD;
 const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 10000);
 const cookieJar = new Map();
+let createdVehicleId = null;
+let createdDriverId = null;
 
 if (!email || !password) {
   console.error("Missing smoke auth credentials: set SMOKE_AUTH_EMAIL/PASSWORD or DIRECTUS_ADMIN_EMAIL/PASSWORD.");
@@ -102,6 +104,48 @@ try {
   assert(Array.isArray(account?.account?.drivers), "account session is missing drivers array.");
   console.log("OK /api/auth/session workspace loaded");
 
+  const uniqueSuffix = `${Date.now()}`;
+  const registrationNumber = `SMK${uniqueSuffix.slice(-6)}`;
+  const driverFirstName = `Smoke${uniqueSuffix.slice(-4)}`;
+  const driverLastName = "Driver";
+
+  const createdVehicle = await request("/api/auth/workspace-item", {
+    method: "POST",
+    body: JSON.stringify({
+      kind: "vehicle",
+      registrationNumber,
+      manufacturer: "Smoke",
+      model: "Queue Check",
+      fiscalPower: 6,
+    }),
+  });
+  const createdVehicleRecord = createdVehicle?.workspace?.vehicles?.find(
+    (vehicle) => vehicle.registrationNumber === registrationNumber,
+  );
+  assert(createdVehicleRecord?.id, "Created vehicle was not returned in workspace.");
+  createdVehicleId = createdVehicleRecord.id;
+  console.log(`OK /api/auth/workspace-item vehicle=${registrationNumber}`);
+
+  const createdDriver = await request("/api/auth/workspace-item", {
+    method: "POST",
+    body: JSON.stringify({
+      kind: "driver",
+      firstName: driverFirstName,
+      lastName: driverLastName,
+      birthday: "1990-01-01",
+      driverEmail: account.account.customer.email,
+      phone: account.account.customer.phone || "",
+      licenseNumber: `LIC-${uniqueSuffix.slice(-6)}`,
+      licenseCountryCode: "FR",
+    }),
+  });
+  const createdDriverRecord = createdDriver?.workspace?.drivers?.find(
+    (driver) => driver.firstName === driverFirstName && driver.lastName === driverLastName,
+  );
+  assert(createdDriverRecord?.id, "Created driver was not returned in workspace.");
+  createdDriverId = createdDriverRecord.id;
+  console.log(`OK /api/auth/workspace-item driver=${driverFirstName} ${driverLastName}`);
+
   const preview = await request("/api/checkout/preview", {
     method: "POST",
     body: JSON.stringify({
@@ -118,11 +162,42 @@ try {
   if (identity.account.user.role === "product_manager" || identity.account.user.role === "admin") {
     const review = await request("/api/admin/workspace-review");
     assert(Array.isArray(review?.items), "/api/admin/workspace-review is missing items array.");
-    console.log(`OK /api/admin/workspace-review items=${review.items.length}`);
+    assert(
+      review.items.some((item) => item.kind === "vehicle" && item.title === registrationNumber),
+      "Created vehicle is missing from manager review queue.",
+    );
+    assert(
+      review.items.some((item) => item.kind === "driver" && item.title.includes(driverFirstName)),
+      "Created driver is missing from manager review queue.",
+    );
+    console.log(`OK /api/admin/workspace-review items=${review.items.length} includes new records`);
   }
 
   console.log(`Smoke API proxy passed at ${baseUrl}.`);
 } catch (error) {
   console.error(`FAIL ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
+} finally {
+  try {
+    if (createdVehicleId) {
+      await request("/api/auth/workspace-item", {
+        method: "DELETE",
+        body: JSON.stringify({ kind: "vehicle", id: createdVehicleId }),
+      });
+    }
+
+    if (createdDriverId) {
+      await request("/api/auth/workspace-item", {
+        method: "DELETE",
+        body: JSON.stringify({ kind: "driver", id: createdDriverId }),
+      });
+    }
+
+    if (createdVehicleId || createdDriverId) {
+      console.log("OK cleanup workspace review records");
+    }
+  } catch (cleanupError) {
+    console.error(`FAIL cleanup ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`);
+    process.exit(1);
+  }
 }
