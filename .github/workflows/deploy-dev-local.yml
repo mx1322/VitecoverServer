@@ -5,6 +5,12 @@ on:
     branches:
       - dev
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Run deployment manually"
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: deploy-dev-local
@@ -18,22 +24,78 @@ jobs:
       run:
         shell: bash
     env:
-      REPO_DIR: /home/max/apps/VitecoverServer
+      DEPLOY_REPO_DIRNAME: deploy-checkout
+      DEPLOY_STATE_DIRNAME: deploy-secrets
       TARGET_BRANCH: dev
+      DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE }}
     steps:
-      - name: Verify local repo path
+      - name: Prepare deployment checkout
         run: |
-          test -d "$REPO_DIR/.git"
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+
+          mkdir -p "$REPO_DIR"
+
+          if [ -d "$REPO_DIR/.git" ]; then
+            echo "Using existing deployment checkout: $REPO_DIR"
+            exit 0
+          fi
+
+          if [ -n "$(find "$REPO_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+            echo "Deployment directory exists but is not a git repository: $REPO_DIR"
+            exit 1
+          fi
+
+          git clone --branch "$TARGET_BRANCH" "https://github.com/${GITHUB_REPOSITORY}.git" "$REPO_DIR"
 
       - name: Verify deployment prerequisites
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          STATE_DIR="${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}"
           cd "$REPO_DIR"
 
-          test -x ./up.sh
-          test -f deploy/linux/.env.deploy
-          test -f backend/docker-compose.yml
-          test -f docker-compose.override.yml
+          git fetch origin
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          git reset --hard "origin/$TARGET_BRANCH"
+
+          mkdir -p "$STATE_DIR"
+
+          if [ ! -f "$STATE_DIR/.env.deploy" ] && [ -n "${DEPLOY_ENV_FILE:-}" ]; then
+            printf '%s\n' "$DEPLOY_ENV_FILE" > "$STATE_DIR/.env.deploy"
+            chmod 600 "$STATE_DIR/.env.deploy"
+          fi
+
+          if [ -f deploy/linux/.env.deploy ] && [ ! -f "$STATE_DIR/.env.deploy" ]; then
+            cp deploy/linux/.env.deploy "$STATE_DIR/.env.deploy"
+          fi
+
+          if [ -f "$STATE_DIR/.env.deploy" ]; then
+            cp "$STATE_DIR/.env.deploy" deploy/linux/.env.deploy
+          fi
+
+          if [ ! -x ./up.sh ]; then
+            echo "Missing executable deploy script: $REPO_DIR/up.sh"
+            exit 1
+          fi
+
+          if [ ! -f deploy/linux/.env.deploy ]; then
+            echo "Missing deploy env file in checkout: $REPO_DIR/deploy/linux/.env.deploy"
+            echo "Place a persistent copy at: $STATE_DIR/.env.deploy"
+            echo "Or set GitHub Actions secret DEPLOY_ENV_FILE with the full deploy/linux/.env.deploy content."
+            exit 1
+          fi
+
+          if [ ! -f backend/docker-compose.yml ]; then
+            echo "Missing compose file: $REPO_DIR/backend/docker-compose.yml"
+            exit 1
+          fi
+
+          if [ ! -f docker-compose.override.yml ]; then
+            echo "Missing compose override: $REPO_DIR/docker-compose.override.yml"
+            exit 1
+          fi
+
           command -v docker >/dev/null
           docker --version
           docker compose version
@@ -41,23 +103,20 @@ jobs:
       - name: Validate workflow and shell syntax
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
-          docker run --rm -v "$REPO_DIR:/repo" -w /repo rhysd/actionlint:1.7.7
+          test -d .github/workflows
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo rhysd/actionlint:1.7.7 .github/workflows/*.yml
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-pages.mjs
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-api-proxy.mjs
+          docker run --rm -v "$REPO_DIR:/repo" -w /repo node:22-alpine node --check scripts/smoke-auth-flow.spec.js
           bash -n ./up.sh ./deploy/linux/up.sh ./deploy/linux/down.sh
-
-      - name: Sync local repository to origin/dev
-        run: |
-          set -euo pipefail
-          cd "$REPO_DIR"
-
-          git fetch origin
-          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
-          git reset --hard "origin/$TARGET_BRANCH"
 
       - name: Deploy latest dev branch
         run: |
           set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
 
           docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml config >/dev/null
@@ -65,23 +124,139 @@ jobs:
 
           ./up.sh
 
+      - name: Resolve smoke target URL
+        run: |
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          cd "$REPO_DIR"
+
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/linux/.env.deploy
+          set +a
+
+          if [ -n "${SMOKE_BASE_URL:-}" ]; then
+            target_url="${SMOKE_BASE_URL%/}"
+          elif [ -n "${NEXT_PUBLIC_SITE_URL:-}" ]; then
+            target_url="${NEXT_PUBLIC_SITE_URL%/}"
+          elif [ -n "${PUBLIC_URL:-}" ]; then
+            target_url="${PUBLIC_URL%/}"
+            target_url="${target_url%/directus}"
+          else
+            target_url="http://127.0.0.1:${EDGE_HTTP_PORT:-80}"
+          fi
+
+          echo "SMOKE_TARGET_BASE_URL=${target_url}" >> "$GITHUB_ENV"
+          echo "Smoke target: ${target_url}"
+
+      - name: Smoke test deployed pages
+        run: |
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          cd "$REPO_DIR"
+
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/linux/.env.deploy
+          set +a
+
+          docker run --rm \
+            --network host \
+            -v "$REPO_DIR:/repo" \
+            -w /repo \
+            -e SMOKE_BASE_URL="${SMOKE_TARGET_BASE_URL}" \
+            node:22-alpine \
+            node scripts/smoke-pages.mjs
+
+      - name: Smoke test API proxy and data
+        run: |
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          cd "$REPO_DIR"
+
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/linux/.env.deploy
+          set +a
+
+          docker run --rm \
+            --network host \
+            -v "$REPO_DIR:/repo" \
+            -w /repo \
+            -e SMOKE_BASE_URL="${SMOKE_TARGET_BASE_URL}" \
+            -e DIRECTUS_ADMIN_EMAIL="${DIRECTUS_ADMIN_EMAIL}" \
+            -e DIRECTUS_ADMIN_PASSWORD="${DIRECTUS_ADMIN_PASSWORD}" \
+            node:22-alpine \
+            node scripts/smoke-api-proxy.mjs
+
+      - name: Smoke test authenticated flows
+        run: |
+          set -euo pipefail
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+          cd "$REPO_DIR"
+
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/linux/.env.deploy
+          set +a
+
+          docker run --rm \
+            --network host \
+            -v "$REPO_DIR:/repo" \
+            -w /repo \
+            -e SMOKE_BASE_URL="${SMOKE_TARGET_BASE_URL}" \
+            -e DIRECTUS_ADMIN_EMAIL="${DIRECTUS_ADMIN_EMAIL}" \
+            -e DIRECTUS_ADMIN_PASSWORD="${DIRECTUS_ADMIN_PASSWORD}" \
+            -e SMOKE_MANAGER_EMAIL="${SMOKE_MANAGER_EMAIL:-}" \
+            -e SMOKE_MANAGER_PASSWORD="${SMOKE_MANAGER_PASSWORD:-}" \
+            -e SMOKE_CUSTOMER_EMAIL="${SMOKE_CUSTOMER_EMAIL:-}" \
+            -e SMOKE_CUSTOMER_PASSWORD="${SMOKE_CUSTOMER_PASSWORD:-}" \
+            mcr.microsoft.com/playwright:v1.53.0-jammy \
+            sh -lc 'mkdir -p /tmp/pw && cp /repo/scripts/smoke-auth-flow.spec.js /tmp/pw/ && cd /tmp/pw && npm init -y >/dev/null && npm install @playwright/test@1.53.0 >/dev/null && npx playwright test smoke-auth-flow.spec.js --reporter=line --workers=1'
+
       - name: Show deployment failure details
         if: failure()
         run: |
           set +e
-          cd "$REPO_DIR"
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
+
+          if [ ! -d "$REPO_DIR" ]; then
+            echo "Deployment directory not found: $REPO_DIR"
+            exit 0
+          fi
+
+          if ! cd "$REPO_DIR"; then
+            echo "Unable to enter deployment directory: $REPO_DIR"
+            exit 0
+          fi
+
+          if [ ! -d .git ]; then
+            echo "Deployment directory is not a git repository: $REPO_DIR"
+            exit 0
+          fi
 
           echo "== Git HEAD =="
           git rev-parse --short HEAD
 
           echo "== Docker Compose PS =="
-          docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml ps
+          if [ -f deploy/linux/.env.deploy ]; then
+            docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml ps
+          else
+            echo "Missing deploy/linux/.env.deploy in deployment checkout."
+            echo "Expected persistent env file at: ${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}/.env.deploy"
+          fi
 
           echo "== Recent Docker Compose Logs =="
-          docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml logs --tail=120
+          if [ -f deploy/linux/.env.deploy ]; then
+            docker compose --env-file deploy/linux/.env.deploy -f backend/docker-compose.yml -f docker-compose.override.yml logs --tail=120
+          else
+            echo "Skipping logs because deploy/linux/.env.deploy is missing."
+            echo "Expected persistent env file at: ${RUNNER_WORKSPACE}/${DEPLOY_STATE_DIRNAME}/.env.deploy"
+          fi
 
       - name: Show deployed revision
         if: success()
         run: |
+          REPO_DIR="${RUNNER_WORKSPACE}/${DEPLOY_REPO_DIRNAME}"
           cd "$REPO_DIR"
           echo "Deployed commit: $(git rev-parse --short HEAD)"

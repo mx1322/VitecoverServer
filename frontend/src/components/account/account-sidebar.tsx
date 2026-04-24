@@ -1,0 +1,126 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { LogoutButton } from "@/components/account/logout-button";
+import type { AccountRole } from "@/lib/auth-session";
+
+type SessionResponse = {
+  authenticated: boolean;
+  account?: {
+    user?: {
+      email?: string;
+      role?: AccountRole;
+    };
+  } | null;
+};
+
+const customerMenuItems = [
+  { label: "Overview", href: "/account" },
+  { label: "Orders", href: "/account/orders" },
+  { label: "Drivers", href: "/account/drivers" },
+  { label: "Vehicles", href: "/account/vehicles" },
+  { label: "Account Settings", href: "/account/settings" },
+];
+
+const managerMenuItems = [
+  { label: "Overview", href: "/account" },
+  { label: "Approvals", href: "/account/manager" },
+  { label: "Orders", href: "/account/orders" },
+  { label: "Drivers", href: "/account/drivers" },
+  { label: "Vehicles", href: "/account/vehicles" },
+  { label: "Account Settings", href: "/account/settings" },
+];
+
+function isActivePath(pathname: string, href: string) {
+  if (href === "/account") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function AccountSidebar() {
+  const pathname = usePathname();
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<AccountRole | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/auth/session?scope=identity", { cache: "no-store" });
+        const payload = (await response.json()) as SessionResponse;
+        if (cancelled) {
+          return;
+        }
+
+        if (!payload.authenticated) {
+          setRole("customer");
+          return;
+        }
+
+        const nextEmail = payload.account?.user?.email?.trim();
+        const nextRole = payload.account?.user?.role;
+
+        if (nextEmail) {
+          setEmail(nextEmail);
+        }
+
+        if (nextRole) {
+          setRole(nextRole);
+        } else {
+          setRole("customer");
+        }
+      } catch {
+        setRole("customer");
+      }
+    }
+
+    loadSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <aside className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
+      <div className="border-b border-[rgba(22,36,58,0.08)] pb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+          Account Center
+        </p>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">My Account</h1>
+        <div className="mt-5 rounded-[22px] bg-[rgba(250,246,240,1)] px-4 py-4">
+          <p className="text-sm text-[var(--muted)]">Welcome back</p>
+          <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email || "Signed in"}</p>
+          <p className="mt-1 text-xs font-medium text-[var(--muted)]">
+            Role: {role === null ? "Loading..." : role === "product_manager" ? "Product Manager" : role === "admin" ? "Admin" : "Customer"}
+          </p>
+        </div>
+      </div>
+      <nav className="mt-4 space-y-2">
+        {(role === "product_manager" || role === "admin" ? managerMenuItems : customerMenuItems).map((item) => {
+          const active = isActivePath(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={
+                active
+                  ? "flex w-full items-center rounded-full bg-[rgba(248,179,71,0.16)] px-4 py-3 text-sm font-semibold text-[var(--ink)]"
+                  : "flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[var(--muted)] transition hover:bg-[rgba(22,36,58,0.04)] hover:text-[var(--ink)]"
+              }
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <LogoutButton />
+    </aside>
+  );
+}

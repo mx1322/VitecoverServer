@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="8">
+  <title>服务维护中</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f1e8;
+      --panel: #fffaf2;
+      --ink: #182230;
+      --muted: #667085;
+      --accent: #f8b347;
+      --line: #eaddcc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #fff8ec 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+
+    main {
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      padding: 34px 30px;
+      box-shadow: 0 18px 50px rgba(24, 34, 48, 0.08);
+    }
+
+    .mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: rgba(248, 179, 71, 0.2);
+      color: #9a5b00;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 24px 0 12px;
+      font-size: 34px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 26px;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      border-radius: 999px;
+      background: var(--accent);
+      padding: 0 18px;
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark">!</div>
+    <h1>网站正在更新中</h1>
+    <p>服务正在短暂重启，通常几秒钟后即可恢复访问。页面会自动刷新，也可以手动重试。</p>
+    <div class="actions">
+      <a href="/">刷新页面</a>
+      <span class="hint">预计 5-10 秒恢复</span>
+    </div>
+  </main>
+</body>
+</html>

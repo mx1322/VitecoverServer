@@ -35,35 +35,6 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
-
-        <div className="hidden items-center gap-4 md:flex">
-          <Link
-            href="/quote"
-            aria-label="Quote cart"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(22,36,58,0.1)] bg-[rgba(255,255,255,0.84)] text-[var(--ink)] transition hover:border-[rgba(22,36,58,0.2)] hover:bg-white"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <circle cx="9" cy="20" r="1.5" />
-              <circle cx="18" cy="20" r="1.5" />
-              <path d="M3 4h2l2.3 10.2a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 8H7" />
-            </svg>
-          </Link>
-          <Link
-            href="/quote"
-            className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_12px_28px_rgba(255,179,71,0.2)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_34px_rgba(255,179,71,0.28)]"
-          >
-            Start Quote
-          </Link>
-        </div>
       </div>
     </header>
   );

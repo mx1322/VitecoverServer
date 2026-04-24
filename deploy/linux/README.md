@@ -66,6 +66,7 @@ Suggested frontend values:
 - `NEXT_PUBLIC_SITE_URL=http://your-host`
 - `NEXT_PUBLIC_DIRECTUS_URL=http://your-host/directus`
 - `NEXT_PUBLIC_FILE_SERVICE_BASE_URL=http://your-host/directus`
+- For LAN or changing-IP setups behind the included reverse proxy, these `NEXT_PUBLIC_*` values can be left blank so the frontend uses relative `/directus/*` paths.
 - `EDGE_HTTP_PORT=80` for AWS, or another free local port such as `8088`
 
 Suggested backend note:
@@ -104,7 +105,7 @@ The self-hosted runner on this machine:
 - hard-resets the deployment checkout to that revision
 - validates workflow syntax, shell syntax, compose rendering, and frontend buildability
 - runs `./up.sh`
-- uses the dedicated deployment checkout at `/home/max/apps/VitecoverServer`
+- uses the dedicated deployment checkout at `${RUNNER_WORKSPACE}/deploy-checkout`
 
 Manual fallback on the Linux server is still:
 

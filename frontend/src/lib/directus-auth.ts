@@ -3,6 +3,7 @@ import {
   readAuthSession,
   writeAuthSession,
   type AuthSession,
+  type AccountRole,
 } from "@/lib/auth-session";
 import {
   ensureCustomerWorkspaceForDirectusUser,
@@ -24,6 +25,10 @@ interface DirectusUserRecord {
   first_name?: string | null;
   last_name?: string | null;
   status?: string | null;
+  role?: {
+    id?: string | null;
+    name?: string | null;
+  } | null;
 }
 
 export interface AuthenticatedAccount {
@@ -34,11 +39,16 @@ export interface AuthenticatedAccount {
     lastName: string;
     status: string;
     isEmailVerified: boolean;
+    role: AccountRole;
   };
   customer: CustomerWorkspace["customer"];
   vehicles: CustomerWorkspace["vehicles"];
   drivers: CustomerWorkspace["drivers"];
   recentOrders: CustomerWorkspace["recentOrders"];
+}
+
+export interface AuthenticatedIdentity {
+  user: AuthenticatedAccount["user"];
 }
 
 const directusInternalUrl =
@@ -59,6 +69,26 @@ function getSiteUrl(): string {
 
 function normalizeText(value?: string | null): string {
   return value?.trim() ?? "";
+}
+
+function getNameFallbackFromEmail(email: string): { firstName: string; lastName: string } {
+  const localPart = email.split("@")[0]?.trim() || "Customer";
+  const nameParts = localPart
+    .split(/[._-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    firstName: nameParts[0] || "Customer",
+    lastName: nameParts.slice(1).join(" ") || "Account",
+  };
+}
+
+function normalizeRoleToken(value?: string | null): string {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 async function directusPublicRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -126,12 +156,13 @@ async function directusAdminRequest<T>(path: string, init?: RequestInit): Promis
   return directusAuthedRequest<T>(path, token, init);
 }
 
-function mapSession(payload: DirectusAuthPayload, email: string): AuthSession {
+function mapSession(payload: DirectusAuthPayload, email: string, role: AccountRole = "customer"): AuthSession {
   return {
     accessToken: payload.access_token,
     refreshToken: payload.refresh_token,
     expiresAt: Date.now() + payload.expires,
     email,
+    role,
   };
 }
 
@@ -154,16 +185,19 @@ export async function registerDirectusAccount(input: {
 }
 
 export async function loginDirectusAccount(email: string, password: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
   const payload = await directusPublicRequest<{ data: DirectusAuthPayload }>("/auth/login", {
     method: "POST",
     body: JSON.stringify({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       mode: "json",
     }),
   });
 
-  await writeAuthSession(mapSession(payload.data, email));
+  const user = await getDirectusUserWithRole(payload.data.access_token);
+  const role = resolveAccountRoleFromUser(user);
+  await writeAuthSession(mapSession(payload.data, normalizedEmail, role));
 }
 
 async function refreshDirectusSession(session: AuthSession): Promise<AuthSession | null> {
@@ -176,11 +210,9 @@ async function refreshDirectusSession(session: AuthSession): Promise<AuthSession
       }),
     });
 
-    const refreshed = mapSession(payload.data, session.email);
-    await writeAuthSession(refreshed);
+    const refreshed = mapSession(payload.data, session.email, session.role ?? "customer");
     return refreshed;
   } catch {
-    await clearAuthSession();
     return null;
   }
 }
@@ -198,13 +230,66 @@ export async function getValidAuthSession(): Promise<AuthSession | null> {
   return refreshDirectusSession(session);
 }
 
+function resolveAccountRoleFromUser(user: DirectusUserRecord): AccountRole {
+  const roleName = normalizeRoleToken(user.role?.name);
+  const roleId = normalizeRoleToken(user.role?.id);
+
+  if (
+    ["admin", "administrator", "super_admin", "superadmin"].includes(roleName) ||
+    ["admin", "administrator", "super_admin", "superadmin"].includes(roleId)
+  ) {
+    return "admin";
+  }
+
+  if (
+    [
+      "product_manager",
+      "product_managers",
+      "manager",
+      "managers",
+      "pm",
+      "review_manager",
+      "account_manager",
+    ].includes(roleName) ||
+    [
+      "product_manager",
+      "product_managers",
+      "manager",
+      "managers",
+      "pm",
+      "review_manager",
+      "account_manager",
+    ].includes(roleId)
+  ) {
+    return "product_manager";
+  }
+
+  return "customer";
+}
+
 async function getDirectusUser(accessToken: string): Promise<DirectusUserRecord> {
   const payload = await directusAuthedRequest<{ data: DirectusUserRecord }>(
-    "/users/me?fields=id,email,first_name,last_name,status",
+    "/users/me?fields=id,email,first_name,last_name,status,role.id,role.name",
     accessToken,
   );
 
   return payload.data;
+}
+
+async function getDirectusUserWithRole(accessToken: string): Promise<DirectusUserRecord> {
+  const user = await getDirectusUser(accessToken);
+  if (normalizeText(user.role?.id) || normalizeText(user.role?.name)) {
+    return user;
+  }
+
+  try {
+    const payload = await directusAdminRequest<{ data: DirectusUserRecord }>(
+      `/users/${user.id}?fields=id,email,first_name,last_name,status,role.id,role.name`,
+    );
+    return payload.data;
+  } catch {
+    return user;
+  }
 }
 
 function mapAuthenticatedAccount(
@@ -212,6 +297,8 @@ function mapAuthenticatedAccount(
   workspace: CustomerWorkspace,
 ): AuthenticatedAccount {
   const status = normalizeText(user.status) || "draft";
+  const role = resolveAccountRoleFromUser(user);
+
   return {
     user: {
       id: user.id,
@@ -220,6 +307,7 @@ function mapAuthenticatedAccount(
       lastName: normalizeText(user.last_name),
       status,
       isEmailVerified: status === "active",
+      role,
     },
     customer: workspace.customer,
     vehicles: workspace.vehicles,
@@ -234,15 +322,38 @@ export async function getAuthenticatedAccount(): Promise<AuthenticatedAccount | 
     return null;
   }
 
-  const user = await getDirectusUser(session.accessToken);
+  const user = await getDirectusUserWithRole(session.accessToken);
+  const fallbackName = getNameFallbackFromEmail(user.email);
   const workspace = await ensureCustomerWorkspaceForDirectusUser({
     directusUserId: user.id,
     email: user.email,
-    firstName: normalizeText(user.first_name),
-    lastName: normalizeText(user.last_name),
+    firstName: normalizeText(user.first_name) || fallbackName.firstName,
+    lastName: normalizeText(user.last_name) || fallbackName.lastName,
   });
 
   return mapAuthenticatedAccount(user, workspace);
+}
+
+export async function getAuthenticatedIdentity(): Promise<AuthenticatedIdentity | null> {
+  const session = await getValidAuthSession();
+  if (!session) {
+    return null;
+  }
+
+  const user = await getDirectusUserWithRole(session.accessToken);
+  const role = resolveAccountRoleFromUser(user);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: normalizeText(user.first_name),
+      lastName: normalizeText(user.last_name),
+      status: normalizeText(user.status) || "draft",
+      isEmailVerified: (normalizeText(user.status) || "draft") === "active",
+      role,
+    },
+  };
 }
 
 export async function logoutDirectusAccount(): Promise<void> {

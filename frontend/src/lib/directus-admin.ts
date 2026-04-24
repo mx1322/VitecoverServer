@@ -86,6 +86,10 @@ interface QuoteRecord {
 
 interface OrderRecord {
   id: number;
+  customer?: number;
+  product?: number;
+  vehicle?: number;
+  driver?: number;
   order_number: string;
   status: string;
   coverage_start_at: string;
@@ -95,6 +99,24 @@ interface OrderRecord {
   currency: string;
   paid_at?: string | null;
   admin_review_status?: string | null;
+}
+
+interface PolicyRecord {
+  id: number;
+  order: number;
+  customer?: number | null;
+  product?: number | null;
+  vehicle?: number | null;
+  driver?: number | null;
+  coverage_start_at?: string | null;
+  coverage_end_at?: string | null;
+  premium_amount?: string | null;
+  total_amount?: string | null;
+  currency?: string | null;
+  status?: string | null;
+  issued_at?: string | null;
+  pdf_file?: string | null;
+  pdf_generated_at?: string | null;
 }
 
 interface PaymentRecord {
@@ -116,6 +138,17 @@ interface AdminReviewRecord {
 
 interface DirectusUserRecord {
   id: string;
+}
+
+interface DirectusFileRecord {
+  id: string;
+  title?: string | null;
+  filename_download?: string | null;
+  type?: string | null;
+}
+
+interface DirectusFileItemResponse {
+  data: DirectusFileRecord;
 }
 
 export interface QuoteProductOption {
@@ -186,6 +219,16 @@ export interface CustomerWorkspaceOrder {
   coverageStartAt: string;
   coverageEndAt: string;
   paidAt?: string | null;
+  contractFileUrl?: string;
+}
+
+export interface WorkspaceReviewItem {
+  id: number;
+  kind: "vehicle" | "driver";
+  ownerEmail: string;
+  title: string;
+  detail: string;
+  isVerified: boolean;
 }
 
 export interface CustomerWorkspace {
@@ -329,6 +372,10 @@ const directusAdminEmail = process.env.DIRECTUS_ADMIN_EMAIL;
 const directusAdminPassword = process.env.DIRECTUS_ADMIN_PASSWORD;
 const defaultGeoZoneCode =
   process.env.DIRECTUS_DEFAULT_GEO_ZONE_CODE ?? "FRANCE_METROPOLE";
+const publicDirectusUrl =
+  process.env.NEXT_PUBLIC_DIRECTUS_URL?.replace(/\/$/, "") ??
+  process.env.DIRECTUS_PUBLIC_URL?.replace(/\/$/, "") ??
+  directusInternalUrl;
 
 function normalizeCoverageStartAt(value: string): string {
   const date = new Date(value);
@@ -457,6 +504,155 @@ function asCurrencyString(value: string | number): string {
   return Number(value).toFixed(2);
 }
 
+function formatDisplayDate(value?: string | null): string {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString("fr-FR", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function buildContractAssetUrl(fileId: string): string {
+  return `${publicDirectusUrl}/assets/${fileId}?download`;
+}
+
+function escapePdfText(value: string): string {
+  return value.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+}
+
+function buildContractPdfTemplate(input: {
+  order: OrderRecord;
+  customer: CustomerRecord;
+  vehicle: VehicleRecord;
+  driver: DriverRecord;
+  productName: string;
+}): ArrayBuffer {
+  const { order, customer, vehicle, driver, productName } = input;
+  const lines = [
+    "Attestation provisoire (demo)",
+    `Commande: ${order.order_number}`,
+    `Produit: ${productName}`,
+    "",
+    `Statut: ${order.status}`,
+    `Debut couverture: ${formatDisplayDate(order.coverage_start_at)}`,
+    `Fin couverture: ${formatDisplayDate(order.coverage_end_at)}`,
+    `Montant total: ${asCurrencyString(order.total_amount)} ${order.currency}`,
+    `Paye le: ${formatDisplayDate(order.paid_at)}`,
+    "",
+    "Vehicule",
+    `Immatriculation: ${vehicle.registration_number}`,
+    `Constructeur/modele: ${`${normalizeText(vehicle.manufacturer)} ${normalizeText(vehicle.model)}`.trim() || "-"}`,
+    `Categorie: ${vehicle.vehicle_category}`,
+    "",
+    "Conducteur",
+    `Nom: ${driver.first_name} ${driver.last_name}`,
+    `Email: ${normalizeText(driver.email) || customer.email}`,
+    `Telephone: ${normalizeText(driver.phone) || normalizeText(customer.phone) || "-"}`,
+    `Pays du permis: ${normalizeText(driver.license_country_code) || "-"}`,
+    "",
+    "Document genere automatiquement pour la phase de demonstration.",
+  ];
+
+  const contentOps = [
+    "BT",
+    "/F1 12 Tf",
+    "50 800 Td",
+    "14 TL",
+    ...lines.map((line, index) =>
+      index === 0 ? `(${escapePdfText(line)}) Tj` : `T* (${escapePdfText(line)}) Tj`,
+    ),
+    "ET",
+  ].join("\n");
+
+  const stream = `${contentOps}\n`;
+  const objects = [
+    "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+    "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+    "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n",
+    "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
+    `5 0 obj\n<< /Length ${Buffer.byteLength(stream, "utf8")} >>\nstream\n${stream}endstream\nendobj\n`,
+  ];
+
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [0];
+  for (const object of objects) {
+    offsets.push(Buffer.byteLength(pdf, "utf8"));
+    pdf += object;
+  }
+
+  const xrefOffset = Buffer.byteLength(pdf, "utf8");
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (let i = 1; i <= objects.length; i += 1) {
+    pdf += `${offsets[i].toString().padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new TextEncoder().encode(pdf).buffer;
+}
+
+async function getDirectusAccessToken(): Promise<string> {
+  return directusStaticToken || directusLogin();
+}
+
+async function uploadContractTemplateFile(
+  filename: string,
+  content: string | ArrayBuffer,
+  mimeType: string,
+): Promise<string> {
+  const formData = new FormData();
+  formData.append("title", filename);
+  formData.append("filename_download", filename);
+  formData.append("type", mimeType);
+  formData.append("file", new Blob([content], { type: mimeType }), filename);
+
+  const token = await getDirectusAccessToken();
+  let response = await fetch(`${directusInternalUrl}/files`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+    cache: "no-store",
+  });
+
+  if ((response.status === 401 || response.status === 403) && directusStaticToken) {
+    const refreshedToken = await directusLogin();
+    response = await fetch(`${directusInternalUrl}/files`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${refreshedToken}`,
+      },
+      body: formData,
+      cache: "no-store",
+    });
+  }
+
+  const payload = (await response.json()) as {
+    data?: { id?: string };
+    errors?: Array<{ message?: string }>;
+  };
+
+  if (!response.ok || !payload.data?.id) {
+    const message = payload.errors?.[0]?.message ?? "Unable to upload contract file.";
+    throw new Error(message);
+  }
+
+  return payload.data.id;
+}
+
 function requirePositiveInteger(value: number | undefined, label: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
     throw new Error(`Invalid ${label}.`);
@@ -533,6 +729,183 @@ function mapOrderRecord(order: OrderRecord): CustomerWorkspaceOrder {
   };
 }
 
+function buildPolicyNumber(orderNumber: string): string {
+  return orderNumber.replace(/^ORD-/, "POL-");
+}
+
+async function mapContractLinksByOrderId(orderIds: number[]): Promise<Map<number, string>> {
+  if (!orderIds.length) {
+    return new Map();
+  }
+
+  const payload = await directusRequest<DirectusCollectionResponse<PolicyRecord>>(
+    `/items/policies${buildQuery({
+      fields: "id,order,pdf_file,pdf_generated_at",
+      "filter[order][_in]": orderIds.join(","),
+      sort: "-id",
+      limit: "200",
+    })}`,
+  );
+
+  const linksByOrderId = new Map<number, string>();
+
+  for (const policy of payload.data) {
+    if (linksByOrderId.has(policy.order)) {
+      continue;
+    }
+
+    const fileId = normalizeText(policy.pdf_file);
+    if (fileId) {
+      linksByOrderId.set(policy.order, buildContractAssetUrl(fileId));
+    }
+  }
+
+  return linksByOrderId;
+}
+
+async function getOrderByIdForCustomer(
+  orderId: number,
+  customerId: number,
+): Promise<OrderRecord | null> {
+  const payload = await directusRequest<DirectusCollectionResponse<OrderRecord>>(
+    `/items/orders${buildQuery({
+      fields:
+        "id,order_number,status,coverage_start_at,coverage_end_at,total_amount,premium_amount,currency,paid_at,admin_review_status,customer,product,vehicle,driver",
+      "filter[id][_eq]": String(orderId),
+      "filter[customer][_eq]": String(customerId),
+      limit: "1",
+    })}`,
+  );
+
+  return payload.data[0] ?? null;
+}
+
+async function getPolicyByOrderId(orderId: number): Promise<PolicyRecord | null> {
+  const payload = await directusRequest<DirectusCollectionResponse<PolicyRecord>>(
+    `/items/policies${buildQuery({
+      fields:
+        "id,order,customer,product,vehicle,driver,status,issued_at,coverage_start_at,coverage_end_at,premium_amount,total_amount,currency,pdf_file,pdf_generated_at",
+      "filter[order][_eq]": String(orderId),
+      sort: "-id",
+      limit: "1",
+    })}`,
+  );
+
+  return payload.data[0] ?? null;
+}
+
+async function getDirectusFileMeta(fileId: string): Promise<DirectusFileRecord> {
+  const payload = await directusRequest<DirectusFileItemResponse>(
+    `/files/${fileId}${buildQuery({ fields: "id,filename_download,type,title" })}`,
+  );
+
+  return payload.data;
+}
+
+async function isPdfAsset(fileId: string): Promise<boolean> {
+  const fileMeta = await getDirectusFileMeta(fileId);
+  const contentType = normalizeText(fileMeta.type).toLowerCase();
+  const filename = normalizeText(fileMeta.filename_download || fileMeta.title).toLowerCase();
+
+  return contentType.includes("pdf") || filename.endsWith(".pdf");
+}
+
+async function getRecordById<T>(
+  collection: string,
+  id: number,
+  fields: string,
+): Promise<T> {
+  const payload = await directusRequest<DirectusItemResponse<T>>(
+    `/items/${collection}/${id}${buildQuery({ fields })}`,
+  );
+
+  return payload.data;
+}
+
+async function ensurePolicyPdfForOrder(orderId: number, customerId: number): Promise<boolean> {
+  const order = await getOrderByIdForCustomer(orderId, customerId);
+  if (!order) {
+    throw new Error("Order not found for this customer.");
+  }
+
+  let existingPolicy = await getPolicyByOrderId(order.id);
+  const existingFileId = normalizeText(existingPolicy?.pdf_file);
+  if (existingFileId && (await isPdfAsset(existingFileId))) {
+    return false;
+  }
+
+  if (!order.vehicle || !order.driver || !order.product) {
+    throw new Error("Order data is incomplete for PDF generation.");
+  }
+
+  const [customer, vehicle, driver, product] = await Promise.all([
+    getRecordById<CustomerRecord>(
+      "customers",
+      customerId,
+      "id,email,first_name,last_name,phone,account_status,customer_type,preferred_language,directus_user",
+    ),
+    getRecordById<VehicleRecord>(
+      "vehicles",
+      order.vehicle,
+      "id,customer,registration_number,manufacturer,model,fiscal_power,vehicle_category,usage_type,is_active,is_verified",
+    ),
+    getRecordById<DriverRecord>(
+      "drivers",
+      order.driver,
+      "id,customer,first_name,last_name,birthday,email,phone,license_number,license_country_code,license_issue_date,is_active,is_verified",
+    ),
+    getRecordById<InsuranceProductRecord>(
+      "insurance_products",
+      order.product,
+      "id,code,name,status",
+    ),
+  ]);
+
+  const pdfBytes = buildContractPdfTemplate({
+    order,
+    customer,
+    vehicle,
+    driver,
+    productName: product.name,
+  });
+  const pdfFileId = await uploadContractTemplateFile(
+    `${order.order_number.toLowerCase()}-contract.pdf`,
+    pdfBytes,
+    "application/pdf",
+  );
+
+  if (existingPolicy) {
+    existingPolicy = await updateItem<PolicyRecord>("policies", existingPolicy.id, {
+      pdf_file: pdfFileId,
+      pdf_generated_at: new Date().toISOString(),
+      document_version: "template-pdf-v1",
+    });
+  } else {
+    await createItem<PolicyRecord>("policies", {
+      policy_number: buildPolicyNumber(order.order_number),
+      order: order.id,
+      customer: customerId,
+      product: order.product,
+      vehicle: order.vehicle,
+      driver: order.driver,
+      status: "issued",
+      issued_at: order.paid_at || new Date().toISOString(),
+      coverage_start_at: order.coverage_start_at,
+      coverage_end_at: order.coverage_end_at,
+      premium_amount: order.premium_amount || order.total_amount,
+      tax_amount: "0.00",
+      total_amount: order.total_amount,
+      currency: order.currency,
+      circulation_countries: "FR",
+      pdf_file: pdfFileId,
+      pdf_generated_at: new Date().toISOString(),
+      document_version: "template-pdf-v1",
+    });
+  }
+
+  return true;
+}
+
 async function createItem<T>(collection: string, payload: Record<string, unknown>): Promise<T> {
   const response = await directusRequest<DirectusItemResponse<T>>(`/items/${collection}`, {
     method: "POST",
@@ -580,6 +953,18 @@ export async function listOrderableProducts(): Promise<QuoteProductOption[]> {
     minDurationDays: item.min_duration_days,
     maxDurationDays: item.max_duration_days,
   }));
+}
+
+export async function listDirectusFiles(): Promise<DirectusFileRecord[]> {
+  const payload = await directusRequest<DirectusCollectionResponse<DirectusFileRecord>>(
+    `/files${buildQuery({
+      fields: "id,title,filename_download,type",
+      limit: "100",
+      sort: "title",
+    })}`,
+  );
+
+  return payload.data;
 }
 
 async function getActiveProductByCode(productCode: string): Promise<InsuranceProductRecord> {
@@ -696,6 +1081,83 @@ async function getDriversByCustomerId(customerId: number): Promise<CustomerWorks
     .map(mapDriverRecord);
 }
 
+async function getCustomersByIds(customerIds: number[]): Promise<Map<number, CustomerRecord>> {
+  if (customerIds.length === 0) {
+    return new Map();
+  }
+
+  const payload = await directusRequest<DirectusCollectionResponse<CustomerRecord>>(
+    `/items/customers${buildQuery({
+      fields: "id,email,first_name,last_name,phone,account_status,customer_type,preferred_language,directus_user",
+      "filter[id][_in]": customerIds.join(","),
+      limit: "100",
+    })}`,
+  );
+
+  return new Map(payload.data.map((customer) => [customer.id, customer]));
+}
+
+export async function listWorkspaceReviewItems(): Promise<WorkspaceReviewItem[]> {
+  const [vehiclesPayload, driversPayload] = await Promise.all([
+    directusRequest<DirectusCollectionResponse<VehicleRecord>>(
+      `/items/vehicles${buildQuery({
+        fields: "id,customer,registration_number,manufacturer,model,fiscal_power,vehicle_category,usage_type,is_active,is_verified",
+        "filter[is_active][_neq]": "false",
+        sort: "-id",
+        limit: "100",
+      })}`,
+    ),
+    directusRequest<DirectusCollectionResponse<DriverRecord>>(
+      `/items/drivers${buildQuery({
+        fields: "id,customer,first_name,last_name,birthday,email,phone,license_number,license_country_code,license_issue_date,is_active,is_verified",
+        "filter[is_active][_neq]": "false",
+        sort: "-id",
+        limit: "100",
+      })}`,
+    ),
+  ]);
+
+  const vehicles = vehiclesPayload.data.filter((vehicle) => !vehicle.is_verified);
+  const drivers = driversPayload.data.filter((driver) => !driver.is_verified);
+  const customerIds = Array.from(
+    new Set([...vehicles.map((vehicle) => vehicle.customer), ...drivers.map((driver) => driver.customer)]),
+  );
+  const customersById = await getCustomersByIds(customerIds);
+
+  return [
+    ...vehicles.map((vehicle): WorkspaceReviewItem => {
+      const customer = customersById.get(vehicle.customer);
+      const model = [normalizeText(vehicle.manufacturer), normalizeText(vehicle.model)]
+        .filter(Boolean)
+        .join(" ");
+
+      return {
+        id: vehicle.id,
+        kind: "vehicle",
+        ownerEmail: normalizeText(customer?.email),
+        title: vehicle.registration_number,
+        detail: model || vehicle.vehicle_category,
+        isVerified: Boolean(vehicle.is_verified),
+      };
+    }),
+    ...drivers.map((driver): WorkspaceReviewItem => {
+      const customer = customersById.get(driver.customer);
+      const name = [normalizeText(driver.first_name), normalizeText(driver.last_name)]
+        .filter(Boolean)
+        .join(" ");
+
+      return {
+        id: driver.id,
+        kind: "driver",
+        ownerEmail: normalizeText(customer?.email),
+        title: name || normalizeText(driver.email) || `Driver #${driver.id}`,
+        detail: normalizeText(driver.license_number) || normalizeText(driver.license_country_code),
+        isVerified: Boolean(driver.is_verified),
+      };
+    }),
+  ];
+}
+
 async function getRecentOrdersByCustomerId(customerId: number): Promise<CustomerWorkspaceOrder[]> {
   const payload = await directusRequest<DirectusCollectionResponse<OrderRecord>>(
     `/items/orders${buildQuery({
@@ -707,7 +1169,104 @@ async function getRecentOrdersByCustomerId(customerId: number): Promise<Customer
     })}`,
   );
 
-  return payload.data.map(mapOrderRecord);
+  const orders = payload.data.map(mapOrderRecord);
+  const linksByOrderId = await mapContractLinksByOrderId(orders.map((order) => order.id));
+
+  return orders.map((order) => ({
+    ...order,
+    contractFileUrl: linksByOrderId.get(order.id),
+  }));
+}
+
+export async function getOrderHistoryByCustomerId(
+  customerId: number,
+): Promise<CustomerWorkspaceOrder[]> {
+  const payload = await directusRequest<DirectusCollectionResponse<OrderRecord>>(
+    `/items/orders${buildQuery({
+      fields:
+        "id,order_number,status,coverage_start_at,coverage_end_at,total_amount,premium_amount,currency,paid_at,admin_review_status",
+      "filter[customer][_eq]": String(customerId),
+      sort: "-id",
+      limit: "100",
+    })}`,
+  );
+
+  const orders = payload.data.map(mapOrderRecord);
+  const linksByOrderId = await mapContractLinksByOrderId(orders.map((order) => order.id));
+
+  return orders.map((order) => ({
+    ...order,
+    contractFileUrl: linksByOrderId.get(order.id),
+  }));
+}
+
+export async function generateMissingPolicyPdfsForCustomer(
+  customerId: number,
+): Promise<{ generated: number; skipped: number }> {
+  const orders = await getOrderHistoryByCustomerId(customerId);
+  let generated = 0;
+  let skipped = 0;
+
+  for (const order of orders) {
+    if (!["paid", "approved", "issued"].includes(order.status)) {
+      skipped += 1;
+      continue;
+    }
+
+    const didGenerate = await ensurePolicyPdfForOrder(order.id, customerId);
+    if (didGenerate) {
+      generated += 1;
+    } else {
+      skipped += 1;
+    }
+  }
+
+  return { generated, skipped };
+}
+
+export async function getPolicyPdfAssetIdForCustomerOrder(
+  customerId: number,
+  orderId: number,
+): Promise<string | null> {
+  const order = await getOrderByIdForCustomer(orderId, customerId);
+  if (!order) {
+    return null;
+  }
+
+  await ensurePolicyPdfForOrder(orderId, customerId);
+  const policy = await getPolicyByOrderId(orderId);
+  return normalizeText(policy?.pdf_file) || null;
+}
+
+export async function fetchDirectusAssetFile(fileId: string): Promise<{
+  bytes: ArrayBuffer;
+  contentType: string;
+  filename: string;
+}> {
+  const [fileMeta, token] = await Promise.all([
+    getDirectusFileMeta(fileId),
+    getDirectusAccessToken(),
+  ]);
+
+  const response = await fetch(`${directusInternalUrl}/assets/${fileId}?download`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to download the policy PDF from file service.");
+  }
+
+  return {
+    bytes: await response.arrayBuffer(),
+    contentType: response.headers.get("content-type") || fileMeta.type || "application/pdf",
+    filename:
+      normalizeText(fileMeta.filename_download) ||
+      normalizeText(fileMeta.title) ||
+      `${fileId}.pdf`,
+  };
 }
 
 async function buildCustomerWorkspace(customer: CustomerRecord): Promise<CustomerWorkspace> {
@@ -1067,6 +1626,7 @@ export async function deleteWorkspaceVehicle(
   }
 
   await getVehicleByIdForCustomer(customer.id, vehicleId);
+
   await softDeleteItem("vehicles", vehicleId);
   return buildCustomerWorkspace(customer);
 }
@@ -1112,6 +1672,7 @@ export async function deleteWorkspaceDriver(
   }
 
   await getDriverByIdForCustomer(customer.id, driverId);
+
   await softDeleteItem("drivers", driverId);
   return buildCustomerWorkspace(customer);
 }
@@ -1160,6 +1721,13 @@ export async function setWorkspaceItemVerification(
   await updateItem("drivers", id, {
     is_verified: isVerified,
   });
+}
+
+export async function archiveWorkspaceItem(
+  kind: "vehicle" | "driver",
+  id: number,
+): Promise<void> {
+  await softDeleteItem(kind === "vehicle" ? "vehicles" : "drivers", id);
 }
 
 async function getCurrentAdminUserId(): Promise<string | null> {
@@ -1274,6 +1842,48 @@ export async function completeCheckoutFlow(
     status: "approved",
     admin_review_status: "approved",
     internal_notes: "Local demo flow approved automatically.",
+  });
+
+  const contractFilename = `${order.order_number.toLowerCase()}-contract.pdf`;
+  const contractPdf = buildContractPdfTemplate({
+    order,
+    customer: {
+      id: workspace.customer.id,
+      email: workspace.customer.email,
+      first_name: workspace.customer.firstName,
+      last_name: workspace.customer.lastName,
+      phone: workspace.customer.phone,
+    },
+    vehicle,
+    driver,
+    productName: product.name,
+  });
+  const contractFileId = await uploadContractTemplateFile(
+    contractFilename,
+    contractPdf,
+    "application/pdf",
+  );
+
+  await createItem<PolicyRecord>("policies", {
+    policy_number: buildPolicyNumber(order.order_number),
+    order: order.id,
+    customer: workspace.customer.id,
+    product: product.id,
+    vehicle: vehicle.id,
+    driver: driver.id,
+    geo_zone: geoZone.id,
+    status: "issued",
+    issued_at: paidAt,
+    coverage_start_at: summary.coverageStartAt,
+    coverage_end_at: summary.coverageEndAt,
+    premium_amount: summary.totalPremium,
+    tax_amount: "0.00",
+    total_amount: summary.totalPremium,
+    currency: summary.currency,
+    circulation_countries: "FR",
+    pdf_file: contractFileId,
+    pdf_generated_at: paidAt,
+    document_version: "template-pdf-v1",
   });
 
   await Promise.all([

@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-import { homeProductCards } from "@/lib/home-product-cards";
+import { FaqLinkPanel } from "@/components/faq-link-panel";
+import { getFaqByTag } from "@/lib/faq";
+import { getHomeProductCards } from "@/lib/home-product-cards";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const homeProductCards = await getHomeProductCards();
   const cardShellClass =
     "group flex h-full min-h-[700px] flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)]";
   const categoryClass =
@@ -129,6 +132,16 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+
+
+      <section className="section-wrap pb-16 md:pb-24">
+        <FaqLinkPanel
+          title="Common questions before you order"
+          intro="To reduce friction, we keep key answers short and link directly to the right FAQ entries."
+          items={getFaqByTag("home").slice(0, 3)}
+        />
       </section>
 
       <section className="section-wrap pb-16 md:pb-24">

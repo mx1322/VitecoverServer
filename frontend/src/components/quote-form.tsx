@@ -64,9 +64,9 @@ const stepLabels: Array<{ id: Step; label: string }> = [
   { id: "price", label: "Product" },
   { id: "vehicle", label: "Vehicle" },
   { id: "driver", label: "Driver" },
-  { id: "payment", label: "Payment" },
+  { id: "payment", label: "Overview" },
   { id: "review", label: "Review" },
-  { id: "success", label: "Success" },
+  { id: "success", label: "Covered" },
 ];
 
 const stepDetails: Record<
@@ -76,37 +76,37 @@ const stepDetails: Record<
   price: {
     title: "Choose the product and cover window",
     description:
-      "Choose the temporary automobile product, the duration, and the start hour. The customer should clearly see the premium, the cover start, and the cover end before moving forward.",
-    next: ["Vehicle", "Driver", "Payment"],
+      "Select product, duration, and start hour. We immediately show premium, start, and end times.",
+    next: ["Vehicle", "Driver", "Overview"],
   },
   vehicle: {
     title: "Confirm the customer and vehicle",
     description:
-      "Before any vehicle can be selected, the customer must sign in with the account module. Once authenticated, the page opens the saved vehicles or the new vehicle form.",
-    next: ["Driver", "Payment", "Review"],
+      "Sign in, then pick a saved vehicle or add a new one.",
+    next: ["Driver", "Overview", "Review"],
   },
   driver: {
     title: "Confirm the driver",
     description:
-      "This step is only about the driver. Once the driver is confirmed, the customer can continue directly to payment.",
-    next: ["Payment", "Review", "Success"],
+      "Pick a saved driver or add one new driver.",
+    next: ["Overview", "Review", "Covered"],
   },
   payment: {
-    title: "Collect payment",
+    title: "Overview",
     description:
-      "The payment page also shows the order recap. In the local demo we still mark payment as successful automatically.",
-    next: ["Review", "Success"],
+      "Check the recap and confirm payment.",
+    next: ["Review", "Covered"],
   },
   review: {
     title: "Manual review",
     description:
-      "This insurance product requires a human review before success. In the local demo, the review is still approved automatically after payment.",
-    next: ["Success"],
+      "Some products require a short manual check before coverage starts.",
+    next: ["Covered"],
   },
   success: {
-    title: "Order success",
+    title: "Covered",
     description:
-      "The order is approved. Contract delivery by email is the next milestone, and the customer can already go to Orders to review the record.",
+      "Order approved. Your policy is sent by email and stored in your history.",
     next: [],
   },
 };
@@ -398,8 +398,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     if (requestedStep !== "price" && !workspace) {
-      setStep("vehicle");
-      router.replace(buildQuoteHref("vehicle"));
+      redirectToAuth(requestedStep);
       return;
     }
 
@@ -690,7 +689,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
     }
 
     if ((target === "review" || target === "success") && !result) {
-      setError("Finish payment before opening review or success.");
+      setError("Finish payment before opening review or covered.");
       setStep("payment");
       return;
     }
@@ -1133,23 +1132,9 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
         {step === "vehicle" ? (
           <div className="mt-8 space-y-6">
             {!workspace ? (
-              <div className="mx-auto max-w-xl rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-white p-8 shadow-[0_18px_50px_rgba(22,36,58,0.08)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Login required
-                </p>
-                <h2 className="mt-3 text-3xl font-semibold text-[var(--ink)]">Sign in to continue</h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                  Vehicle, driver, payment, and review are only available after login.
-                </p>
-                <div className="mt-6">
-                  <Link
-                    href={`/auth?returnTo=${encodeURIComponent(buildQuoteHref("vehicle"))}`}
-                    className={`${primaryButtonClass} inline-flex items-center justify-center`}
-                  >
-                    Open account login
-                  </Link>
-                </div>
-              </div>
+              <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+                Redirecting to login...
+              </p>
             ) : (
               <>
                 <div className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[var(--surface-2)] p-5">
@@ -1534,10 +1519,10 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
             <div className="rounded-[28px] bg-[var(--surface-2)] p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Local payment
+                Overview
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-[var(--ink)]">
-                Simulate a successful payment for this order.
+                Confirm the order details before payment.
               </h2>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
                 For the local flow we skip the real PSP and mark the payment as succeeded
@@ -1559,7 +1544,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               The order has passed the required human review step.
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              This insurance product must be checked by a human reviewer before success. In the
+              This insurance product must be checked by a human reviewer before coverage. In the
               local demo, the review is approved automatically after payment so the flow can keep moving.
             </p>
             <div className="mt-5 grid gap-3 text-sm text-[var(--ink)]">
@@ -1573,7 +1558,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
         {step === "success" && result ? (
           <div className="mt-8 space-y-4">
             <div className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6">
-              <p className="eyebrow">Order success</p>
+              <p className="eyebrow">Covered</p>
               <h2 className="mt-3 text-2xl font-semibold text-[var(--ink)]">
                 {result.order.orderNumber}
               </h2>
@@ -1622,7 +1607,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
           </p>
         ) : null}
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           {step !== "price" && step !== "success" ? (
             <button
               type="button"
@@ -1649,7 +1634,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                 }}
                 className={primaryButtonClass}
               >
-                Continue to vehicle
+                Confirm insurance
               </button>
             </>
           ) : null}
@@ -1661,7 +1646,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={handleVehicleContinue}
               className={primaryButtonClass}
             >
-              {isPending ? "Refreshing price..." : "Use this vehicle"}
+              {isPending ? "Refreshing price..." : "Confirm vehicle"}
             </button>
           ) : null}
 
@@ -1671,7 +1656,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={handleDriverContinue}
               className={primaryButtonClass}
             >
-              Continue to payment
+              Confirm driver
             </button>
           ) : null}
 
@@ -1695,7 +1680,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               }}
               className={primaryButtonClass}
             >
-              Continue to success
+              Continue to covered
             </button>
           ) : null}
 

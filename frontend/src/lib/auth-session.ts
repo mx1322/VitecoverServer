@@ -2,11 +2,14 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { cookies } from "next/headers";
 
+export type AccountRole = "customer" | "product_manager" | "admin";
+
 export interface AuthSession {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
   email: string;
+  role?: AccountRole;
 }
 
 const sessionCookieName = "vitecover-auth-session";
@@ -20,13 +23,13 @@ function shouldUseSecureCookies(): boolean {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? "";
 
   if (!siteUrl) {
-    return process.env.NODE_ENV === "production";
+    return false;
   }
 
   try {
     return new URL(siteUrl).protocol === "https:";
   } catch {
-    return process.env.NODE_ENV === "production";
+    return false;
   }
 }
 

@@ -37,11 +37,52 @@ The intended workflow is:
 - `.github/workflows/deploy-dev-local.yml`
   Pushes to `dev` trigger deployment on a GitHub self-hosted runner running on this machine.
 - Deployment target path:
-  `/home/max/apps/VitecoverServer`
+  `${RUNNER_WORKSPACE}/deploy-checkout`
 - Deployment command:
   `./up.sh`
 - Important:
   This path is hard-reset to `origin/dev` during deployment, so it should be treated as a dedicated deployment checkout, not a place for uncommitted local work.
+
+## Reverse proxy access model (recommended)
+
+For integrated frontend + backend runs (`./up.sh`), use **one public entrypoint**:
+
+- Public/LAN URL: `http://<host>[:EDGE_HTTP_PORT]` via `vitecover_edge` (Nginx)
+- Frontend app is reachable only behind this edge proxy
+- Directus public API/assets are exposed through `/directus/*` on the same edge host
+
+Directus is kept internal to the Docker network in the integrated stack.
+
+That means:
+
+- LAN/mobile clients should use the edge URL only
+- backend/admin traffic still reaches Directus through the shared reverse proxy
+
+## Optional local browser test container
+
+When you need to quickly validate frontend/backend integration flows (for example: Google account
+login management, self-service order creation, PDF/contract attachment access), you can run the
+optional browser tooling container:
+
+```bash
+docker compose -f docker-compose.browser.yml up -d
+docker exec -it vitecover_browser_tools bash
+```
+
+Then inside the container, you can run Playwright one-off checks against the reverse-proxy URL:
+
+```bash
+npx -y playwright@1.53.0 open http://127.0.0.1:${EDGE_HTTP_PORT:-80}
+```
+
+For CI-like headless smoke checks and screenshots:
+
+```bash
+npx -y playwright@1.53.0 screenshot --browser=chromium http://127.0.0.1:${EDGE_HTTP_PORT:-80} /tmp/home.png
+```
+
+The browser container uses host networking so it can access your local reverse-proxy endpoint and
+the local-only Directus debug endpoint when needed.
 
 ## Current focus
 
@@ -62,10 +103,10 @@ The backend is already initialized around the temporary vehicle insurance workfl
 
 ## Where to start
 
-- Backend runtime and schema workflow: [backend/README.md](/home/max/devwork/VitecoverServer/backend/README.md)
-- Documentation index: [docs/README.md](/home/max/devwork/VitecoverServer/docs/README.md)
-- Local workflow and repository usage: [docs/01-local-doc-index.md](/home/max/devwork/VitecoverServer/docs/01-local-doc-index.md)
-- Business scope: [docs/02-business-plan.md](/home/max/devwork/VitecoverServer/docs/02-business-plan.md)
-- Technical roadmap: [docs/03-technical-roadmap.md](/home/max/devwork/VitecoverServer/docs/03-technical-roadmap.md)
-- Frontend plan: [docs/04-frontend-plan.md](/home/max/devwork/VitecoverServer/docs/04-frontend-plan.md)
-- Backend plan: [docs/05-backend-plan.md](/home/max/devwork/VitecoverServer/docs/05-backend-plan.md)
+- Backend runtime and schema workflow: [backend/README.md](backend/README.md)
+- Documentation index: [docs/README.md](docs/README.md)
+- Local workflow and repository usage: [docs/01-local-doc-index.md](docs/01-local-doc-index.md)
+- Business scope: [docs/02-business-plan.md](docs/02-business-plan.md)
+- Technical roadmap: [docs/03-technical-roadmap.md](docs/03-technical-roadmap.md)
+- Frontend plan: [docs/04-frontend-plan.md](docs/04-frontend-plan.md)
+- Backend plan: [docs/05-backend-plan.md](docs/05-backend-plan.md)

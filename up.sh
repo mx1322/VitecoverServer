@@ -30,8 +30,7 @@ ensure_not_template_copy() {
   if cmp -s "$target" "$template"; then
     echo "$target still matches $template"
     echo "Please update these values before first startup:"
-    echo "- NEXT_PUBLIC_SITE_URL"
-    echo "- NEXT_PUBLIC_DIRECTUS_URL"
+    echo "- PUBLIC_URL"
     echo "- MINIO_ROOT_USER"
     echo "- MINIO_ROOT_PASSWORD"
     echo "- MINIO_BUCKET"
@@ -51,8 +50,6 @@ ensure_required_values_set() {
     "MINIO_ROOT_USER"
     "MINIO_ROOT_PASSWORD"
     "MINIO_BUCKET"
-    "NEXT_PUBLIC_SITE_URL"
-    "NEXT_PUBLIC_DIRECTUS_URL"
     "PUBLIC_URL"
   )
   local missing=0
@@ -110,6 +107,20 @@ ensure_not_template_copy "$ENV_FILE" "$ENV_TEMPLATE"
 ensure_required_values_set "$ENV_FILE"
 ensure_minio_password_not_default "$ENV_FILE"
 
+remove_legacy_named_containers() {
+  local names=(
+    "directus_app"
+    "directus_nginx"
+  )
+
+  for name in "${names[@]}"; do
+    if docker ps -a --format '{{.Names}}' | grep -Fxq "$name"; then
+      docker rm -f "$name" >/dev/null
+    fi
+  done
+}
+
+remove_legacy_named_containers
 docker compose --env-file "$ENV_FILE" -f backend/docker-compose.yml -f docker-compose.override.yml up -d --build
 ensure_minio_bucket_exists "$ENV_FILE"
 docker compose --env-file "$ENV_FILE" -f backend/docker-compose.yml -f docker-compose.override.yml ps

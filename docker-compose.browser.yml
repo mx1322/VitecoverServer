@@ -1,0 +1,14 @@
+services:
+  browser_tools:
+    image: mcr.microsoft.com/playwright:v1.53.0-jammy
+    container_name: vitecover_browser_tools
+    working_dir: /workspace/VitecoverServer
+    entrypoint: ["/bin/bash", "-lc"]
+    command: "sleep infinity"
+    volumes:
+      - ./:/workspace/VitecoverServer
+    # Share host networking so the browser container can hit local URLs such as
+    # http://127.0.0.1:${EDGE_HTTP_PORT} and http://127.0.0.1:${DIRECTUS_DEV_PORT}
+    network_mode: host
+    stdin_open: true
+    tty: true

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { setWorkspaceItemVerification } from "@/lib/directus-admin";
+import { listWorkspaceReviewItems, setWorkspaceItemVerification } from "@/lib/directus-admin";
+import { getAuthenticatedIdentity } from "@/lib/directus-auth";
 
 function requireString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
@@ -29,22 +30,30 @@ function requireBoolean(value: unknown, label: string): boolean {
   return value;
 }
 
-function ensureAdminAccess(request: Request) {
-  const configuredKey = process.env.ADMIN_REVIEW_API_KEY;
-  const requestKey = request.headers.get("x-admin-review-key") ?? "";
-
-  if (!configuredKey) {
-    throw new Error("ADMIN_REVIEW_API_KEY is not configured.");
+async function ensureManagerAccess() {
+  const identity = await getAuthenticatedIdentity();
+  if (identity?.user.role === "product_manager" || identity?.user.role === "admin") {
+    return;
   }
 
-  if (requestKey !== configuredKey) {
-    throw new Error("Admin access denied.");
+  throw new Error("Manager access denied.");
+}
+
+export async function GET() {
+  try {
+    await ensureManagerAccess();
+    const items = await listWorkspaceReviewItems();
+
+    return NextResponse.json({ items });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load review items.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    ensureAdminAccess(request);
+    await ensureManagerAccess();
 
     const body = (await request.json()) as Record<string, unknown>;
     const kind = requireString(body.kind, "kind");
@@ -66,4 +75,11 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+export async function DELETE() {
+  return NextResponse.json(
+    { error: "Managers cannot delete workspace items from the review queue." },
+    { status: 403 },
+  );
 }

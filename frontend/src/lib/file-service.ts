@@ -1,35 +1,35 @@
-const fileServiceBaseUrl =
+const configuredFileServiceBaseUrl =
   process.env.NEXT_PUBLIC_FILE_SERVICE_BASE_URL?.replace(/\/$/, "") ??
   process.env.NEXT_PUBLIC_DIRECTUS_URL?.replace(/\/$/, "") ??
   "";
 
 function isLoopbackHost(hostname: string): boolean {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "0.0.0.0";
 }
 
-function shouldUseRelativeDirectusPath(baseUrl: string): boolean {
-  if (!baseUrl || typeof window === "undefined") {
-    return false;
+function shouldUseRelativeAssetPath(baseUrl: string): boolean {
+  if (!baseUrl) {
+    return true;
   }
 
   try {
     const parsedBaseUrl = new URL(baseUrl);
-    const currentHostname = window.location.hostname;
 
+    if (typeof window === "undefined") {
+      return isLoopbackHost(parsedBaseUrl.hostname);
+    }
+
+    const currentHostname = window.location.hostname;
     return isLoopbackHost(parsedBaseUrl.hostname) && !isLoopbackHost(currentHostname);
   } catch {
-    return false;
+    return true;
   }
 }
 
 export function directusAssetUrl(assetId: string): string {
-  if (shouldUseRelativeDirectusPath(fileServiceBaseUrl)) {
-    return `/directus/assets/${assetId}`;
+  if (!shouldUseRelativeAssetPath(configuredFileServiceBaseUrl)) {
+    return `${configuredFileServiceBaseUrl}/assets/${assetId}`;
   }
 
-  if (fileServiceBaseUrl) {
-    return `${fileServiceBaseUrl}/assets/${assetId}`;
-  }
-
-  return `/directus/assets/${assetId}`;
+  return `/api/assets/${assetId}`;
 }
