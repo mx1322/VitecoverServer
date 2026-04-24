@@ -64,7 +64,7 @@ export default function ManagerOrdersPage() {
   if (role !== "product_manager" && role !== "admin") {
     return (
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6">
-        <h2 className="text-2xl font-semibold text-[var(--ink)]">仅产品经理可访问</h2>
+        <h2 className="text-2xl font-semibold text-[var(--ink)]">Product managers only</h2>
       </section>
     );
   }
@@ -77,14 +77,14 @@ export default function ManagerOrdersPage() {
         }
 
         if ((order.vehicleVerified || order.driverVerified) && patch.reviewStatus !== undefined) {
-          setMessage("资料已确认的订单审核状态已锁定，需管理员后台更改。");
+          setMessage("The review state is locked for orders with verified documents. An administrator must change it.");
           return order;
         }
 
         const next = { ...order, ...patch };
 
         if (next.reviewStatus === "pending_confirmation" && next.paymentStatus !== "paid") {
-          setMessage("所有等待确认订单必须是已付款状态，修改已拦截。");
+          setMessage("All orders waiting for confirmation must already be paid. This change was blocked.");
           return order;
         }
 
@@ -97,9 +97,9 @@ export default function ManagerOrdersPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6">
-        <h2 className="text-3xl font-semibold tracking-tight text-[var(--ink)]">产品经理订单管理</h2>
+        <h2 className="text-3xl font-semibold tracking-tight text-[var(--ink)]">Product manager order review</h2>
         <p className="mt-3 text-sm text-[var(--muted)]">
-          规则：排队等待确认的订单必须已付款。经理可取消订单或修改订单。若驾驶员/车辆任一资料已确认，则订单信息锁定，只允许管理员后台更改。
+          Rules: orders waiting for confirmation must already be paid. Managers can cancel or edit orders. If either the driver or vehicle documents have been verified, the order is locked and can only be changed by an administrator.
         </p>
       </section>
 
@@ -114,7 +114,7 @@ export default function ManagerOrdersPage() {
           <article key={order.id} className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5">
             <div className="grid gap-3 md:grid-cols-2">
               <label className="text-sm">
-                订单号
+                Order number
                 <input
                   value={order.orderNo}
                   disabled={locked}
@@ -123,7 +123,7 @@ export default function ManagerOrdersPage() {
                 />
               </label>
               <label className="text-sm">
-                产品
+                Product
                 <input
                   value={order.product}
                   disabled={locked}
@@ -132,7 +132,7 @@ export default function ManagerOrdersPage() {
                 />
               </label>
               <label className="text-sm">
-                支付状态
+                Payment status
                 <select
                   value={order.paymentStatus}
                   disabled={locked}
@@ -144,7 +144,7 @@ export default function ManagerOrdersPage() {
                 </select>
               </label>
               <label className="text-sm">
-                审核状态
+                Review status
                 <select
                   value={order.reviewStatus}
                   disabled={locked}
@@ -164,10 +164,10 @@ export default function ManagerOrdersPage() {
                 onClick={() => updateOrder(order.id, { reviewStatus: "cancelled" })}
                 className="rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[rgba(235,235,235,0.6)] disabled:text-[var(--muted)]"
               >
-                取消订单
+                Cancel order
               </button>
               <span className="text-xs text-[var(--muted)]">
-                资料锁定：{locked ? "已锁定（需管理员后台更改）" : "未锁定"}
+                Document lock: {locked ? "Locked (administrator required)" : "Unlocked"}
               </span>
             </div>
           </article>

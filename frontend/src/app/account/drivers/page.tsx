@@ -83,7 +83,7 @@ export default function DriversPage() {
     event.preventDefault();
 
     if (!hasAllDriverDocs(form)) {
-      setMessage("请上传驾照正反面 + 身份证/护照正反面后再提交。\n");
+      setMessage("Please upload the front and back of the driving license and the front and back of the ID card or passport before submitting.\n");
       return;
     }
 
@@ -104,7 +104,7 @@ export default function DriversPage() {
     const target = drivers.find((driver) => driver.id === id);
 
     if (target?.status === "approved") {
-      setMessage("驾驶员资料已确认，不能在当前界面删除。请联系管理员后台处理。");
+      setMessage("This driver record has already been verified and cannot be deleted here. Please contact an administrator.");
       return;
     }
 
@@ -122,7 +122,7 @@ export default function DriversPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Drivers</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Drivers</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              请上传驾驶员证件：驾照正反面，以及身份证或护照正反面。
+              Please upload the driver's documents: front and back of the driving license, plus front and back of the ID card or passport.
             </p>
           </div>
           <button
@@ -172,7 +172,7 @@ export default function DriversPage() {
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
                     <span>Date of birth: {driver.dob}</span>
                     <span>Licence: {driver.licence}</span>
-                    <span>资料: {hasAllDriverDocs(driver) ? "已上传" : "未完整上传"}</span>
+                    <span>Documents: {hasAllDriverDocs(driver) ? "Uploaded" : "Incomplete"}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -241,22 +241,22 @@ function DriverForm({
         />
       </label>
       <DocumentUpload
-        label="驾照正面"
+        label="Driving license - front"
         existingFileName={form.licenseFrontFileName}
         onSelect={(name) => onChange((current) => ({ ...current, licenseFrontFileName: name }))}
       />
       <DocumentUpload
-        label="驾照反面"
+        label="Driving license - back"
         existingFileName={form.licenseBackFileName}
         onSelect={(name) => onChange((current) => ({ ...current, licenseBackFileName: name }))}
       />
       <DocumentUpload
-        label="身份证/护照正面"
+        label="ID card / passport - front"
         existingFileName={form.identityFrontFileName}
         onSelect={(name) => onChange((current) => ({ ...current, identityFrontFileName: name }))}
       />
       <DocumentUpload
-        label="身份证/护照反面"
+        label="ID card / passport - back"
         existingFileName={form.identityBackFileName}
         onSelect={(name) => onChange((current) => ({ ...current, identityBackFileName: name }))}
       />
@@ -297,7 +297,7 @@ function DocumentUpload({
         onChange={(event) => onSelect(event.target.files?.[0]?.name || existingFileName || "")}
         className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
       />
-      {hasExistingFile ? <p className="mt-1 text-xs text-[var(--muted)]">已上传：{existingFileName}</p> : null}
+      {hasExistingFile ? <p className="mt-1 text-xs text-[var(--muted)]">Uploaded: {existingFileName}</p> : null}
     </label>
   );
 }

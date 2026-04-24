@@ -65,7 +65,7 @@ export default function VehiclesPage() {
     event.preventDefault();
 
     if (!form.greyCardFileName?.trim()) {
-      setMessage("请上传车辆行驶证（法国灰卡）后再提交。");
+      setMessage("Please upload the vehicle registration document (French Carte Grise) before submitting.");
       return;
     }
 
@@ -86,7 +86,7 @@ export default function VehiclesPage() {
     const target = vehicles.find((vehicle) => vehicle.id === id);
 
     if (target?.status === "approved") {
-      setMessage("车辆资料已确认，不能在当前界面删除。请联系管理员后台处理。");
+      setMessage("This vehicle record has already been verified and cannot be deleted here. Please contact an administrator.");
       return;
     }
 
@@ -104,7 +104,7 @@ export default function VehiclesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Vehicles</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Vehicles</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              普通用户可上传车辆资料。请上传法国灰卡（Carte Grise）图片后提交审核。
+              Customers can upload vehicle documents here. Please upload an image of the French Carte Grise before submitting for review.
             </p>
           </div>
           <button
@@ -154,7 +154,7 @@ export default function VehiclesPage() {
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
                     <span>{vehicle.model}</span>
                     <span>{vehicle.type}</span>
-                    <span>灰卡文件：{vehicle.greyCardFileName || "未上传"}</span>
+                    <span>Carte Grise file: {vehicle.greyCardFileName || "Not uploaded"}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -223,7 +223,7 @@ function VehicleForm({
         />
       </label>
       <label className="text-sm font-medium text-[var(--ink)] md:col-span-3">
-        车辆行驶证（法国灰卡）
+        Vehicle registration document (French Carte Grise)
         <input
           required
           type="file"
@@ -236,7 +236,7 @@ function VehicleForm({
           }
           className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
         />
-        <p className="mt-1 text-xs text-[var(--muted)]">支持图片或 PDF，仅用于审核车辆资料。</p>
+        <p className="mt-1 text-xs text-[var(--muted)]">Images or PDF files are supported. These files are used only for vehicle review.</p>
       </label>
       <div className="flex gap-3 md:col-span-3">
         <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">
