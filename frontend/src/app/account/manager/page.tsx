@@ -7,9 +7,11 @@ import type { AccountRole } from "@/lib/auth-session";
 type WorkspaceReviewItem = {
   id: number;
   kind: "vehicle" | "driver";
+  ownerName: string;
   ownerEmail: string;
   title: string;
   detail: string;
+  details: Array<{ label: string; value: string }>;
   isVerified: boolean;
 };
 
@@ -145,11 +147,23 @@ export default function ManagerWorkspaceReviewPage() {
               <div className="mt-4 space-y-3">
                 {vehicleItems.map((item) => (
                   <article key={`${item.kind}-${item.id}`} className="rounded-[18px] border border-[rgba(22,36,58,0.08)] px-4 py-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0">
                         <p className="font-semibold text-[var(--ink)]">Vehicle: {item.title}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">Customer: {item.ownerEmail || "Unknown"}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">{item.detail || "No additional details"}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          Customer: {[item.ownerName, item.ownerEmail].filter(Boolean).join(" · ") || "Unknown"}
+                        </p>
+                        <p className="mt-2 text-sm text-[var(--ink)]">{item.detail || "No additional details"}</p>
+                        <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {item.details.map((detail) => (
+                            <div key={`${item.id}-${detail.label}`} className="rounded-[14px] bg-[rgba(22,36,58,0.03)] px-3 py-2">
+                              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                                {detail.label}
+                              </dt>
+                              <dd className="mt-1 text-sm text-[var(--ink)]">{detail.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
                       </div>
                       <button
                         onClick={() => updateItem(item, true)}
@@ -172,11 +186,23 @@ export default function ManagerWorkspaceReviewPage() {
               <div className="mt-4 space-y-3">
                 {driverItems.map((item) => (
                   <article key={`${item.kind}-${item.id}`} className="rounded-[18px] border border-[rgba(22,36,58,0.08)] px-4 py-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0">
                         <p className="font-semibold text-[var(--ink)]">Driver: {item.title}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">Customer: {item.ownerEmail || "Unknown"}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">{item.detail || "No additional details"}</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          Customer: {[item.ownerName, item.ownerEmail].filter(Boolean).join(" · ") || "Unknown"}
+                        </p>
+                        <p className="mt-2 text-sm text-[var(--ink)]">{item.detail || "No additional details"}</p>
+                        <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {item.details.map((detail) => (
+                            <div key={`${item.id}-${detail.label}`} className="rounded-[14px] bg-[rgba(22,36,58,0.03)] px-3 py-2">
+                              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                                {detail.label}
+                              </dt>
+                              <dd className="mt-1 text-sm text-[var(--ink)]">{detail.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
                       </div>
                       <button
                         onClick={() => updateItem(item, true)}

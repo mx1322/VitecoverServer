@@ -1,41 +1,42 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type Vehicle = {
-  id: string;
-  registration: string;
-  model: string;
-  type: string;
-  status: "approved" | "under_review";
-  greyCardFileName?: string;
+import type { CustomerWorkspaceVehicle } from "@/lib/directus-admin";
+
+type SessionResponse = {
+  authenticated: boolean;
+  account?: {
+    vehicles?: CustomerWorkspaceVehicle[];
+  } | null;
+  error?: string;
 };
 
-const initialVehicles: Vehicle[] = [
-  {
-    id: "1",
-    registration: "AB-123-CD",
-    model: "Peugeot 308",
-    type: "Passenger Car",
-    status: "under_review",
-    greyCardFileName: "carte-grise-maxime-bai.pdf",
-  },
-  { id: "2", registration: "EF-456-GH", model: "Renault Trafic", type: "Light Commercial Van", status: "approved", greyCardFileName: "carte-grise-renault.jpg" },
-];
+type WorkspaceMutationResponse = {
+  workspace?: {
+    vehicles?: CustomerWorkspaceVehicle[];
+  };
+  error?: string;
+};
 
-const emptyVehicle: Vehicle = {
-  id: "",
-  registration: "",
+type VehicleFormState = {
+  registrationNumber: string;
+  manufacturer: string;
+  model: string;
+  fiscalPower: string;
+  greyCardFileName: string;
+};
+
+const emptyVehicle: VehicleFormState = {
+  registrationNumber: "",
+  manufacturer: "",
   model: "",
-  type: "",
-  status: "under_review",
+  fiscalPower: "6",
   greyCardFileName: "",
 };
 
-function VehicleStatusBadge({ status }: { status: Vehicle["status"] }) {
-  const approved = status === "approved";
-
+function VehicleStatusBadge({ approved }: { approved: boolean }) {
   return (
     <span
       className={
@@ -50,51 +51,101 @@ function VehicleStatusBadge({ status }: { status: Vehicle["status"] }) {
 }
 
 export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState(initialVehicles);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [vehicles, setVehicles] = useState<CustomerWorkspaceVehicle[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState(emptyVehicle);
-  const [message, setMessage] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
+  const [message, setMessage] = useState("");
 
-  function startEdit(vehicle?: Vehicle) {
-    setEditingId(vehicle?.id || "new");
-    setForm(vehicle || emptyVehicle);
-    setMessage("");
-  }
+  useEffect(() => {
+    async function loadVehicles() {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const payload = (await response.json()) as SessionResponse;
 
-  function saveVehicle(event: FormEvent<HTMLFormElement>) {
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to load vehicles.");
+        }
+
+        setVehicles(payload.account?.vehicles || []);
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Unable to load vehicles.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadVehicles();
+  }, []);
+
+  async function saveVehicle(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.greyCardFileName?.trim()) {
+    if (!form.greyCardFileName.trim()) {
       setMessage("Please upload the vehicle registration document (French Carte Grise) before submitting.");
       return;
     }
 
-    const nextVehicle = {
-      ...form,
-      id: form.id || `vehicle-${Date.now()}`,
-    };
-
-    setVehicles((current) =>
-      form.id ? current.map((vehicle) => (vehicle.id === form.id ? nextVehicle : vehicle)) : [nextVehicle, ...current],
-    );
-    setEditingId(null);
-    setForm(emptyVehicle);
+    setIsPending(true);
     setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/workspace-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "vehicle",
+          registrationNumber: form.registrationNumber,
+          manufacturer: form.manufacturer,
+          model: form.model,
+          fiscalPower: Number(form.fiscalPower),
+        }),
+      });
+      const payload = (await response.json()) as WorkspaceMutationResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to save this vehicle.");
+      }
+
+      setVehicles(payload.workspace?.vehicles || []);
+      setForm(emptyVehicle);
+      setIsAdding(false);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save this vehicle.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
-  function removeVehicle(id: string) {
-    const target = vehicles.find((vehicle) => vehicle.id === id);
-
-    if (target?.status === "approved") {
+  async function removeVehicle(id: number, approved: boolean) {
+    if (approved) {
       setMessage("This vehicle record has already been verified and cannot be deleted here. Please contact an administrator.");
       return;
     }
 
-    setVehicles((current) => current.filter((vehicle) => vehicle.id !== id));
+    setIsPending(true);
     setMessage("");
-  }
 
-  const isAdding = editingId === "new";
+    try {
+      const response = await fetch("/api/auth/workspace-item", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "vehicle", id }),
+      });
+      const payload = (await response.json()) as WorkspaceMutationResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to remove this vehicle.");
+      }
+
+      setVehicles(payload.workspace?.vehicles || []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to remove this vehicle.");
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -108,7 +159,11 @@ export default function VehiclesPage() {
             </p>
           </div>
           <button
-            onClick={() => startEdit()}
+            onClick={() => {
+              setIsAdding(true);
+              setForm(emptyVehicle);
+              setMessage("");
+            }}
             className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)]"
           >
             Add vehicle
@@ -123,13 +178,20 @@ export default function VehiclesPage() {
       <section className="space-y-4">
         {isAdding ? (
           <article className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] px-5 py-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]">
-            <VehicleForm
-              form={form}
-              onChange={setForm}
-              onSubmit={saveVehicle}
-              onCancel={() => setEditingId(null)}
-            />
+            <VehicleForm form={form} onChange={setForm} onSubmit={saveVehicle} onCancel={() => setIsAdding(false)} isPending={isPending} />
           </article>
+        ) : null}
+
+        {loading ? (
+          <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+            Loading vehicles...
+          </p>
+        ) : null}
+
+        {!loading && vehicles.length === 0 ? (
+          <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+            No vehicles yet.
+          </p>
         ) : null}
 
         {vehicles.map((vehicle) => (
@@ -137,44 +199,28 @@ export default function VehiclesPage() {
             key={vehicle.id}
             className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] px-5 py-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]"
           >
-            {editingId === vehicle.id ? (
-              <VehicleForm
-                form={form}
-                onChange={setForm}
-                onSubmit={saveVehicle}
-                onCancel={() => setEditingId(null)}
-              />
-            ) : (
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="font-semibold text-[var(--ink)]">{vehicle.registration}</p>
-                    <VehicleStatusBadge status={vehicle.status} />
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
-                    <span>{vehicle.model}</span>
-                    <span>{vehicle.type}</span>
-                    <span>Carte Grise file: {vehicle.greyCardFileName || "Not uploaded"}</span>
-                  </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="font-semibold text-[var(--ink)]">{vehicle.registrationNumber}</p>
+                  <VehicleStatusBadge approved={vehicle.isVerified} />
                 </div>
-                <div className="flex gap-3">
-                  {vehicle.status !== "approved" ? (
-                    <button
-                      onClick={() => startEdit(vehicle)}
-                      className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-                    >
-                      Edit
-                    </button>
-                  ) : null}
-                  <button
-                    onClick={() => removeVehicle(vehicle.id)}
-                    className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-                  >
-                    Remove
-                  </button>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
+                  <span>{[vehicle.manufacturer, vehicle.model].filter(Boolean).join(" ") || "Vehicle"}</span>
+                  <span>{vehicle.fiscalPower} CV</span>
+                  <span>Documents: {vehicle.isVerified ? "Verified" : "Submitted for review"}</span>
                 </div>
               </div>
-            )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => removeVehicle(vehicle.id, vehicle.isVerified)}
+                  disabled={isPending}
+                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)] disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </article>
         ))}
       </section>
@@ -187,66 +233,49 @@ function VehicleForm({
   onChange,
   onSubmit,
   onCancel,
+  isPending,
 }: {
-  form: Vehicle;
-  onChange: (value: Vehicle | ((current: Vehicle) => Vehicle)) => void;
+  form: VehicleFormState;
+  onChange: (value: VehicleFormState | ((current: VehicleFormState) => VehicleFormState)) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
+  isPending: boolean;
 }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-3">
       <label className="text-sm font-medium text-[var(--ink)]">
         Registration
-        <input
-          required
-          value={form.registration}
-          onChange={(event) => onChange((current) => ({ ...current, registration: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+        <input required value={form.registrationNumber} onChange={(event) => onChange((current) => ({ ...current, registrationNumber: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
+      </label>
+      <label className="text-sm font-medium text-[var(--ink)]">
+        Manufacturer
+        <input value={form.manufacturer} onChange={(event) => onChange((current) => ({ ...current, manufacturer: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
       <label className="text-sm font-medium text-[var(--ink)]">
         Model
-        <input
-          required
-          value={form.model}
-          onChange={(event) => onChange((current) => ({ ...current, model: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+        <input value={form.model} onChange={(event) => onChange((current) => ({ ...current, model: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
       <label className="text-sm font-medium text-[var(--ink)]">
-        Type
-        <input
-          required
-          value={form.type}
-          onChange={(event) => onChange((current) => ({ ...current, type: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+        Fiscal power
+        <input required type="number" min="1" value={form.fiscalPower} onChange={(event) => onChange((current) => ({ ...current, fiscalPower: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
-      <label className="text-sm font-medium text-[var(--ink)] md:col-span-3">
+      <label className="text-sm font-medium text-[var(--ink)] md:col-span-2">
         Vehicle registration document (French Carte Grise)
         <input
           required
           type="file"
           accept="image/*,.pdf"
-          onChange={(event) =>
-            onChange((current) => ({
-              ...current,
-              greyCardFileName: event.target.files?.[0]?.name || current.greyCardFileName || "",
-            }))
-          }
+          onChange={(event) => onChange((current) => ({ ...current, greyCardFileName: event.target.files?.[0]?.name || "" }))}
           className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
         />
+        {form.greyCardFileName ? <p className="mt-1 text-xs text-[var(--muted)]">Selected: {form.greyCardFileName}</p> : null}
         <p className="mt-1 text-xs text-[var(--muted)]">Images or PDF files are supported. These files are used only for vehicle review.</p>
       </label>
       <div className="flex gap-3 md:col-span-3">
-        <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">
-          Save vehicle
+        <button disabled={isPending} className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">
+          {isPending ? "Saving..." : "Save vehicle"}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-full border border-[rgba(22,36,58,0.08)] px-5 py-3 text-sm font-medium text-[var(--ink)]"
-        >
+        <button type="button" onClick={onCancel} className="rounded-full border border-[rgba(22,36,58,0.08)] px-5 py-3 text-sm font-medium text-[var(--ink)]">
           Cancel
         </button>
       </div>

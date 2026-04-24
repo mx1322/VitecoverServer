@@ -225,9 +225,11 @@ export interface CustomerWorkspaceOrder {
 export interface WorkspaceReviewItem {
   id: number;
   kind: "vehicle" | "driver";
+  ownerName: string;
   ownerEmail: string;
   title: string;
   detail: string;
+  details: Array<{ label: string; value: string }>;
   isVerified: boolean;
 }
 
@@ -1134,9 +1136,19 @@ export async function listWorkspaceReviewItems(): Promise<WorkspaceReviewItem[]>
       return {
         id: vehicle.id,
         kind: "vehicle",
+        ownerName: [normalizeText(customer?.first_name), normalizeText(customer?.last_name)]
+          .filter(Boolean)
+          .join(" "),
         ownerEmail: normalizeText(customer?.email),
         title: vehicle.registration_number,
         detail: model || vehicle.vehicle_category,
+        details: [
+          { label: "Manufacturer", value: normalizeText(vehicle.manufacturer) || "-" },
+          { label: "Model", value: normalizeText(vehicle.model) || "-" },
+          { label: "Category", value: normalizeText(vehicle.vehicle_category) || "-" },
+          { label: "Usage", value: normalizeText(vehicle.usage_type) || "-" },
+          { label: "Fiscal power", value: vehicle.fiscal_power ? `${vehicle.fiscal_power} CV` : "-" },
+        ],
         isVerified: Boolean(vehicle.is_verified),
       };
     }),
@@ -1149,9 +1161,19 @@ export async function listWorkspaceReviewItems(): Promise<WorkspaceReviewItem[]>
       return {
         id: driver.id,
         kind: "driver",
+        ownerName: [normalizeText(customer?.first_name), normalizeText(customer?.last_name)]
+          .filter(Boolean)
+          .join(" "),
         ownerEmail: normalizeText(customer?.email),
         title: name || normalizeText(driver.email) || `Driver #${driver.id}`,
         detail: normalizeText(driver.license_number) || normalizeText(driver.license_country_code),
+        details: [
+          { label: "Birthday", value: normalizeText(driver.birthday) || "-" },
+          { label: "Email", value: normalizeText(driver.email) || "-" },
+          { label: "Phone", value: normalizeText(driver.phone) || "-" },
+          { label: "Licence number", value: normalizeText(driver.license_number) || "-" },
+          { label: "Licence country", value: normalizeText(driver.license_country_code) || "-" },
+        ],
         isVerified: Boolean(driver.is_verified),
       };
     }),

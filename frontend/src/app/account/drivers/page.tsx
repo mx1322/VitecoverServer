@@ -1,50 +1,54 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type Driver = {
-  id: string;
-  name: string;
-  dob: string;
-  licence: string;
-  status: "approved" | "under_review";
-  licenseFrontFileName?: string;
-  licenseBackFileName?: string;
-  identityFrontFileName?: string;
-  identityBackFileName?: string;
+import type { CustomerWorkspaceDriver } from "@/lib/directus-admin";
+
+type SessionResponse = {
+  authenticated: boolean;
+  account?: {
+    drivers?: CustomerWorkspaceDriver[];
+  } | null;
+  error?: string;
 };
 
-const initialDrivers: Driver[] = [
-  {
-    id: "1",
-    name: "Maxime Bai",
-    dob: "01 Jan 1988",
-    licence: "FR-XXXX-1234",
-    status: "under_review",
-    licenseFrontFileName: "licence-front.jpg",
-    licenseBackFileName: "licence-back.jpg",
-    identityFrontFileName: "passport-front.jpg",
-    identityBackFileName: "passport-back.jpg",
-  },
-  { id: "2", name: "Alex Martin", dob: "18 Apr 1991", licence: "FR-XXXX-5678", status: "approved", licenseFrontFileName: "alex-licence-front.png", licenseBackFileName: "alex-licence-back.png", identityFrontFileName: "alex-id-front.png", identityBackFileName: "alex-id-back.png" },
-];
+type WorkspaceMutationResponse = {
+  workspace?: {
+    drivers?: CustomerWorkspaceDriver[];
+  };
+  error?: string;
+};
 
-const emptyDriver: Driver = {
-  id: "",
-  name: "",
-  dob: "",
-  licence: "",
-  status: "under_review",
+type DriverFormState = {
+  firstName: string;
+  lastName: string;
+  birthday: string;
+  email: string;
+  phone: string;
+  licenseNumber: string;
+  licenseCountryCode: string;
+  licenseFrontFileName: string;
+  licenseBackFileName: string;
+  identityFrontFileName: string;
+  identityBackFileName: string;
+};
+
+const emptyDriver: DriverFormState = {
+  firstName: "",
+  lastName: "",
+  birthday: "",
+  email: "",
+  phone: "",
+  licenseNumber: "",
+  licenseCountryCode: "FR",
   licenseFrontFileName: "",
   licenseBackFileName: "",
   identityFrontFileName: "",
   identityBackFileName: "",
 };
 
-function DriverStatusBadge({ status }: { status: Driver["status"] }) {
-  const approved = status === "approved";
-
+function DriverStatusBadge({ approved }: { approved: boolean }) {
   return (
     <span
       className={
@@ -58,61 +62,131 @@ function DriverStatusBadge({ status }: { status: Driver["status"] }) {
   );
 }
 
-function hasAllDriverDocs(driver: Driver): boolean {
+function hasAllDriverDocs(driver: DriverFormState): boolean {
   return Boolean(
-    driver.licenseFrontFileName?.trim() &&
-      driver.licenseBackFileName?.trim() &&
-      driver.identityFrontFileName?.trim() &&
-      driver.identityBackFileName?.trim(),
+    driver.licenseFrontFileName.trim() &&
+      driver.licenseBackFileName.trim() &&
+      driver.identityFrontFileName.trim() &&
+      driver.identityBackFileName.trim(),
   );
 }
 
-export default function DriversPage() {
-  const [drivers, setDrivers] = useState(initialDrivers);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyDriver);
-  const [message, setMessage] = useState<string>("");
-
-  function startEdit(driver?: Driver) {
-    setEditingId(driver?.id || "new");
-    setForm(driver || emptyDriver);
-    setMessage("");
+function formatBirthday(value?: string) {
+  if (!value) {
+    return "Not set";
   }
 
-  function saveDriver(event: FormEvent<HTMLFormElement>) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export default function DriversPage() {
+  const [drivers, setDrivers] = useState<CustomerWorkspaceDriver[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState(emptyDriver);
+  const [loading, setLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    async function loadDrivers() {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const payload = (await response.json()) as SessionResponse;
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to load drivers.");
+        }
+
+        setDrivers(payload.account?.drivers || []);
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Unable to load drivers.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDrivers();
+  }, []);
+
+  async function saveDriver(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!hasAllDriverDocs(form)) {
-      setMessage("Please upload the front and back of the driving license and the front and back of the ID card or passport before submitting.\n");
+      setMessage("Please upload the front and back of the driving license and the front and back of the ID card or passport before submitting.");
       return;
     }
 
-    const nextDriver = {
-      ...form,
-      id: form.id || `driver-${Date.now()}`,
-    };
-
-    setDrivers((current) =>
-      form.id ? current.map((driver) => (driver.id === form.id ? nextDriver : driver)) : [nextDriver, ...current],
-    );
-    setEditingId(null);
-    setForm(emptyDriver);
+    setIsPending(true);
     setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/workspace-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "driver",
+          firstName: form.firstName,
+          lastName: form.lastName,
+          birthday: form.birthday,
+          driverEmail: form.email,
+          phone: form.phone,
+          licenseNumber: form.licenseNumber,
+          licenseCountryCode: form.licenseCountryCode,
+        }),
+      });
+      const payload = (await response.json()) as WorkspaceMutationResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to save this driver.");
+      }
+
+      setDrivers(payload.workspace?.drivers || []);
+      setForm(emptyDriver);
+      setIsAdding(false);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save this driver.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
-  function removeDriver(id: string) {
-    const target = drivers.find((driver) => driver.id === id);
-
-    if (target?.status === "approved") {
+  async function removeDriver(id: number, approved: boolean) {
+    if (approved) {
       setMessage("This driver record has already been verified and cannot be deleted here. Please contact an administrator.");
       return;
     }
 
-    setDrivers((current) => current.filter((driver) => driver.id !== id));
+    setIsPending(true);
     setMessage("");
-  }
 
-  const isAdding = editingId === "new";
+    try {
+      const response = await fetch("/api/auth/workspace-item", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "driver", id }),
+      });
+      const payload = (await response.json()) as WorkspaceMutationResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to remove this driver.");
+      }
+
+      setDrivers(payload.workspace?.drivers || []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to remove this driver.");
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -126,7 +200,11 @@ export default function DriversPage() {
             </p>
           </div>
           <button
-            onClick={() => startEdit()}
+            onClick={() => {
+              setIsAdding(true);
+              setForm(emptyDriver);
+              setMessage("");
+            }}
             className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.18)]"
           >
             Add driver
@@ -141,13 +219,20 @@ export default function DriversPage() {
       <section className="space-y-4">
         {isAdding ? (
           <article className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] px-5 py-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]">
-            <DriverForm
-              form={form}
-              onChange={setForm}
-              onSubmit={saveDriver}
-              onCancel={() => setEditingId(null)}
-            />
+            <DriverForm form={form} onChange={setForm} onSubmit={saveDriver} onCancel={() => setIsAdding(false)} isPending={isPending} />
           </article>
+        ) : null}
+
+        {loading ? (
+          <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+            Loading drivers...
+          </p>
+        ) : null}
+
+        {!loading && drivers.length === 0 ? (
+          <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
+            No drivers yet.
+          </p>
         ) : null}
 
         {drivers.map((driver) => (
@@ -155,44 +240,30 @@ export default function DriversPage() {
             key={driver.id}
             className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] px-5 py-5 shadow-[0_14px_36px_rgba(22,36,58,0.04)]"
           >
-            {editingId === driver.id ? (
-              <DriverForm
-                form={form}
-                onChange={setForm}
-                onSubmit={saveDriver}
-                onCancel={() => setEditingId(null)}
-              />
-            ) : (
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="font-semibold text-[var(--ink)]">{driver.name}</p>
-                    <DriverStatusBadge status={driver.status} />
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
-                    <span>Date of birth: {driver.dob}</span>
-                    <span>Licence: {driver.licence}</span>
-                    <span>Documents: {hasAllDriverDocs(driver) ? "Uploaded" : "Incomplete"}</span>
-                  </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="font-semibold text-[var(--ink)]">
+                    {[driver.firstName, driver.lastName].filter(Boolean).join(" ") || "Driver"}
+                  </p>
+                  <DriverStatusBadge approved={driver.isVerified} />
                 </div>
-                <div className="flex gap-3">
-                  {driver.status !== "approved" ? (
-                    <button
-                      onClick={() => startEdit(driver)}
-                      className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-                    >
-                      Edit
-                    </button>
-                  ) : null}
-                  <button
-                    onClick={() => removeDriver(driver.id)}
-                    className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
-                  >
-                    Remove
-                  </button>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
+                  <span>Date of birth: {formatBirthday(driver.birthday)}</span>
+                  <span>Licence: {driver.licenseNumber || "Not set"}</span>
+                  <span>Documents: {driver.isVerified ? "Verified" : "Submitted for review"}</span>
                 </div>
               </div>
-            )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => removeDriver(driver.id, driver.isVerified)}
+                  disabled={isPending}
+                  className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)] disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </article>
         ))}
       </section>
@@ -205,70 +276,49 @@ function DriverForm({
   onChange,
   onSubmit,
   onCancel,
+  isPending,
 }: {
-  form: Driver;
-  onChange: (value: Driver | ((current: Driver) => Driver)) => void;
+  form: DriverFormState;
+  onChange: (value: DriverFormState | ((current: DriverFormState) => DriverFormState)) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
+  isPending: boolean;
 }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
       <label className="text-sm font-medium text-[var(--ink)]">
-        Name
-        <input
-          required
-          value={form.name}
-          onChange={(event) => onChange((current) => ({ ...current, name: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+        First name
+        <input required value={form.firstName} onChange={(event) => onChange((current) => ({ ...current, firstName: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
+      </label>
+      <label className="text-sm font-medium text-[var(--ink)]">
+        Last name
+        <input required value={form.lastName} onChange={(event) => onChange((current) => ({ ...current, lastName: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
       <label className="text-sm font-medium text-[var(--ink)]">
         Date of birth
-        <input
-          required
-          value={form.dob}
-          onChange={(event) => onChange((current) => ({ ...current, dob: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+        <input type="date" value={form.birthday} onChange={(event) => onChange((current) => ({ ...current, birthday: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
-      <label className="text-sm font-medium text-[var(--ink)] md:col-span-2">
-        Licence
-        <input
-          required
-          value={form.licence}
-          onChange={(event) => onChange((current) => ({ ...current, licence: event.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
-        />
+      <label className="text-sm font-medium text-[var(--ink)]">
+        Email
+        <input type="email" value={form.email} onChange={(event) => onChange((current) => ({ ...current, email: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
       </label>
-      <DocumentUpload
-        label="Driving license - front"
-        existingFileName={form.licenseFrontFileName}
-        onSelect={(name) => onChange((current) => ({ ...current, licenseFrontFileName: name }))}
-      />
-      <DocumentUpload
-        label="Driving license - back"
-        existingFileName={form.licenseBackFileName}
-        onSelect={(name) => onChange((current) => ({ ...current, licenseBackFileName: name }))}
-      />
-      <DocumentUpload
-        label="ID card / passport - front"
-        existingFileName={form.identityFrontFileName}
-        onSelect={(name) => onChange((current) => ({ ...current, identityFrontFileName: name }))}
-      />
-      <DocumentUpload
-        label="ID card / passport - back"
-        existingFileName={form.identityBackFileName}
-        onSelect={(name) => onChange((current) => ({ ...current, identityBackFileName: name }))}
-      />
+      <label className="text-sm font-medium text-[var(--ink)]">
+        Phone
+        <input value={form.phone} onChange={(event) => onChange((current) => ({ ...current, phone: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
+      </label>
+      <label className="text-sm font-medium text-[var(--ink)]">
+        Licence number
+        <input value={form.licenseNumber} onChange={(event) => onChange((current) => ({ ...current, licenseNumber: event.target.value }))} className="mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm" />
+      </label>
+      <FileInput label="Driving licence - front" onSelect={(fileName) => onChange((current) => ({ ...current, licenseFrontFileName: fileName }))} existingFileName={form.licenseFrontFileName} />
+      <FileInput label="Driving licence - back" onSelect={(fileName) => onChange((current) => ({ ...current, licenseBackFileName: fileName }))} existingFileName={form.licenseBackFileName} />
+      <FileInput label="ID card / passport - front" onSelect={(fileName) => onChange((current) => ({ ...current, identityFrontFileName: fileName }))} existingFileName={form.identityFrontFileName} />
+      <FileInput label="ID card / passport - back" onSelect={(fileName) => onChange((current) => ({ ...current, identityBackFileName: fileName }))} existingFileName={form.identityBackFileName} />
       <div className="flex gap-3 md:col-span-2">
-        <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">
-          Save driver
+        <button disabled={isPending} className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">
+          {isPending ? "Saving..." : "Save driver"}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-full border border-[rgba(22,36,58,0.08)] px-5 py-3 text-sm font-medium text-[var(--ink)]"
-        >
+        <button type="button" onClick={onCancel} className="rounded-full border border-[rgba(22,36,58,0.08)] px-5 py-3 text-sm font-medium text-[var(--ink)]">
           Cancel
         </button>
       </div>
@@ -276,28 +326,25 @@ function DriverForm({
   );
 }
 
-function DocumentUpload({
+function FileInput({
   label,
-  existingFileName,
   onSelect,
+  existingFileName,
 }: {
   label: string;
+  onSelect: (fileName: string) => void;
   existingFileName?: string;
-  onSelect: (filename: string) => void;
 }) {
-  const hasExistingFile = Boolean(existingFileName?.trim());
-
   return (
     <label className="text-sm font-medium text-[var(--ink)]">
       {label}
       <input
-        required={!hasExistingFile}
         type="file"
         accept="image/*,.pdf"
-        onChange={(event) => onSelect(event.target.files?.[0]?.name || existingFileName || "")}
+        onChange={(event) => onSelect(event.target.files?.[0]?.name || "")}
         className="mt-2 block w-full rounded-2xl border border-[rgba(22,36,58,0.12)] px-4 py-3 text-sm"
       />
-      {hasExistingFile ? <p className="mt-1 text-xs text-[var(--muted)]">Uploaded: {existingFileName}</p> : null}
+      {existingFileName ? <p className="mt-1 text-xs text-[var(--muted)]">Selected: {existingFileName}</p> : null}
     </label>
   );
 }
