@@ -1,5 +1,5 @@
 import { directusList } from "@/lib/directus/client";
-import type { Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import type { LocalizedFaqItem } from "@/types/faq";
 
 type FaqRow = {
@@ -24,7 +24,8 @@ export async function getFaqItems(locale: Locale): Promise<LocalizedFaqItem[]> {
 
   return rows
     .map((row) => {
-      const translation = row.translations?.find((item) => item.locale === locale);
+      const translation = row.translations?.find((item) => item.locale === locale)
+        ?? row.translations?.find((item) => item.locale === defaultLocale);
       if (!translation) {
         return null;
       }
@@ -33,7 +34,7 @@ export async function getFaqItems(locale: Locale): Promise<LocalizedFaqItem[]> {
         id: row.id,
         slug: row.slug,
         category: row.category,
-        locale,
+        locale: translation.locale,
         question: translation.question,
         answer: translation.answer,
         seoTitle: translation.seo_title,

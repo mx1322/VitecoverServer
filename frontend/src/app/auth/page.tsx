@@ -1,10 +1,13 @@
-import { AuthGatewayClient } from "./auth-gateway-client";
+import { redirect } from "next/navigation";
 
-export default async function AuthPage({
+import { defaultLocale } from "@/lib/i18n/config";
+
+export default async function AuthRedirectPage({
   searchParams,
 }: {
   searchParams: Promise<{ returnTo?: string }>;
 }) {
   const params = await searchParams;
-  return <AuthGatewayClient returnTo={params.returnTo || "/account"} />;
+  const returnTo = params.returnTo ? `?returnTo=${encodeURIComponent(params.returnTo)}` : "";
+  redirect(`/${defaultLocale}/auth${returnTo}`);
 }

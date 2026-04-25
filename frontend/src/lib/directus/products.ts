@@ -1,5 +1,5 @@
 import { directusList } from "@/lib/directus/client";
-import type { Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import type { LocalizedProduct } from "@/types/product";
 
 type ProductRow = {
@@ -20,7 +20,9 @@ type ProductRow = {
 };
 
 function mapProduct(row: ProductRow, locale: Locale): LocalizedProduct | null {
-  const translation = row.translations?.find((item) => item.locale === locale);
+  const translation = row.translations?.find((item) => item.locale === locale)
+    ?? row.translations?.find((item) => item.locale === defaultLocale);
+
   if (!translation) {
     return null;
   }
@@ -32,7 +34,7 @@ function mapProduct(row: ProductRow, locale: Locale): LocalizedProduct | null {
     category: row.category,
     icon: row.icon,
     basePriceFrom: row.base_price_from,
-    locale,
+    locale: translation.locale,
     title: translation.title,
     shortDescription: translation.short_description ?? "",
     longDescription: translation.long_description ?? "",

@@ -1,18 +1,77 @@
 {
   "brandTagline": "Assurance auto temporaire",
-  "nav": {"home":"Accueil","products":"Produits","quote":"Devis","faq":"FAQ","account":"Compte"},
-  "cta": {"getQuote":"Obtenir un devis","downloadPdf":"Télécharger PDF","edit":"Modifier","addDriver":"Ajouter un conducteur","addVehicle":"Ajouter un véhicule","uploadDocument":"Téléverser un document"},
-  "home": {"eyebrow":"Vitecover France","title":"Assurance auto temporaire multilingue","subtitle":"Souscription rapide en ligne","body":"Choisissez un produit, obtenez un devis et recevez votre police rapidement."},
-  "products": {"title":"Nos produits","intro":"Découvrez les produits disponibles selon le type de véhicule.","from":"À partir de","noData":"Les produits localisés ne sont pas disponibles pour le moment.","viewDetail":"Voir le détail"},
-  "quote": {"title":"Demande de devis","intro":"Un parcours partagé en 4 étapes pour tous les marchés.","steps":["Choix du produit","Informations conducteur","Informations véhicule","Paiement et émission"]},
-  "faq": {"title":"Questions fréquentes","intro":"Réponses utiles avant achat et pendant la gestion de contrat.","empty":"Aucune FAQ localisée disponible actuellement."},
+  "nav": {
+    "home": "Accueil",
+    "products": "Produits",
+    "quote": "Devis",
+    "faq": "FAQ",
+    "account": "Compte"
+  },
+  "cta": {
+    "getQuote": "Obtenir un devis",
+    "downloadPdf": "Télécharger PDF",
+    "edit": "Modifier",
+    "addDriver": "Ajouter un conducteur",
+    "addVehicle": "Ajouter un véhicule",
+    "uploadDocument": "Téléverser un document"
+  },
+  "home": {
+    "eyebrow": "Vitecover France",
+    "title": "Assurance auto temporaire multilingue",
+    "subtitle": "Souscription rapide en ligne",
+    "body": "Choisissez un produit, obtenez un devis et recevez votre police rapidement."
+  },
+  "products": {
+    "title": "Nos produits",
+    "intro": "Découvrez les produits disponibles selon le type de véhicule.",
+    "from": "À partir de",
+    "noData": "Les produits localisés ne sont pas disponibles pour le moment.",
+    "viewDetail": "Voir le détail"
+  },
+  "quote": {
+    "title": "Demande de devis",
+    "intro": "Un parcours partagé en 4 étapes pour tous les marchés.",
+    "steps": [
+      "Choix du produit",
+      "Informations conducteur",
+      "Informations véhicule",
+      "Paiement et émission"
+    ]
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "intro": "Réponses utiles avant achat et pendant la gestion de contrat.",
+    "empty": "Aucune FAQ localisée disponible actuellement."
+  },
   "account": {
-    "title":"Centre de compte",
-    "welcome":"Bienvenue sur votre espace client",
-    "sidebar":{"overview":"Vue d'ensemble","policies":"Polices","drivers":"Conducteurs","vehicles":"Véhicules","documents":"Documents","settings":"Paramètres"},
-    "summary":{"activePolicies":"Polices actives","savedDrivers":"Conducteurs enregistrés","savedVehicles":"Véhicules enregistrés","pendingDocuments":"Documents en attente"},
-    "recentPolicies":"Polices récentes",
-    "quickActions":"Actions rapides",
-    "statuses":{"active":"Actif","pending":"En attente","expired":"Expiré","uploaded":"Téléversé","missing":"Manquant","underReview":"En revue"}
+    "title": "Centre de compte",
+    "welcome": "Bienvenue sur votre espace client",
+    "sidebar": {
+      "overview": "Vue d'ensemble",
+      "policies": "Polices",
+      "drivers": "Conducteurs",
+      "vehicles": "Véhicules",
+      "documents": "Documents",
+      "settings": "Paramètres"
+    },
+    "summary": {
+      "activePolicies": "Polices actives",
+      "savedDrivers": "Conducteurs enregistrés",
+      "savedVehicles": "Véhicules enregistrés",
+      "pendingDocuments": "Documents en attente"
+    },
+    "recentPolicies": "Polices récentes",
+    "quickActions": "Actions rapides",
+    "statuses": {
+      "active": "Actif",
+      "pending": "En attente",
+      "expired": "Expiré",
+      "uploaded": "Téléversé",
+      "missing": "Manquant",
+      "underReview": "En revue"
+    }
+  },
+  "common": {
+    "stepLabel": "Étape"
   }
 }

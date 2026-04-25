@@ -1,18 +1,13 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import { LegalPageContent } from "@/app/legal/page";
-import { isLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n/config";
 
-export default async function LocalizedLegalPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function LegacyLocalizedPageRedirect({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
 
   if (!isLocale(locale)) {
     notFound();
   }
 
-  return <LegalPageContent locale={locale} />;
+  redirect(`/${locale}`);
 }

@@ -16,7 +16,7 @@ export default async function QuotePage({ params }: { params: Promise<{ locale: 
       <ol className="mt-8 grid gap-4 md:grid-cols-2">
         {dictionary.quote.steps.map((step, index) => (
           <li key={step} className="rounded-2xl border bg-white/90 p-5">
-            <p className="text-xs uppercase text-[var(--muted)]">Step {index + 1}</p>
+            <p className="text-xs uppercase text-[var(--muted)]">{dictionary.common.stepLabel} {index + 1}</p>
             <p className="mt-2 font-medium">{step}</p>
           </li>
         ))}

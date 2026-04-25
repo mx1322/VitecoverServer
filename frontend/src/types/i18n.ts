@@ -7,6 +7,9 @@ export type Dictionary = {
     faq: string;
     account: string;
   };
+  common: {
+    stepLabel: string;
+  };
   cta: {
     getQuote: string;
     downloadPdf: string;

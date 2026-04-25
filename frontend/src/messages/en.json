@@ -1,18 +1,77 @@
 {
   "brandTagline": "Temporary Auto Insurance",
-  "nav": {"home":"Home","products":"Products","quote":"Quote","faq":"FAQ","account":"Account"},
-  "cta": {"getQuote":"Get a quote","downloadPdf":"Download PDF","edit":"Edit","addDriver":"Add driver","addVehicle":"Add vehicle","uploadDocument":"Upload document"},
-  "home": {"eyebrow":"Vitecover France","title":"Multilingual temporary motor insurance","subtitle":"Fast online onboarding","body":"Select a product, request a quote, and receive your policy quickly."},
-  "products": {"title":"Insurance products","intro":"Browse available products by vehicle type.","from":"From","noData":"No localized products are available right now.","viewDetail":"View details"},
-  "quote": {"title":"Quote request","intro":"One shared 4-step flow across all locales.","steps":["Choose product","Driver information","Vehicle information","Payment and issuance"]},
-  "faq": {"title":"Frequently Asked Questions","intro":"Helpful answers before checkout and during policy management.","empty":"No localized FAQ content is available right now."},
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "quote": "Quote",
+    "faq": "FAQ",
+    "account": "Account"
+  },
+  "cta": {
+    "getQuote": "Get a quote",
+    "downloadPdf": "Download PDF",
+    "edit": "Edit",
+    "addDriver": "Add driver",
+    "addVehicle": "Add vehicle",
+    "uploadDocument": "Upload document"
+  },
+  "home": {
+    "eyebrow": "Vitecover France",
+    "title": "Multilingual temporary motor insurance",
+    "subtitle": "Fast online onboarding",
+    "body": "Select a product, request a quote, and receive your policy quickly."
+  },
+  "products": {
+    "title": "Insurance products",
+    "intro": "Browse available products by vehicle type.",
+    "from": "From",
+    "noData": "No localized products are available right now.",
+    "viewDetail": "View details"
+  },
+  "quote": {
+    "title": "Quote request",
+    "intro": "One shared 4-step flow across all locales.",
+    "steps": [
+      "Choose product",
+      "Driver information",
+      "Vehicle information",
+      "Payment and issuance"
+    ]
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "intro": "Helpful answers before checkout and during policy management.",
+    "empty": "No localized FAQ content is available right now."
+  },
   "account": {
-    "title":"Account center",
-    "welcome":"Welcome to your account dashboard",
-    "sidebar":{"overview":"Overview","policies":"Policies","drivers":"Drivers","vehicles":"Vehicles","documents":"Documents","settings":"Settings"},
-    "summary":{"activePolicies":"Active policies","savedDrivers":"Saved drivers","savedVehicles":"Saved vehicles","pendingDocuments":"Pending documents"},
-    "recentPolicies":"Recent policies",
-    "quickActions":"Quick actions",
-    "statuses":{"active":"Active","pending":"Pending","expired":"Expired","uploaded":"Uploaded","missing":"Missing","underReview":"Under review"}
+    "title": "Account center",
+    "welcome": "Welcome to your account dashboard",
+    "sidebar": {
+      "overview": "Overview",
+      "policies": "Policies",
+      "drivers": "Drivers",
+      "vehicles": "Vehicles",
+      "documents": "Documents",
+      "settings": "Settings"
+    },
+    "summary": {
+      "activePolicies": "Active policies",
+      "savedDrivers": "Saved drivers",
+      "savedVehicles": "Saved vehicles",
+      "pendingDocuments": "Pending documents"
+    },
+    "recentPolicies": "Recent policies",
+    "quickActions": "Quick actions",
+    "statuses": {
+      "active": "Active",
+      "pending": "Pending",
+      "expired": "Expired",
+      "uploaded": "Uploaded",
+      "missing": "Missing",
+      "underReview": "Under review"
+    }
+  },
+  "common": {
+    "stepLabel": "Step"
   }
 }

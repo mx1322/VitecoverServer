@@ -28,7 +28,7 @@ body {
     radial-gradient(circle at top right, rgba(31, 183, 166, 0.14), transparent 24%),
     linear-gradient(180deg, #fffdf8 0%, #fff8ee 42%, #fff4e5 100%);
   color: var(--text);
-  font-family: var(--font-body), sans-serif;
+  font-family: "Inter", "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 a {

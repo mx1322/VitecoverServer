@@ -1,18 +1,77 @@
 {
   "brandTagline": "临时汽车保险",
-  "nav": {"home":"首页","products":"产品","quote":"报价","faq":"常见问题","account":"账户中心"},
-  "cta": {"getQuote":"获取报价","downloadPdf":"下载 PDF","edit":"编辑","addDriver":"新增驾驶员","addVehicle":"新增车辆","uploadDocument":"上传文件"},
-  "home": {"eyebrow":"Vitecover 法国","title":"多语言临时车险架构","subtitle":"快速在线投保","body":"选择产品、提交报价并快速接收保单。"},
-  "products": {"title":"保险产品","intro":"按车辆类型浏览可用产品。","from":"起价","noData":"当前暂无本地化产品内容。","viewDetail":"查看详情"},
-  "quote": {"title":"报价申请","intro":"所有语言共享统一的 4 步流程。","steps":["选择产品","驾驶员信息","车辆信息","支付与出单"]},
-  "faq": {"title":"常见问题","intro":"下单前与保单管理中的常见解答。","empty":"当前暂无本地化 FAQ 内容。"},
+  "nav": {
+    "home": "首页",
+    "products": "产品",
+    "quote": "报价",
+    "faq": "常见问题",
+    "account": "账户中心"
+  },
+  "cta": {
+    "getQuote": "获取报价",
+    "downloadPdf": "下载 PDF",
+    "edit": "编辑",
+    "addDriver": "新增驾驶员",
+    "addVehicle": "新增车辆",
+    "uploadDocument": "上传文件"
+  },
+  "home": {
+    "eyebrow": "Vitecover 法国",
+    "title": "多语言临时车险架构",
+    "subtitle": "快速在线投保",
+    "body": "选择产品、提交报价并快速接收保单。"
+  },
+  "products": {
+    "title": "保险产品",
+    "intro": "按车辆类型浏览可用产品。",
+    "from": "起价",
+    "noData": "当前暂无本地化产品内容。",
+    "viewDetail": "查看详情"
+  },
+  "quote": {
+    "title": "报价申请",
+    "intro": "所有语言共享统一的 4 步流程。",
+    "steps": [
+      "选择产品",
+      "驾驶员信息",
+      "车辆信息",
+      "支付与出单"
+    ]
+  },
+  "faq": {
+    "title": "常见问题",
+    "intro": "下单前与保单管理中的常见解答。",
+    "empty": "当前暂无本地化 FAQ 内容。"
+  },
   "account": {
-    "title":"账户中心",
-    "welcome":"欢迎来到您的账户仪表盘",
-    "sidebar":{"overview":"概览","policies":"保单","drivers":"驾驶员","vehicles":"车辆","documents":"文件","settings":"设置"},
-    "summary":{"activePolicies":"有效保单","savedDrivers":"已保存驾驶员","savedVehicles":"已保存车辆","pendingDocuments":"待处理文件"},
-    "recentPolicies":"最近保单",
-    "quickActions":"快捷操作",
-    "statuses":{"active":"有效","pending":"待处理","expired":"已过期","uploaded":"已上传","missing":"缺失","underReview":"审核中"}
+    "title": "账户中心",
+    "welcome": "欢迎来到您的账户仪表盘",
+    "sidebar": {
+      "overview": "概览",
+      "policies": "保单",
+      "drivers": "驾驶员",
+      "vehicles": "车辆",
+      "documents": "文件",
+      "settings": "设置"
+    },
+    "summary": {
+      "activePolicies": "有效保单",
+      "savedDrivers": "已保存驾驶员",
+      "savedVehicles": "已保存车辆",
+      "pendingDocuments": "待处理文件"
+    },
+    "recentPolicies": "最近保单",
+    "quickActions": "快捷操作",
+    "statuses": {
+      "active": "有效",
+      "pending": "待处理",
+      "expired": "已过期",
+      "uploaded": "已上传",
+      "missing": "缺失",
+      "underReview": "审核中"
+    }
+  },
+  "common": {
+    "stepLabel": "步骤"
   }
 }
