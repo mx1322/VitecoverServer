@@ -1,5 +1,5 @@
-import { HomePageContent } from "@/components/home-page-content";
+import { redirect } from "next/navigation";
 
-export default async function HomePage() {
-  return <HomePageContent locale="en" />;
+export default function HomePage() {
+  redirect("/fr");
 }

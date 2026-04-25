@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 
-import { SiteHeader } from "@/components/site-header";
-import { siteConfig } from "@/lib/site";
-
 import "./globals.css";
 
 const bodyFont = Manrope({
@@ -17,23 +14,14 @@ const displayFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} | Temporary Motor Insurance`,
-  description: siteConfig.description,
+  title: "Vitecover | Temporary Motor Insurance",
+  description: "Multilingual temporary motor insurance platform",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
-        <div className="page-shell">
-          <SiteHeader />
-          {children}
-        </div>
-      </body>
+    <html lang="fr">
+      <body className={`${bodyFont.variable} ${displayFont.variable}`}>{children}</body>
     </html>
   );
 }
