@@ -2,6 +2,7 @@ import { FaqLinkPanel } from "@/components/faq-link-panel";
 import { QuoteForm } from "@/components/quote-form";
 import { getFaqByTag } from "@/lib/faq";
 import type { QuoteProductOption } from "@/lib/directus-admin";
+import { localeToFaqLocale, quotePageCopy, type Locale } from "@/lib/i18n";
 
 const initialProducts: QuoteProductOption[] = [
   {
@@ -41,12 +42,15 @@ const initialProducts: QuoteProductOption[] = [
   },
 ];
 
-export default async function QuotePage({
+export async function QuotePageContent({
+  locale,
   searchParams,
 }: {
+  locale: Locale;
   searchParams: Promise<{ product?: string }>;
 }) {
   const params = await searchParams;
+  const copy = quotePageCopy[locale];
   const requestedProduct = params.product?.trim().toUpperCase();
   const initialProductCode = initialProducts.some((item) => item.code === requestedProduct)
     ? requestedProduct
@@ -54,12 +58,9 @@ export default async function QuotePage({
 
   return (
     <main className="section-wrap py-16">
-      <p className="eyebrow">Temporary auto checkout</p>
-      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">Get insured in 4 simple steps.</h1>
-      <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">
-        Choose product and duration, fill in vehicle and driver details, confirm payment, then
-        receive your policy by email after review.
-      </p>
+      <p className="eyebrow">{copy.eyebrow}</p>
+      <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">{copy.title}</h1>
+      <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">{copy.intro}</p>
 
       <div className="mt-10">
         <QuoteForm products={initialProducts} initialProductCode={initialProductCode} />
@@ -67,11 +68,20 @@ export default async function QuotePage({
 
       <div className="mt-10">
         <FaqLinkPanel
-          title="Need help before payment?"
-          intro="Use these quick answers to avoid drop-off during checkout and find full details when needed."
-          items={getFaqByTag("quote").slice(0, 3)}
+          title={copy.faqTitle}
+          intro={copy.faqIntro}
+          items={getFaqByTag("quote", localeToFaqLocale(locale)).slice(0, 3)}
+          locale={locale}
         />
       </div>
     </main>
   );
+}
+
+export default async function QuotePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ product?: string }>;
+}) {
+  return <QuotePageContent locale="en" searchParams={searchParams} />;
 }

@@ -1,16 +1,22 @@
 import Link from "next/link";
 
 import type { FaqItem } from "@/lib/faq";
+import { localePath, type Locale } from "@/lib/i18n";
 
 export function FaqLinkPanel({
   title,
   intro,
   items,
+  locale = "en",
 }: {
   title: string;
   intro: string;
   items: FaqItem[];
+  locale?: Locale;
 }) {
+  const viewAllLabel =
+    locale === "fr" ? "Voir toutes les FAQ" : locale === "zh" ? "查看全部 FAQ" : "View all FAQs";
+
   return (
     <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)] md:p-8">
       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">FAQ</p>
@@ -21,7 +27,7 @@ export function FaqLinkPanel({
         {items.map((item) => (
           <Link
             key={item.id}
-            href={`/faq#${item.id}`}
+            href={`${localePath(locale, "/faq")}#${item.id}`}
             className="block rounded-2xl border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.88)] px-4 py-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
           >
             {item.question}
@@ -30,10 +36,10 @@ export function FaqLinkPanel({
       </div>
 
       <Link
-        href="/faq"
+        href={localePath(locale, "/faq")}
         className="mt-5 inline-flex items-center rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)]"
       >
-        View all FAQs
+        {viewAllLabel}
       </Link>
     </section>
   );
