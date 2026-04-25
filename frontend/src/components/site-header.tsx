@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { readAuthSession } from "@/lib/auth-session";
 import { siteConfig } from "@/lib/site";
 
@@ -24,7 +25,11 @@ export async function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--muted)] md:flex">
+        <div className="hidden md:block">
+          <LanguageSwitcher />
+        </div>
+
+        <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--muted)] lg:flex">
           {siteConfig.navigation.map((item) => (
             <Link
               key={item.label}
@@ -35,6 +40,9 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
+        <div className="md:hidden">
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );

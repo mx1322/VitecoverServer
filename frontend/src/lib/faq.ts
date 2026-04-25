@@ -1,6 +1,6 @@
 export type FaqTag = "home" | "quote" | "support";
 
-export type FaqLocale = "en" | "zh-CN";
+export type FaqLocale = "en" | "fr" | "zh-CN";
 
 export type FaqItem = {
   id: string;
@@ -12,7 +12,7 @@ export type FaqItem = {
 type FaqEntry = {
   id: string;
   tags: FaqTag[];
-  translations: Record<FaqLocale, { question: string; answer: string }>;
+  translations: Record<"en" | "zh-CN", { question: string; answer: string }> & Partial<Record<"fr", { question: string; answer: string }>>;
 };
 
 const faqEntries: FaqEntry[] = [
@@ -198,8 +198,8 @@ export function getFaqItems(locale: FaqLocale = "en"): FaqItem[] {
   return faqEntries.map((entry) => ({
     id: entry.id,
     tags: entry.tags,
-    question: entry.translations[locale].question,
-    answer: entry.translations[locale].answer,
+    question: (entry.translations[locale] ?? entry.translations.en).question,
+    answer: (entry.translations[locale] ?? entry.translations.en).answer,
   }));
 }
 
