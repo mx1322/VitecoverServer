@@ -1,8 +1,23 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getFaqItems } from "@/lib/directus/faq";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { buildLocaleMetadata } from "@/lib/seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  const dictionary = await getDictionary(locale);
+  return buildLocaleMetadata("/faq", locale, {
+    title: dictionary.faq.title,
+    description: dictionary.faq.intro,
+  });
+}
 
 export default async function FaqPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -10,8 +25,23 @@ export default async function FaqPage({ params }: { params: Promise<{ locale: st
 
   const [dictionary, items] = await Promise.all([getDictionary(locale), getFaqItems(locale as Locale)]);
 
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }} />
+
       <h1 className="text-3xl font-semibold">{dictionary.faq.title}</h1>
       <p className="mt-3 text-[var(--muted)]">{dictionary.faq.intro}</p>
 

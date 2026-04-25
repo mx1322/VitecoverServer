@@ -1,5 +1,5 @@
 import { directusList } from "@/lib/directus/client";
-import type { Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import type { LocalizedPageSection } from "@/types/page-section";
 
 type SectionRow = {
@@ -29,7 +29,8 @@ export async function getPageSections(pageKey: string, locale: Locale): Promise<
 
   return rows
     .map((row) => {
-      const translation = row.translations?.find((item) => item.locale === locale);
+      const translation = row.translations?.find((item) => item.locale === locale)
+        ?? row.translations?.find((item) => item.locale === defaultLocale);
       if (!translation) {
         return null;
       }
@@ -38,7 +39,7 @@ export async function getPageSections(pageKey: string, locale: Locale): Promise<
         pageKey: row.page_key,
         sectionKey: row.section_key,
         sortOrder: row.sort_order,
-        locale,
+        locale: translation.locale,
         eyebrow: translation.eyebrow,
         title: translation.title,
         subtitle: translation.subtitle,

@@ -1,12 +1,19 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AccountSidebar } from "@/components/account/account-sidebar";
-import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { getAuthenticatedIdentity } from "@/lib/directus-auth";
 import { isLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 export default async function AccountLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+
+  const identity = await getAuthenticatedIdentity();
+
+  if (!identity) {
+    redirect(`/${locale}/auth?returnTo=${encodeURIComponent(`/${locale}/account`)}`);
+  }
 
   const dictionary = await getDictionary(locale);
 

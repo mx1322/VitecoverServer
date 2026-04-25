@@ -1,18 +1,13 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import { ContactPageContent } from "@/app/contact/page";
-import { isLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n/config";
 
-export default async function LocalizedContactPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function LegacyLocalizedPageRedirect({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
 
   if (!isLocale(locale)) {
     notFound();
   }
 
-  return <ContactPageContent locale={locale} />;
+  redirect(`/${locale}`);
 }
