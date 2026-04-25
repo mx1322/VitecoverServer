@@ -1,0 +1,56 @@
+name: Backup Customer Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 2 * * *"
+
+concurrency:
+  group: backup-customer-data
+  cancel-in-progress: false
+
+jobs:
+  backup-customer-data:
+    runs-on:
+      - self-hosted
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Prepare backup folder
+        run: |
+          set -euo pipefail
+          mkdir -p backups
+
+      - name: Backup production database
+        env:
+          PGHOST: ${{ secrets.PROD_DB_HOST }}
+          PGPORT: ${{ secrets.PROD_DB_PORT }}
+          PGDATABASE: ${{ secrets.PROD_DB_NAME }}
+          PGUSER: ${{ secrets.PROD_DB_USER }}
+          PGPASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          TS=$(date +%Y%m%d_%H%M%S)
+          pg_dump -Fc -f "backups/customer_data_${TS}.dump" "$PGDATABASE"
+
+      - name: Archive private customer files
+        env:
+          PRIVATE_FILES_PATH: ${{ secrets.PROD_PRIVATE_FILES_PATH }}
+        run: |
+          set -euo pipefail
+          TS=$(date +%Y%m%d_%H%M%S)
+          tar -czf "backups/private_files_${TS}.tar.gz" "$PRIVATE_FILES_PATH"
+
+      - name: Upload backups to backup target
+        env:
+          BACKUP_TARGET_DIR: ${{ secrets.BACKUP_TARGET_DIR }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$BACKUP_TARGET_DIR"
+          cp backups/* "$BACKUP_TARGET_DIR"/
+
+      - name: Safety confirmation
+        run: |
+          echo "Backup only workflow completed."
+          echo "No automatic restore or overwrite is implemented by design."
