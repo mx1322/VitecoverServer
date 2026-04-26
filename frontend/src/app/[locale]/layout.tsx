@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { LocaleHtmlLang } from "@/components/layout/locale-html-lang";
 import { SiteHeader } from "@/components/layout/site-header";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { isLocale, locales, type Locale } from "@/lib/i18n/config";
@@ -19,6 +20,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
 
   return (
     <div className="page-shell">
+      <LocaleHtmlLang locale={locale as Locale} />
       <SiteHeader locale={locale as Locale} dictionary={dictionary} />
       {children}
     </div>

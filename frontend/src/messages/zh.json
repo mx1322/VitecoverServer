@@ -15,12 +15,6 @@
     "addVehicle": "新增车辆",
     "uploadDocument": "上传文件"
   },
-  "home": {
-    "eyebrow": "Vitecover 法国",
-    "title": "多语言临时车险架构",
-    "subtitle": "快速在线投保",
-    "body": "选择产品、提交报价并快速接收保单。"
-  },
   "products": {
     "title": "保险产品",
     "intro": "按车辆类型浏览可用产品。",
