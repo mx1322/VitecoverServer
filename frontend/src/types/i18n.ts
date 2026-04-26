@@ -18,12 +18,6 @@ export type Dictionary = {
     addVehicle: string;
     uploadDocument: string;
   };
-  home: {
-    eyebrow: string;
-    title: string;
-    subtitle: string;
-    body: string;
-  };
   products: {
     title: string;
     intro: string;

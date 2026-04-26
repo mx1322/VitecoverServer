@@ -15,12 +15,6 @@
     "addVehicle": "Add vehicle",
     "uploadDocument": "Upload document"
   },
-  "home": {
-    "eyebrow": "Vitecover France",
-    "title": "Multilingual temporary motor insurance",
-    "subtitle": "Fast online onboarding",
-    "body": "Select a product, request a quote, and receive your policy quickly."
-  },
   "products": {
     "title": "Insurance products",
     "intro": "Browse available products by vehicle type.",

@@ -15,12 +15,6 @@
     "addVehicle": "Ajouter un véhicule",
     "uploadDocument": "Téléverser un document"
   },
-  "home": {
-    "eyebrow": "Vitecover France",
-    "title": "Assurance auto temporaire multilingue",
-    "subtitle": "Souscription rapide en ligne",
-    "body": "Choisissez un produit, obtenez un devis et recevez votre police rapidement."
-  },
   "products": {
     "title": "Nos produits",
     "intro": "Découvrez les produits disponibles selon le type de véhicule.",

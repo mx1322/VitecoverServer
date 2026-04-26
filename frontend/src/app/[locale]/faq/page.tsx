@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { getFaqItemContent } from "@/lib/content/get-content";
 import { getFaqItems } from "@/lib/directus/faq";
-import { isLocale, type Locale } from "@/lib/i18n/config";
+import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { buildLocaleMetadata } from "@/lib/seo";
 
@@ -23,7 +24,23 @@ export default async function FaqPage({ params }: { params: Promise<{ locale: st
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [dictionary, items] = await Promise.all([getDictionary(locale), getFaqItems(locale as Locale)]);
+  const [dictionary, structuredItems] = await Promise.all([getDictionary(locale), getFaqItems()]);
+
+  const items = structuredItems
+    .map((item) => {
+      const localized = getFaqItemContent(locale, item.slug);
+      if (!localized) {
+        return null;
+      }
+
+      return {
+        id: item.id,
+        slug: item.slug,
+        question: localized.question,
+        answer: localized.answer,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   const faqStructuredData = {
     "@context": "https://schema.org",

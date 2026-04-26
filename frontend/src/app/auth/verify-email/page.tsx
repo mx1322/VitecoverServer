@@ -1,4 +1,6 @@
-import { VerifyEmailClient } from "./verify-email-client";
+import { redirect } from "next/navigation";
+
+import { defaultLocale } from "@/lib/i18n/config";
 
 export default async function VerifyEmailPage({
   searchParams,
@@ -6,5 +8,6 @@ export default async function VerifyEmailPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const params = await searchParams;
-  return <VerifyEmailClient token={params.token || ""} />;
+  const token = params.token ? `?token=${encodeURIComponent(params.token)}` : "";
+  redirect(`/${defaultLocale}/auth/verify-email${token}`);
 }

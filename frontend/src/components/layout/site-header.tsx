@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -25,7 +26,9 @@ export function SiteHeader({ locale, dictionary }: { locale: Locale; dictionary:
         </nav>
 
         <div className="flex items-center gap-3">
-          <LanguageSwitcher />
+          <Suspense fallback={null}>
+            <LanguageSwitcher />
+          </Suspense>
           <Link className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--ink)]" href={`/${locale}/quote`}>
             {dictionary.cta.getQuote}
           </Link>

@@ -1,16 +1,19 @@
-import type { Locale } from "@/lib/i18n/config";
-
-export type LocalizedProduct = {
+export type StructuredProduct = {
   id: number;
   slug: string;
   code: string;
   category: string | null;
   icon: string | null;
   basePriceFrom: number | null;
-  locale: Locale;
+};
+
+export type MergedLocalizedProduct = StructuredProduct & {
   title: string;
   shortDescription: string;
   longDescription: string;
-  seoTitle: string | null;
-  seoDescription: string | null;
+  seoTitle?: string;
+  seoDescription?: string;
+  highlights?: string[];
+  eligibility?: string[];
+  coverageNotes?: string[];
 };
