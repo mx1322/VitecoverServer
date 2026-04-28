@@ -1,0 +1,16 @@
+name: Backup Customer Data
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 1 * * *'
+
+jobs:
+  backup-customer-data:
+    runs-on: [self-hosted, dev-local]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Backup customer/private data
+        run: bash backend/scripts/backup_customer_data.sh
