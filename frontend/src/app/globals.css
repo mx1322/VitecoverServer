@@ -10,6 +10,8 @@
   --accent: #ffb347;
   --accent-2: #1fb7a6;
   --danger: #ea6f51;
+  --font-body: Manrope, Avenir Next, Avenir, Segoe UI, Helvetica Neue, Arial, sans-serif;
+  --font-display: Space Grotesk, Manrope, Avenir Next, Avenir, Segoe UI, Helvetica Neue, Arial, sans-serif;
 }
 
 * {
