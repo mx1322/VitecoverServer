@@ -13,7 +13,7 @@ export default async function HomePage() {
   const titleClass =
     "text-[22px] font-semibold leading-[1.12] tracking-tight text-[var(--ink)] md:text-[24px] md:leading-[1.08]";
   const iconWrapClass =
-    "mt-4 flex h-[170px] w-full items-center justify-center rounded-[24px] bg-[rgba(255,179,71,0.14)] px-4 py-5 sm:h-[210px] md:h-[250px] md:rounded-[26px] md:py-6";
+    "mt-4 flex h-[170px] w-full items-center justify-center overflow-hidden rounded-[24px] bg-[rgba(255,179,71,0.14)] px-3 py-4 sm:h-[210px] md:h-[250px] md:rounded-[26px] md:px-4 md:py-5";
   const descriptionClass =
     "text-[15px] leading-7 text-[var(--muted)]";
   const priceBlockClass =
@@ -54,7 +54,7 @@ export default async function HomePage() {
                   <img
                     src={product.iconPath}
                     alt={product.title}
-                    className="h-auto max-h-full w-full max-w-[240px] object-contain sm:max-w-[280px] md:max-w-[320px]"
+                    className="h-full w-full max-w-none scale-[1.55] transform-gpu object-contain sm:scale-[1.45] md:scale-[1.35]"
                   />
                 </div>
 
