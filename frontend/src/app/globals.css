@@ -58,7 +58,13 @@ a {
   z-index: 1;
   margin-inline: auto;
   max-width: 72rem;
-  padding-inline: 1.5rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .section-wrap {
+    padding-inline: 1.5rem;
+  }
 }
 
 .eyebrow {
