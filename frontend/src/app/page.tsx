@@ -7,13 +7,13 @@ import { getHomeProductCards } from "@/lib/home-product-cards";
 export default async function HomePage() {
   const homeProductCards = await getHomeProductCards();
   const cardShellClass =
-    "group flex h-full min-h-[700px] flex-col rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)]";
+    "group flex h-full min-h-[520px] flex-col rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)] md:min-h-[640px] md:rounded-[32px] md:p-6 lg:min-h-[700px]";
   const categoryClass =
     "text-[11px] font-semibold uppercase tracking-[0.26em] text-[var(--muted)]";
   const titleClass =
-    "text-[24px] font-semibold leading-[1.08] tracking-tight text-[var(--ink)]";
+    "text-[22px] font-semibold leading-[1.12] tracking-tight text-[var(--ink)] md:text-[24px] md:leading-[1.08]";
   const iconWrapClass =
-    "mt-4 flex h-[250px] w-full items-center justify-center rounded-[26px] bg-[rgba(255,179,71,0.14)] px-4 py-6";
+    "mt-4 flex h-[170px] w-full items-center justify-center rounded-[24px] bg-[rgba(255,179,71,0.14)] px-4 py-5 sm:h-[210px] md:h-[250px] md:rounded-[26px] md:py-6";
   const descriptionClass =
     "text-[15px] leading-7 text-[var(--muted)]";
   const priceBlockClass =
@@ -24,7 +24,7 @@ export default async function HomePage() {
       <section className="section-wrap pb-1 pt-6 md:pb-6 md:pt-6">
         <div className="max-w-5xl">
           <h1
-            className="mt-2 max-w-none whitespace-nowrap text-[2.2rem] font-semibold leading-[1] tracking-tight text-[var(--ink)] md:text-[3.3rem]"
+            className="mt-2 max-w-4xl text-[2rem] font-semibold leading-[1.06] tracking-tight text-[var(--ink)] sm:text-[2.45rem] md:text-[3.3rem] md:leading-[1]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Get temporary auto insurance in minutes.
@@ -40,7 +40,7 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="mt-5 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-5 sm:gap-6 md:grid-cols-2 md:gap-8 xl:grid-cols-3">
           {homeProductCards.map((product) => {
             const [priceMain, priceSuffix] = product.price.split(" / ");
             const cardBody = (
@@ -54,11 +54,11 @@ export default async function HomePage() {
                   <img
                     src={product.iconPath}
                     alt={product.title}
-                    className="h-auto w-full max-w-[320px] object-contain"
+                    className="h-auto max-h-full w-full max-w-[240px] object-contain sm:max-w-[280px] md:max-w-[320px]"
                   />
                 </div>
 
-                <div className="mt-5 min-h-[72px] border-t border-[rgba(255,179,71,0.18)] pt-4">
+                <div className="mt-5 border-t border-[rgba(255,179,71,0.18)] pt-4 md:min-h-[72px]">
                   <p className={descriptionClass}>{product.description}</p>
                 </div>
 
@@ -66,10 +66,10 @@ export default async function HomePage() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
                     {product.priceLabel}
                   </p>
-                  <p className="mt-2 text-[28px] font-semibold leading-none tracking-tight text-[var(--ink)] whitespace-nowrap">
+                  <p className="mt-2 text-[24px] font-semibold leading-none tracking-tight text-[var(--ink)] sm:text-[28px]">
                     {priceMain}
                     {priceSuffix ? (
-                      <span className="text-[18px] font-medium"> / {priceSuffix}</span>
+                      <span className="text-[16px] font-medium sm:text-[18px]"> / {priceSuffix}</span>
                     ) : null}
                   </p>
                 </div>
