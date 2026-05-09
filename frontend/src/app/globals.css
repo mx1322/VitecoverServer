@@ -38,6 +38,19 @@ a {
   text-decoration: none;
 }
 
+input[type="date"] {
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
 .page-shell {
   position: relative;
   overflow: hidden;
