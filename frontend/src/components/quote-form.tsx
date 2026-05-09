@@ -58,7 +58,7 @@ const secondaryButtonClass =
 const toggleButtonClass =
   "rounded-full px-4 py-2 text-sm font-semibold transition duration-200 ease-out hover:scale-[1.03] active:scale-[0.99]";
 const fieldClass =
-  "mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] focus:border-[rgba(255,179,71,0.8)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,179,71,0.22)]";
+  "mt-2 block w-full min-w-0 rounded-2xl border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] focus:border-[rgba(255,179,71,0.8)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,179,71,0.22)]";
 
 const stepLabels: Array<{ id: Step; label: string }> = [
   { id: "price", label: "Product" },
