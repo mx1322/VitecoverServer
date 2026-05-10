@@ -13,7 +13,7 @@ jobs:
   backup-customer-data:
     runs-on:
       - self-hosted
-      - dev-local
+      - dev
     defaults:
       run:
         shell: bash
