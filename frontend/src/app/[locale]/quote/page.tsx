@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 
+import { QuoteForm } from "@/components/quote-form";
+import { listOrderableProducts } from "@/lib/directus-admin";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 
@@ -7,7 +9,10 @@ export default async function QuotePage({ params }: { params: Promise<{ locale: 
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const dictionary = await getDictionary(locale);
+  const [dictionary, products] = await Promise.all([
+    getDictionary(locale),
+    listOrderableProducts(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
@@ -21,6 +26,9 @@ export default async function QuotePage({ params }: { params: Promise<{ locale: 
           </li>
         ))}
       </ol>
+      <div className="mt-10">
+        <QuoteForm products={products} />
+      </div>
     </main>
   );
 }
