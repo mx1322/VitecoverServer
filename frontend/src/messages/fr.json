@@ -13,7 +13,9 @@
     "edit": "Modifier",
     "addDriver": "Ajouter un conducteur",
     "addVehicle": "Ajouter un véhicule",
-    "uploadDocument": "Téléverser un document"
+    "uploadDocument": "Téléverser un document",
+    "signOut": "Se déconnecter",
+    "signingOut": "Déconnexion..."
   },
   "products": {
     "title": "Nos produits",
@@ -21,6 +23,67 @@
     "from": "À partir de",
     "noData": "Les produits localisés ne sont pas disponibles pour le moment.",
     "viewDetail": "Voir le détail"
+  },
+  "auth": {
+    "tabs": {
+      "login": "Connexion",
+      "register": "Inscription",
+      "forgot": "Mot de passe oublié"
+    },
+    "headings": {
+      "login": "Connexion",
+      "register": "Créer un compte",
+      "forgot": "Réinitialiser le mot de passe",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "chooseNewPassword": "Choisir un nouveau mot de passe",
+      "verifyEmail": "Vérification de l'email",
+      "verifyingAccount": "Confirmation de votre compte",
+      "verificationComplete": "Vérification terminée",
+      "verificationFailed": "Échec de la vérification"
+    },
+    "descriptions": {
+      "login": "Saisissez votre email et votre mot de passe pour continuer.",
+      "register": "Créez votre compte puis vérifiez votre email.",
+      "forgot": "Nous allons envoyer un lien de réinitialisation."
+    },
+    "fields": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "newPassword": "Nouveau mot de passe"
+    },
+    "actions": {
+      "createAccount": "Créer un compte",
+      "sendResetLink": "Envoyer le lien",
+      "processing": "Traitement...",
+      "updating": "Mise à jour...",
+      "updatePassword": "Mettre à jour le mot de passe",
+      "returnToSignIn": "Retour à la connexion",
+      "goToSignIn": "Aller à la connexion"
+    },
+    "notices": {
+      "accountCreated": "Compte créé. Vérifiez votre boîte mail pour confirmer votre email.",
+      "resetEmailSent": "Email de réinitialisation envoyé.",
+      "passwordUpdated": "Mot de passe mis à jour. Reconnectez-vous avec le nouveau mot de passe.",
+      "verifyingToken": "Vérification du token email...",
+      "emailVerified": "Email vérifié. Le compte peut maintenant se connecter."
+    },
+    "errors": {
+      "requestFailed": "Échec de la requête.",
+      "emailRequired": "L'email est requis.",
+      "fullNameRequired": "Le prénom et le nom sont requis.",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+      "passwordRequired": "Le mot de passe est requis.",
+      "unableToContinue": "Impossible de continuer.",
+      "unableToResetPassword": "Impossible de réinitialiser le mot de passe.",
+      "missingResetToken": "Token de réinitialisation manquant.",
+      "unableToReset": "Impossible de réinitialiser.",
+      "unableToVerifyEmail": "Impossible de vérifier cet email.",
+      "missingVerificationToken": "Token de vérification manquant."
+    }
   },
   "quote": {
     "title": "Demande de devis",
@@ -56,6 +119,16 @@
     },
     "recentPolicies": "Polices récentes",
     "quickActions": "Actions rapides",
+    "settings": {
+      "email": "Email",
+      "password": "Mot de passe",
+      "contact": "Contact"
+    },
+    "documents": {
+      "drivingLicence": "Permis de conduire",
+      "vehicleRegistration": "Carte grise",
+      "proofOfAddress": "Justificatif de domicile"
+    },
     "statuses": {
       "active": "Actif",
       "pending": "En attente",
@@ -66,6 +139,20 @@
     }
   },
   "common": {
-    "stepLabel": "Étape"
+    "stepLabel": "Étape",
+    "languageSwitcherLabel": "Langue"
+  },
+  "brandName": "Vitecover",
+  "brandInitials": "VC",
+  "legal": {
+    "hubTitle": "Mentions légales",
+    "hubSeoTitle": "Informations légales | Vitecover",
+    "hubSeoDescription": "Informations légales et réglementaires.",
+    "privacySeoTitle": "Politique de confidentialité | Vitecover",
+    "privacySeoDescription": "Politique de confidentialité.",
+    "termsSeoTitle": "Conditions générales | Vitecover",
+    "termsSeoDescription": "Conditions générales.",
+    "regulatorySeoTitle": "Informations réglementaires | Vitecover",
+    "regulatorySeoDescription": "Informations réglementaires."
   }
 }
