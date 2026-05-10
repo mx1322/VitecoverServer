@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AuthGatewayClient } from "@/app/auth/auth-gateway-client";
 import { isLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 export default async function LocalizedAuthPage({
   params,
@@ -15,6 +16,7 @@ export default async function LocalizedAuthPage({
 
   const query = await searchParams;
   const returnTo = query.returnTo || `/${locale}/account`;
+  const dictionary = await getDictionary(locale);
 
-  return <AuthGatewayClient returnTo={returnTo} />;
+  return <AuthGatewayClient returnTo={returnTo} dictionary={dictionary.auth} />;
 }

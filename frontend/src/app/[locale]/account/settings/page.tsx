@@ -7,14 +7,15 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const dictionary = await getDictionary(locale);
+  const settings = [
+    [dictionary.account.settings.email, "client@example.com"],
+    [dictionary.account.settings.password, "••••••••"],
+    [dictionary.account.settings.contact, "+33 6 00 00 00 00"],
+  ] as const;
 
   return (
     <div className="space-y-4">
-      {[
-        ["Email", "client@example.com"],
-        ["Password", "••••••••"],
-        ["Contact", "+33 6 00 00 00 00"],
-      ].map(([label, value]) => (
+      {settings.map(([label, value]) => (
         <article key={label} className="rounded-2xl border bg-white/90 p-5 flex items-center justify-between">
           <div>
             <p className="text-sm text-[var(--muted)]">{label}</p>

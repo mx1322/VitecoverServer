@@ -4,16 +4,17 @@ import { notFound } from "next/navigation";
 import { SimpleContentPage } from "@/components/simple-content-page";
 import { getLegalContent, getLegalPageContent } from "@/lib/content/get-content";
 import { isLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { buildLocaleMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
 
-  const page = getLegalPageContent(locale, "privacy");
+  const [page, dictionary] = await Promise.all([getLegalPageContent(locale, "privacy"), getDictionary(locale)]);
   return buildLocaleMetadata("/privacy", locale, {
-    title: page?.seoTitle ?? page?.title ?? "Privacy policy | Vitecover",
-    description: page?.seoDescription ?? page?.body ?? "Privacy policy.",
+    title: page?.seoTitle ?? page?.title ?? dictionary.legal.privacySeoTitle,
+    description: page?.seoDescription ?? page?.body ?? dictionary.legal.privacySeoDescription,
   });
 }
 
@@ -21,12 +22,15 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const legal = getLegalContent(locale);
-  const page = getLegalPageContent(locale, "privacy");
+  const [legal, page, dictionary] = await Promise.all([
+    getLegalContent(locale),
+    getLegalPageContent(locale, "privacy"),
+    getDictionary(locale),
+  ]);
   if (!page) notFound();
 
   return (
-    <SimpleContentPage eyebrow={legal.hub?.title ?? "Legal"} title={page.title} intro={page.seoDescription ?? ""}>
+    <SimpleContentPage eyebrow={legal.hub?.title ?? dictionary.legal.hubTitle} title={page.title} intro={page.seoDescription ?? ""}>
       <p>{page.body}</p>
     </SimpleContentPage>
   );

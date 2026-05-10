@@ -3,16 +3,15 @@ import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { isLocale } from "@/lib/i18n/config";
 
-const documents = [
-  { name: "Driving Licence", status: "uploaded" },
-  { name: "Vehicle Registration", status: "missing" },
-  { name: "Proof of Address", status: "underReview" },
-] as const;
-
 export default async function DocumentsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const dictionary = await getDictionary(locale);
+  const documents = [
+    { name: dictionary.account.documents.drivingLicence, status: "uploaded" },
+    { name: dictionary.account.documents.vehicleRegistration, status: "missing" },
+    { name: dictionary.account.documents.proofOfAddress, status: "underReview" },
+  ] as const;
 
   return (
     <div className="space-y-4">

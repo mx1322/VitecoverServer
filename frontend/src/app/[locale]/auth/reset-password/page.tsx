@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { isLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 import { ResetPasswordClient } from "@/app/auth/reset-password/reset-password-client";
 
@@ -15,5 +16,6 @@ export default async function LocalizedResetPasswordPage({
   if (!isLocale(locale)) notFound();
 
   const query = await searchParams;
-  return <ResetPasswordClient token={query.token || ""} />;
+  const dictionary = await getDictionary(locale);
+  return <ResetPasswordClient token={query.token || ""} locale={locale} dictionary={dictionary.auth} />;
 }

@@ -13,7 +13,9 @@
     "edit": "Edit",
     "addDriver": "Add driver",
     "addVehicle": "Add vehicle",
-    "uploadDocument": "Upload document"
+    "uploadDocument": "Upload document",
+    "signOut": "Sign out",
+    "signingOut": "Signing out..."
   },
   "products": {
     "title": "Insurance products",
@@ -21,6 +23,67 @@
     "from": "From",
     "noData": "No localized products are available right now.",
     "viewDetail": "View details"
+  },
+  "auth": {
+    "tabs": {
+      "login": "Sign in",
+      "register": "Register",
+      "forgot": "Forgot"
+    },
+    "headings": {
+      "login": "Sign in",
+      "register": "Create account",
+      "forgot": "Reset password",
+      "resetPassword": "Reset password",
+      "chooseNewPassword": "Choose a new password",
+      "verifyEmail": "Email verification",
+      "verifyingAccount": "Confirming your account",
+      "verificationComplete": "Verification complete",
+      "verificationFailed": "Verification failed"
+    },
+    "descriptions": {
+      "login": "Enter your email and password to continue.",
+      "register": "Create your account and verify your email.",
+      "forgot": "We will send a password reset link."
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "newPassword": "New password"
+    },
+    "actions": {
+      "createAccount": "Create account",
+      "sendResetLink": "Send reset link",
+      "processing": "Processing...",
+      "updating": "Updating...",
+      "updatePassword": "Update password",
+      "returnToSignIn": "Return to sign in",
+      "goToSignIn": "Go to sign in"
+    },
+    "notices": {
+      "accountCreated": "Account created. Check your inbox to verify your email.",
+      "resetEmailSent": "Password reset email sent.",
+      "passwordUpdated": "Password updated. Sign in again with the new password.",
+      "verifyingToken": "Verifying the email token...",
+      "emailVerified": "Email verified. The account can now sign in."
+    },
+    "errors": {
+      "requestFailed": "Request failed.",
+      "emailRequired": "Email is required.",
+      "fullNameRequired": "First name and last name are required.",
+      "passwordMinLength": "Password must be at least 8 characters long.",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "passwordRequired": "Password is required.",
+      "unableToContinue": "Unable to continue.",
+      "unableToResetPassword": "Unable to reset the password.",
+      "missingResetToken": "Missing reset token.",
+      "unableToReset": "Unable to reset.",
+      "unableToVerifyEmail": "Unable to verify this email.",
+      "missingVerificationToken": "Missing verification token."
+    }
   },
   "quote": {
     "title": "Quote request",
@@ -56,6 +119,16 @@
     },
     "recentPolicies": "Recent policies",
     "quickActions": "Quick actions",
+    "settings": {
+      "email": "Email",
+      "password": "Password",
+      "contact": "Contact"
+    },
+    "documents": {
+      "drivingLicence": "Driving Licence",
+      "vehicleRegistration": "Vehicle Registration",
+      "proofOfAddress": "Proof of Address"
+    },
     "statuses": {
       "active": "Active",
       "pending": "Pending",
@@ -66,6 +139,20 @@
     }
   },
   "common": {
-    "stepLabel": "Step"
+    "stepLabel": "Step",
+    "languageSwitcherLabel": "Language"
+  },
+  "brandName": "Vitecover",
+  "brandInitials": "VC",
+  "legal": {
+    "hubTitle": "Legal",
+    "hubSeoTitle": "Legal information | Vitecover",
+    "hubSeoDescription": "Legal and regulatory information.",
+    "privacySeoTitle": "Privacy policy | Vitecover",
+    "privacySeoDescription": "Privacy policy.",
+    "termsSeoTitle": "Terms and conditions | Vitecover",
+    "termsSeoDescription": "Terms and conditions.",
+    "regulatorySeoTitle": "Regulatory information | Vitecover",
+    "regulatorySeoDescription": "Regulatory information."
   }
 }

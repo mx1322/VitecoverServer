@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
-import { locales, normalizeLocale, replacePathLocale } from "@/lib/i18n/locales";
+import { getLocaleLabel, locales, normalizeLocale, replacePathLocale } from "@/lib/i18n/locales";
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ label }: { label: string }) {
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const currentLocale = normalizeLocale(pathname.split("/").filter(Boolean)[0]);
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,36,58,0.12)] bg-white/80 p-1">
+    <div aria-label={label} className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,36,58,0.12)] bg-white/80 p-1">
       {locales.map((locale) => {
         const nextPath = replacePathLocale(pathname, locale);
         const href = query ? `${nextPath}?${query}` : nextPath;
@@ -22,6 +22,8 @@ export function LanguageSwitcher() {
           <Link
             key={locale}
             href={href}
+            title={getLocaleLabel(locale)}
+            aria-current={isActive ? "page" : undefined}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               isActive
                 ? "bg-[var(--accent)] text-[var(--ink)]"

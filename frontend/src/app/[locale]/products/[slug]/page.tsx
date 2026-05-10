@@ -16,10 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   const product = await getProductBySlug(slug);
   const localized = product ? getProductContent(locale, product.code) : null;
+  const dictionary = await getDictionary(locale);
 
   return buildLocaleMetadata(`/products/${slug}`, locale, {
-    title: localized?.seoTitle ?? localized?.title ?? "Product | Vitecover",
-    description: localized?.seoDescription ?? localized?.shortDescription ?? "Localized product details",
+    title: localized?.seoTitle ?? localized?.title ?? dictionary.products.title,
+    description: localized?.seoDescription ?? localized?.shortDescription ?? dictionary.products.intro,
   });
 }
 
