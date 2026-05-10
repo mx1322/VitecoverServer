@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import type { Dictionary } from "@/types/i18n";
 
-async function resetPassword(token: string, password: string): Promise<void> {
+async function resetPassword(token: string, password: string, fallbackError: string): Promise<void> {
   const response = await fetch("/api/auth/password/reset", {
     method: "POST",
     headers: {
@@ -14,11 +15,11 @@ async function resetPassword(token: string, password: string): Promise<void> {
 
   const payload = (await response.json()) as { error?: string };
   if (!response.ok) {
-    throw new Error(payload.error ?? "Unable to reset the password.");
+    throw new Error(fallbackError);
   }
 }
 
-export function ResetPasswordClient({ token }: { token: string }) {
+export function ResetPasswordClient({ token, locale, dictionary }: { token: string; locale: string; dictionary: Dictionary["auth"] }) {
   const [isPending, startTransition] = useTransition();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,23 +33,23 @@ export function ResetPasswordClient({ token }: { token: string }) {
     startTransition(async () => {
       try {
         if (!token) {
-          throw new Error("Missing reset token.");
+          throw new Error(dictionary.errors.missingResetToken);
         }
 
         if (!password || password.length < 8) {
-          throw new Error("Password must be at least 8 characters long.");
+          throw new Error(dictionary.errors.passwordMinLength);
         }
 
         if (password !== confirmPassword) {
-          throw new Error("Passwords do not match.");
+          throw new Error(dictionary.errors.passwordsDoNotMatch);
         }
 
-        await resetPassword(token, password);
-        setNotice("Password updated. Sign in again with the new password.");
+        await resetPassword(token, password, dictionary.errors.unableToResetPassword);
+        setNotice(dictionary.notices.passwordUpdated);
         setPassword("");
         setConfirmPassword("");
       } catch (requestError) {
-        setError(requestError instanceof Error ? requestError.message : "Unable to reset.");
+        setError(requestError instanceof Error ? requestError.message : dictionary.errors.unableToReset);
       }
     });
   }
@@ -59,10 +60,10 @@ export function ResetPasswordClient({ token }: { token: string }) {
   return (
     <main className="section-wrap py-20">
       <div className="mx-auto max-w-lg rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-8 shadow-[0_24px_70px_rgba(22,36,58,0.08)]">
-        <p className="eyebrow">Reset password</p>
-        <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">Choose a new password</h1>
+        <p className="eyebrow">{dictionary.headings.resetPassword}</p>
+        <h1 className="mt-4 text-4xl font-semibold text-[var(--ink)]">{dictionary.headings.chooseNewPassword}</h1>
         <label className="mt-8 block text-sm font-medium text-[var(--ink)]">
-          New password
+          {dictionary.fields.newPassword}
           <input
             type="password"
             value={password}
@@ -71,7 +72,7 @@ export function ResetPasswordClient({ token }: { token: string }) {
           />
         </label>
         <label className="mt-5 block text-sm font-medium text-[var(--ink)]">
-          Confirm password
+          {dictionary.fields.confirmPassword}
           <input
             type="password"
             value={confirmPassword}
@@ -96,10 +97,10 @@ export function ResetPasswordClient({ token }: { token: string }) {
             disabled={isPending}
             className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--ink)]"
           >
-            {isPending ? "Updating..." : "Update password"}
+            {isPending ? dictionary.actions.updating : dictionary.actions.updatePassword}
           </button>
-          <Link href="/auth" className="text-sm font-semibold text-[var(--muted)]">
-            Return to sign in
+          <Link href={`/${locale}/auth`} className="text-sm font-semibold text-[var(--muted)]">
+            {dictionary.actions.returnToSignIn}
           </Link>
         </div>
       </div>

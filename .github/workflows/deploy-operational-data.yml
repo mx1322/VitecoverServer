@@ -1,0 +1,80 @@
+name: Deploy Operational Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      apply_schema:
+        description: "Apply Directus schema changes (operational metadata only)"
+        required: true
+        default: true
+        type: boolean
+      deploy_content:
+        description: "Deploy operational content seed"
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: deploy-operational-data-${{ github.event.inputs.target_env }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-operational-data:
+    runs-on:
+      - self-hosted
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Directus target
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event.inputs.target_env }}" = "production" ]; then
+            echo "DIRECTUS_URL=${{ secrets.PROD_DIRECTUS_URL }}" >> "$GITHUB_ENV"
+            echo "DIRECTUS_TOKEN=${{ secrets.PROD_DIRECTUS_TOKEN }}" >> "$GITHUB_ENV"
+          else
+            echo "DIRECTUS_URL=${{ secrets.STAGING_DIRECTUS_URL }}" >> "$GITHUB_ENV"
+            echo "DIRECTUS_TOKEN=${{ secrets.STAGING_DIRECTUS_TOKEN }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Apply Directus schema (operational metadata only)
+        if: ${{ github.event.inputs.apply_schema == 'true' }}
+        run: |
+          set -euo pipefail
+          printf 'y\ny\n' | python backend/scripts/directus_schema_sync.py push
+
+      - name: Deploy operational catalog/content seed
+        if: ${{ github.event.inputs.deploy_content == 'true' }}
+        run: |
+          set -euo pipefail
+          python backend/scripts/directus_catalog_seed.py
+
+      - name: Safety confirmation
+        run: |
+          echo "This workflow deploys operational schema/content only."
+          echo "No customer backup restore or overwrite actions are defined here."

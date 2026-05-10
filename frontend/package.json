@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:i18n": "node scripts/check-i18n-alignment.mjs"
   },
   "dependencies": {
     "@directus/sdk": "^19.1.0",

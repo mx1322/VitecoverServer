@@ -1,0 +1,158 @@
+{
+  "brandTagline": "临时汽车保险",
+  "nav": {
+    "home": "首页",
+    "products": "产品",
+    "quote": "报价",
+    "faq": "常见问题",
+    "account": "账户中心"
+  },
+  "cta": {
+    "getQuote": "获取报价",
+    "downloadPdf": "下载 PDF",
+    "edit": "编辑",
+    "addDriver": "新增驾驶员",
+    "addVehicle": "新增车辆",
+    "uploadDocument": "上传文件",
+    "signOut": "退出登录",
+    "signingOut": "正在退出..."
+  },
+  "products": {
+    "title": "保险产品",
+    "intro": "按车辆类型浏览可用产品。",
+    "from": "起价",
+    "noData": "当前暂无本地化产品内容。",
+    "viewDetail": "查看详情"
+  },
+  "auth": {
+    "tabs": {
+      "login": "登录",
+      "register": "注册",
+      "forgot": "忘记密码"
+    },
+    "headings": {
+      "login": "登录",
+      "register": "创建账户",
+      "forgot": "重置密码",
+      "resetPassword": "重置密码",
+      "chooseNewPassword": "设置新密码",
+      "verifyEmail": "邮箱验证",
+      "verifyingAccount": "正在确认您的账户",
+      "verificationComplete": "验证完成",
+      "verificationFailed": "验证失败"
+    },
+    "descriptions": {
+      "login": "请输入邮箱和密码继续。",
+      "register": "创建账户后请完成邮箱验证。",
+      "forgot": "我们会发送密码重置链接。"
+    },
+    "fields": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "邮箱",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "newPassword": "新密码"
+    },
+    "actions": {
+      "createAccount": "创建账户",
+      "sendResetLink": "发送重置链接",
+      "processing": "处理中...",
+      "updating": "更新中...",
+      "updatePassword": "更新密码",
+      "returnToSignIn": "返回登录",
+      "goToSignIn": "前往登录"
+    },
+    "notices": {
+      "accountCreated": "账户已创建。请检查收件箱并完成邮箱验证。",
+      "resetEmailSent": "密码重置邮件已发送。",
+      "passwordUpdated": "密码已更新。请使用新密码重新登录。",
+      "verifyingToken": "正在验证邮箱令牌...",
+      "emailVerified": "邮箱已验证，账户现在可以登录。"
+    },
+    "errors": {
+      "requestFailed": "请求失败。",
+      "emailRequired": "邮箱为必填项。",
+      "fullNameRequired": "姓和名为必填项。",
+      "passwordMinLength": "密码长度至少为 8 位。",
+      "passwordsDoNotMatch": "两次输入的密码不一致。",
+      "passwordRequired": "密码为必填项。",
+      "unableToContinue": "无法继续。",
+      "unableToResetPassword": "无法重置密码。",
+      "missingResetToken": "缺少重置令牌。",
+      "unableToReset": "无法重置。",
+      "unableToVerifyEmail": "无法验证此邮箱。",
+      "missingVerificationToken": "缺少验证令牌。"
+    }
+  },
+  "quote": {
+    "title": "报价申请",
+    "intro": "所有语言共享统一的 4 步流程。",
+    "steps": [
+      "选择产品",
+      "驾驶员信息",
+      "车辆信息",
+      "支付与出单"
+    ]
+  },
+  "faq": {
+    "title": "常见问题",
+    "intro": "下单前与保单管理中的常见解答。",
+    "empty": "当前暂无本地化 FAQ 内容。"
+  },
+  "account": {
+    "title": "账户中心",
+    "welcome": "欢迎来到您的账户仪表盘",
+    "sidebar": {
+      "overview": "概览",
+      "policies": "保单",
+      "drivers": "驾驶员",
+      "vehicles": "车辆",
+      "documents": "文件",
+      "settings": "设置"
+    },
+    "summary": {
+      "activePolicies": "有效保单",
+      "savedDrivers": "已保存驾驶员",
+      "savedVehicles": "已保存车辆",
+      "pendingDocuments": "待处理文件"
+    },
+    "recentPolicies": "最近保单",
+    "quickActions": "快捷操作",
+    "settings": {
+      "email": "邮箱",
+      "password": "密码",
+      "contact": "联系方式"
+    },
+    "documents": {
+      "drivingLicence": "驾驶证",
+      "vehicleRegistration": "车辆登记证",
+      "proofOfAddress": "地址证明"
+    },
+    "statuses": {
+      "active": "有效",
+      "pending": "待处理",
+      "expired": "已过期",
+      "uploaded": "已上传",
+      "missing": "缺失",
+      "underReview": "审核中"
+    }
+  },
+  "common": {
+    "stepLabel": "步骤",
+    "languageSwitcherLabel": "语言"
+  },
+  "brandName": "Vitecover",
+  "brandInitials": "VC",
+  "legal": {
+    "hubTitle": "法律信息",
+    "hubSeoTitle": "法律信息 | Vitecover",
+    "hubSeoDescription": "法律与监管信息。",
+    "privacySeoTitle": "隐私政策 | Vitecover",
+    "privacySeoDescription": "隐私政策。",
+    "termsSeoTitle": "条款与条件 | Vitecover",
+    "termsSeoDescription": "条款与条件。",
+    "regulatorySeoTitle": "监管信息 | Vitecover",
+    "regulatorySeoDescription": "监管信息。"
+  }
+}

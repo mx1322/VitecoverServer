@@ -2,15 +2,29 @@ name: Backup Customer Data
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: '0 1 * * *'
+  schedule:
+    - cron: "30 2 * * *"
+
+concurrency:
+  group: backup-customer-data
+  cancel-in-progress: false
 
 jobs:
   backup-customer-data:
-    runs-on: [self-hosted, dev-local]
+    runs-on:
+      - self-hosted
+      - dev-local
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Backup customer/private data
+      - name: Run repository customer backup script
         run: bash backend/scripts/backup_customer_data.sh
+
+      - name: Safety confirmation
+        run: |
+          echo "Backup only workflow completed."
+          echo "No automatic restore or overwrite is implemented by design."
