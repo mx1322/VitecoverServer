@@ -1,27 +1,23 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/site-header";
-import { siteConfig } from "@/lib/site";
+import { headers } from "next/headers";
+
+import { defaultLocale, isLocale } from "@/lib/i18n/config";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} | Temporary Motor Insurance`,
-  description: siteConfig.description,
+  title: "Vitecover",
+  description: "Vitecover",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const requestHeaders = await headers();
+  const localeHeader = requestHeaders.get("x-vitecover-locale");
+  const htmlLang = localeHeader && isLocale(localeHeader) ? localeHeader : defaultLocale;
+
   return (
-    <html lang="en">
-      <body>
-        <div className="page-shell">
-          <SiteHeader />
-          {children}
-        </div>
-      </body>
+    <html lang={htmlLang} suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }
