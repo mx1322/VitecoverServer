@@ -1,0 +1,38 @@
+name: Backup Operational Data
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 2 * * 1'
+
+jobs:
+  backup-operational:
+    runs-on: [self-hosted, dev-local]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Install python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests pyyaml
+
+      - name: Backup operational data
+        run: python3 backend/scripts/backup_operational_data.py backup
+
+      - name: Verify operational backup
+        run: python3 backend/scripts/backup_operational_data.py verify
+
+      - name: Commit operational backup changes
+        run: |
+          if [[ -n "$(git status --porcelain backend/directus/seed/operational backend/directus/schema)" ]]; then
+            git config user.name "vitecover-backup-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add backend/directus/seed/operational backend/directus/schema
+            git commit -m "chore(backup): update operational Directus seed data"
+            git push origin dev
+          else
+            echo "No operational backup changes to commit."
+          fi

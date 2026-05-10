@@ -110,3 +110,14 @@ The backend is already initialized around the temporary vehicle insurance workfl
 - Technical roadmap: [docs/03-technical-roadmap.md](docs/03-technical-roadmap.md)
 - Frontend plan: [docs/04-frontend-plan.md](docs/04-frontend-plan.md)
 - Backend plan: [docs/05-backend-plan.md](docs/05-backend-plan.md)
+
+## Backup and disaster recovery
+
+- Backup policy: [backend/backup/backup-policy.yaml](backend/backup/backup-policy.yaml)
+- Operational backup/restore/verify:
+  - `python3 backend/scripts/backup_operational_data.py backup`
+  - `python3 backend/scripts/backup_operational_data.py restore`
+  - `python3 backend/scripts/backup_operational_data.py verify`
+- Customer backup: `bash backend/scripts/backup_customer_data.sh`
+- Customer restore: `bash backend/scripts/restore_customer_data.sh --archive <archive> --yes`
+- Full runbook: [docs/06-backup-and-disaster-recovery.md](docs/06-backup-and-disaster-recovery.md)

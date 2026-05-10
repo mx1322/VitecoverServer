@@ -16,6 +16,8 @@ This directory contains the main project documentation for VitecoverServer.
   Backend domain model, collection design, schema logic, and operational workflow.
 - `06-ai-agent-runbook.md`
   Agent-focused runbook for local integrated testing, reverse-proxy access discipline, and smoke-check workflow.
+- `06-backup-and-disaster-recovery.md`
+  Split backup domains, Git-safe operational backups, and customer/private disaster recovery workflow.
 
 ## Reading order
 
@@ -27,3 +29,4 @@ If someone is new to the project, the recommended reading order is:
 4. `04-frontend-plan.md`
 5. `01-local-doc-index.md`
 6. `06-ai-agent-runbook.md`
+7. `06-backup-and-disaster-recovery.md`

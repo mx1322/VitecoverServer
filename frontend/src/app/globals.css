@@ -10,6 +10,8 @@
   --accent: #ffb347;
   --accent-2: #1fb7a6;
   --danger: #ea6f51;
+  --font-body: Manrope, Avenir Next, Avenir, Segoe UI, Helvetica Neue, Arial, sans-serif;
+  --font-display: Space Grotesk, Manrope, Avenir Next, Avenir, Segoe UI, Helvetica Neue, Arial, sans-serif;
 }
 
 * {
@@ -36,6 +38,19 @@ a {
   text-decoration: none;
 }
 
+input[type="date"] {
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
 .page-shell {
   position: relative;
   overflow: hidden;
@@ -58,7 +73,13 @@ a {
   z-index: 1;
   margin-inline: auto;
   max-width: 72rem;
-  padding-inline: 1.5rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .section-wrap {
+    padding-inline: 1.5rem;
+  }
 }
 
 .eyebrow {

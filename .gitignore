@@ -17,6 +17,11 @@ backend/backups/
 backend/snapshots/
 backend/directus/schema/live-current.tmp.json
 
+# Generic backup artifacts
+**/*.dump
+**/*.tar.gz
+data/
+
 # Logs
 *.log
 npm-debug.log*

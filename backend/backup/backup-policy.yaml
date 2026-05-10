@@ -1,0 +1,25 @@
+# Backup policy for Vitecover split backup domains.
+# Operational data is Git-safe only if it contains NO personal/customer/private data.
+# Customer/private data backups MUST NEVER be committed to Git.
+
+operational:
+  collections:
+    - geo_zones
+    - insurance_products
+    - pricing_rules
+  file_collections_or_folders:
+    - product-logos
+    - website-public-assets
+  output_dir: backend/directus/seed/operational
+  include_schema: true
+  include_public_assets: true
+
+customer_data:
+  postgres_dump: true
+  include_minio_bucket: true
+  output_dir: backend/backups/customer-data
+  encrypt: false
+  storage:
+    provider: minio
+    bucket_env: CUSTOMER_BACKUP_BUCKET
+    prefix: vitecover/customer-data

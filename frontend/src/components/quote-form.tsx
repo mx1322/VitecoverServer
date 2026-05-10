@@ -58,7 +58,8 @@ const secondaryButtonClass =
 const toggleButtonClass =
   "rounded-full px-4 py-2 text-sm font-semibold transition duration-200 ease-out hover:scale-[1.03] active:scale-[0.99]";
 const fieldClass =
-  "mt-2 w-full rounded-2xl border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] focus:border-[rgba(255,179,71,0.8)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,179,71,0.22)]";
+  "mt-2 block w-full min-w-0 max-w-full [min-inline-size:0] rounded-2xl border border-[rgba(22,36,58,0.12)] bg-white px-4 py-3 text-sm text-[var(--ink)] transition duration-200 ease-out hover:border-[rgba(22,36,58,0.22)] focus:border-[rgba(255,179,71,0.8)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,179,71,0.22)]";
+const fieldLabelClass = "block min-w-0 text-sm font-medium text-[var(--ink)]";
 
 const stepLabels: Array<{ id: Step; label: string }> = [
   { id: "price", label: "Product" },
@@ -969,7 +970,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
         {step === "price" ? (
           <div className="mt-8 grid gap-5 md:grid-cols-2">
-            <label className="text-sm font-medium text-[var(--ink)]">
+            <label className={fieldLabelClass}>
               Product
               <select
                 value={priceForm.productCode}
@@ -984,7 +985,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               </select>
             </label>
 
-            <label className="text-sm font-medium text-[var(--ink)]">
+            <label className={fieldLabelClass}>
               Duration
               <select
                 value={priceForm.durationDays}
@@ -1000,7 +1001,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               </select>
             </label>
 
-            <label className="text-sm font-medium text-[var(--ink)]">
+            <label className={fieldLabelClass}>
               Coverage date
               <input
                 type="date"
@@ -1010,7 +1011,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               />
             </label>
 
-            <label className="text-sm font-medium text-[var(--ink)]">
+            <label className={fieldLabelClass}>
               Coverage start hour
               <select
                 value={coverageStartParts.hour}
@@ -1025,7 +1026,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               </select>
             </label>
 
-            <label className="text-sm font-medium text-[var(--ink)]">
+            <label className={fieldLabelClass}>
               Fiscal power (CV)
               <select
                 value={priceForm.fiscalPower}
@@ -1237,7 +1238,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   </div>
                 ) : (
                   <div className="grid gap-5 md:grid-cols-2">
-                    <label className="text-sm font-medium text-[var(--ink)]">
+                    <label className={fieldLabelClass}>
                       Registration number
                       <input
                         value={vehicleForm.registrationNumber}
@@ -1246,7 +1247,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                       />
                     </label>
 
-                    <label className="text-sm font-medium text-[var(--ink)]">
+                    <label className={fieldLabelClass}>
                       Fiscal power (CV)
                       <select
                         value={vehicleForm.fiscalPower}
@@ -1261,7 +1262,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                       </select>
                     </label>
 
-                    <label className="text-sm font-medium text-[var(--ink)]">
+                    <label className={fieldLabelClass}>
                       Manufacturer
                       <input
                         value={vehicleForm.manufacturer}
@@ -1270,7 +1271,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                       />
                     </label>
 
-                    <label className="text-sm font-medium text-[var(--ink)]">
+                    <label className={fieldLabelClass}>
                       Model
                       <input
                         value={vehicleForm.model}
@@ -1379,7 +1380,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               </div>
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   First name
                   <input
                     value={driverForm.firstName}
@@ -1388,7 +1389,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   Last name
                   <input
                     value={driverForm.lastName}
@@ -1397,7 +1398,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   Birthday
                   <input
                     type="date"
@@ -1407,7 +1408,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   License number
                   <input
                     value={driverForm.licenseNumber}
@@ -1416,7 +1417,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   Email
                   <input
                     type="email"
@@ -1426,7 +1427,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   Phone
                   <input
                     value={driverForm.phone}
@@ -1435,7 +1436,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   License expiry date
                   <input
                     type="date"
@@ -1445,7 +1446,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                   />
                 </label>
 
-                <label className="text-sm font-medium text-[var(--ink)]">
+                <label className={fieldLabelClass}>
                   License country
                   <input
                     value={driverForm.licenseCountryCode}

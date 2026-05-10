@@ -160,3 +160,26 @@ mkdir -p data/postgres uploads
 - Commit `directus/schema/schema-target.json` and `directus/schema/schema-remote-baseline.json`.
 - Ignore `directus/schema/live-current.tmp.json`.
 - For EC2 production, put Directus behind HTTPS and use RDS + S3.
+
+## Backup and recovery commands
+
+- Policy: [`backup/backup-policy.yaml`](backup/backup-policy.yaml)
+- Operational backup:
+  ```bash
+  python3 scripts/backup_operational_data.py backup
+  python3 scripts/backup_operational_data.py verify
+  ```
+- Operational restore:
+  ```bash
+  python3 scripts/backup_operational_data.py restore
+  python3 scripts/backup_operational_data.py restore --replace --apply-schema
+  ```
+- Customer/private backup:
+  ```bash
+  bash scripts/backup_customer_data.sh
+  ```
+- Customer/private restore:
+  ```bash
+  bash scripts/restore_customer_data.sh --archive <archive> --yes
+  ```
+- DR runbook: [`../docs/06-backup-and-disaster-recovery.md`](../docs/06-backup-and-disaster-recovery.md)

@@ -9,16 +9,16 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-[rgba(22,36,58,0.08)] bg-[rgba(255,252,247,0.94)] backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 md:py-5">
-        <Link href="/" className="flex items-center gap-4 text-[var(--ink)]">
-          <span className="inline-flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-[var(--accent)] text-base font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.2)] md:h-16 md:w-16 md:text-lg">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 md:gap-6 md:py-5">
+        <Link href="/" className="flex min-w-0 items-center gap-3 text-[var(--ink)] sm:gap-4">
+          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-[var(--ink)] shadow-[0_10px_24px_rgba(255,179,71,0.2)] sm:h-[3.25rem] sm:w-[3.25rem] sm:text-base md:h-16 md:w-16 md:text-lg">
             VC
           </span>
-          <span>
-            <span className="block text-xl font-semibold tracking-tight md:text-[1.75rem]">
+          <span className="min-w-0">
+            <span className="block truncate text-lg font-semibold tracking-tight sm:text-xl md:text-[1.75rem]">
               {siteConfig.name}
             </span>
-            <span className="block text-[10px] font-medium uppercase tracking-[0.34em] text-[rgba(102,117,138,0.86)] md:text-[11px]">
+            <span className="block truncate text-[9px] font-medium uppercase tracking-[0.16em] text-[rgba(102,117,138,0.86)] sm:text-[10px] sm:tracking-[0.28em] md:text-[11px] md:tracking-[0.34em]">
               Temporary Auto Insurance
             </span>
           </span>
