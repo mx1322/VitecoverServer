@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 
 import { LogoutButton } from "@/components/account/logout-button";
 import type { AccountRole } from "@/lib/auth-session";
+import { localizePath, normalizeLocale, stripLocalePrefix } from "@/lib/i18n/routing";
+import { t } from "@/lib/i18n/translations";
 
 type SessionResponse = {
   authenticated: boolean;
@@ -43,7 +45,9 @@ function isActivePath(pathname: string, href: string) {
 }
 
 export function AccountSidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/account";
+  const locale = normalizeLocale(pathname.split("/").filter(Boolean)[0]);
+  const activePathname = stripLocalePrefix(pathname);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AccountRole | null>(null);
 
@@ -91,36 +95,36 @@ export function AccountSidebar() {
     <aside className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
       <div className="border-b border-[rgba(22,36,58,0.08)] pb-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-          Account Center
+          {t(locale, "Account Center")}
         </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">My Account</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">{t(locale, "My Account")}</h1>
         <div className="mt-5 rounded-[22px] bg-[rgba(250,246,240,1)] px-4 py-4">
-          <p className="text-sm text-[var(--muted)]">Welcome back</p>
-          <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email || "Signed in"}</p>
+          <p className="text-sm text-[var(--muted)]">{t(locale, "Welcome back")}</p>
+          <p className="mt-1 text-sm font-medium text-[var(--ink)]">{email || t(locale, "Signed in")}</p>
           <p className="mt-1 text-xs font-medium text-[var(--muted)]">
-            Role: {role === null ? "Loading..." : role === "product_manager" ? "Product Manager" : role === "admin" ? "Admin" : "Customer"}
+            {t(locale, "Role")}: {role === null ? t(locale, "Loading...") : role === "product_manager" ? t(locale, "Product Manager") : role === "admin" ? t(locale, "Admin") : t(locale, "Customer")}
           </p>
         </div>
       </div>
       <nav className="mt-4 space-y-2">
         {(role === "product_manager" || role === "admin" ? managerMenuItems : customerMenuItems).map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = isActivePath(activePathname, item.href);
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={localizePath(item.href, locale)}
               className={
                 active
                   ? "flex w-full items-center rounded-full bg-[rgba(248,179,71,0.16)] px-4 py-3 text-sm font-semibold text-[var(--ink)]"
                   : "flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-[var(--muted)] transition hover:bg-[rgba(22,36,58,0.04)] hover:text-[var(--ink)]"
               }
             >
-              {item.label}
+              {t(locale, item.label)}
             </Link>
           );
         })}
       </nav>
-      <LogoutButton />
+      <LogoutButton locale={locale} />
     </aside>
   );
 }

@@ -12,10 +12,13 @@ import type {
   QuoteProductOption,
 } from "@/lib/directus-admin";
 import type { AuthenticatedAccount } from "@/lib/directus-auth";
+import type { Locale } from "@/lib/i18n/config";
+import { t } from "@/lib/i18n/translations";
 
 interface QuoteFormProps {
   products: QuoteProductOption[];
   initialProductCode?: string;
+  locale: Locale;
 }
 
 type Step =
@@ -210,7 +213,7 @@ function toWorkspace(account: AuthenticatedAccount): CustomerWorkspace {
   };
 }
 
-export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
+export function QuoteForm({ products, initialProductCode, locale }: QuoteFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -942,7 +945,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                         isActive || isComplete ? "text-[var(--ink)]" : "text-[var(--muted)]"
                       }`}
                     >
-                      {item.label}
+                      {t(locale, item.label)}
                     </p>
                   </button>
                 );
@@ -953,25 +956,25 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
 
         <div className="mt-6 rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[linear-gradient(135deg,rgba(255,179,71,0.12),rgba(31,183,166,0.08))] p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Current step
+            {t(locale, "Current step")}
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-[var(--ink)]">
-            {currentStepMeta.title}
+            {t(locale, currentStepMeta.title)}
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            {currentStepMeta.description}
+            {t(locale, currentStepMeta.description)}
           </p>
           <p className="mt-4 text-sm leading-6 text-[var(--ink)]">
             {currentStepMeta.next.length
-              ? `Coming next: ${currentStepMeta.next.join(" -> ")}`
-              : "The order is complete for now. Contract email delivery will be connected next."}
+              ? `${t(locale, "Coming next")}: ${currentStepMeta.next.map((item) => t(locale, item)).join(" -> ")}`
+              : t(locale, "The order is complete for now. Contract email delivery will be connected next.")}
           </p>
         </div>
 
         {step === "price" ? (
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             <label className={fieldLabelClass}>
-              Product
+              {t(locale, "Product")}
               <select
                 value={priceForm.productCode}
                 onChange={(event) => updatePriceField("productCode", event.target.value)}
@@ -979,14 +982,14 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               >
                 {products.map((product) => (
                   <option key={product.code} value={product.code}>
-                    {product.name}
+                    {t(locale, product.name)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className={fieldLabelClass}>
-              Duration
+              {t(locale, "Duration")}
               <select
                 value={priceForm.durationDays}
                 onChange={(event) => updatePriceField("durationDays", event.target.value)}
@@ -995,14 +998,14 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               >
                 {durationOptions.map((days) => (
                   <option key={days} value={days}>
-                    {days} day{days > 1 ? "s" : ""}
+                    {days} {t(locale, days > 1 ? "days" : "day")}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className={fieldLabelClass}>
-              Coverage date
+              {t(locale, "Coverage date")}
               <input
                 type="date"
                 value={coverageStartParts.date}
@@ -1012,7 +1015,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
             </label>
 
             <label className={fieldLabelClass}>
-              Coverage start hour
+              {t(locale, "Coverage start hour")}
               <select
                 value={coverageStartParts.hour}
                 onChange={(event) => updateCoverageStart({ hour: event.target.value })}
@@ -1027,7 +1030,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
             </label>
 
             <label className={fieldLabelClass}>
-              Fiscal power (CV)
+              {t(locale, "Fiscal power (CV)")}
               <select
                 value={priceForm.fiscalPower}
                 onChange={(event) => updatePriceField("fiscalPower", event.target.value)}
@@ -1615,7 +1618,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={moveBack}
               className={secondaryButtonClass}
             >
-              Back
+              {t(locale, "Back")}
             </button>
           ) : null}
 
@@ -1635,7 +1638,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
                 }}
                 className={primaryButtonClass}
               >
-                Confirm insurance
+                {t(locale, "Confirm insurance")}
               </button>
             </>
           ) : null}
@@ -1647,7 +1650,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={handleVehicleContinue}
               className={primaryButtonClass}
             >
-              {isPending ? "Refreshing price..." : "Confirm vehicle"}
+              {isPending ? t(locale, "Refreshing price...") : t(locale, "Confirm vehicle")}
             </button>
           ) : null}
 
@@ -1657,7 +1660,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={handleDriverContinue}
               className={primaryButtonClass}
             >
-              Confirm driver
+              {t(locale, "Confirm driver")}
             </button>
           ) : null}
 
@@ -1668,7 +1671,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               onClick={handleLocalPayment}
               className={primaryButtonClass}
             >
-              {isPending ? "Processing payment..." : "Pay locally"}
+              {isPending ? t(locale, "Processing payment...") : t(locale, "Pay locally")}
             </button>
           ) : null}
 
@@ -1681,7 +1684,7 @@ export function QuoteForm({ products, initialProductCode }: QuoteFormProps) {
               }}
               className={primaryButtonClass}
             >
-              Continue to covered
+              {t(locale, "Continue to covered")}
             </button>
           ) : null}
 

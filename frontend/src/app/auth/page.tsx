@@ -1,10 +1,12 @@
 import { AuthGatewayClient } from "./auth-gateway-client";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export default async function AuthPage({
   searchParams,
 }: {
   searchParams: Promise<{ returnTo?: string }>;
 }) {
+  const locale = await getRequestLocale();
   const params = await searchParams;
-  return <AuthGatewayClient returnTo={params.returnTo || "/account"} />;
+  return <AuthGatewayClient returnTo={params.returnTo || "/account"} locale={locale} />;
 }

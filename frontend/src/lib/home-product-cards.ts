@@ -1,5 +1,8 @@
 import { listDirectusFiles } from "@/lib/directus-admin";
 import { directusAssetUrl } from "@/lib/file-service";
+import type { Locale } from "@/lib/i18n/config";
+import { localizePath } from "@/lib/i18n/routing";
+import { t } from "@/lib/i18n/translations";
 
 export type HomeProductCard = {
   code: string;
@@ -110,7 +113,20 @@ function normalizeFileLabel(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
 
-export async function getHomeProductCards(): Promise<HomeProductCard[]> {
+function translateCard(card: HomeProductCard, locale: Locale): HomeProductCard {
+  return {
+    ...card,
+    title: t(locale, card.title),
+    category: t(locale, card.category),
+    description: t(locale, card.description),
+    href: card.href ? localizePath(card.href, locale) : card.href,
+    priceLabel: t(locale, card.priceLabel),
+    price: t(locale, card.price),
+    buttonLabel: t(locale, card.buttonLabel),
+  };
+}
+
+export async function getHomeProductCards(locale: Locale): Promise<HomeProductCard[]> {
   try {
     const files = await listDirectusFiles();
 
@@ -123,15 +139,15 @@ export async function getHomeProductCards(): Promise<HomeProductCard[]> {
       });
 
       if (!matchedFile?.id) {
-        return card;
+        return translateCard(card, locale);
       }
 
-      return {
+      return translateCard({
         ...card,
         iconPath: directusAssetUrl(matchedFile.id),
-      };
+      }, locale);
     });
   } catch {
-    return baseHomeProductCards;
+    return baseHomeProductCards.map((card) => translateCard(card, locale));
   }
 }
