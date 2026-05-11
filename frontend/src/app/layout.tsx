@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { SiteHeader } from "@/components/site-header";
+import { defaultLanguage, languageCookieName } from "@/lib/language";
 import { siteConfig } from "@/lib/site";
 
 import "./globals.css";
@@ -14,8 +16,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const language = cookies().get(languageCookieName)?.value ?? defaultLanguage;
+
   return (
-    <html lang="en">
+    <html lang={language}>
       <body>
         <div className="page-shell">
           <SiteHeader />
