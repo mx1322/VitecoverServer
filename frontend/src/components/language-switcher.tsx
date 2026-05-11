@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { locales } from "@/lib/i18n/config";
@@ -20,7 +19,7 @@ export function LanguageSwitcher({ label }: { label: string }) {
         const isActive = locale === currentLocale;
 
         return (
-          <Link
+          <a
             key={locale}
             href={href}
             title={getLocaleLabel(locale)}
@@ -30,10 +29,9 @@ export function LanguageSwitcher({ label }: { label: string }) {
             }`}
           >
             {locale.toUpperCase()}
-          </Link>
+          </a>
         );
       })}
     </div>
   );
 }
-
