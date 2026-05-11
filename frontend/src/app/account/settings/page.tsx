@@ -3,6 +3,9 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
+import { useCurrentLocale } from "@/lib/i18n/client";
+import { t } from "@/lib/i18n/translations";
+
 type SettingsState = {
   email: string;
   password: string;
@@ -25,6 +28,7 @@ const labels: Record<keyof SettingsState, string> = {
 };
 
 export default function SettingsPage() {
+  const locale = useCurrentLocale();
   const [settings, setSettings] = useState(initialSettings);
   const [editingKey, setEditingKey] = useState<keyof SettingsState | null>(null);
   const [draftValue, setDraftValue] = useState("");
@@ -73,11 +77,11 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-          Account Settings
+          {t(locale, "Account Settings")}
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Settings</h2>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">{t(locale, "Settings")}</h2>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          Update your personal details and account preferences.
+          {t(locale, "Update your personal details and account preferences.")}
         </p>
       </section>
 
@@ -90,7 +94,7 @@ export default function SettingsPage() {
             {editingKey === key ? (
               <form onSubmit={saveSetting} className="flex flex-col gap-4 md:flex-row md:items-end">
                 <label className="min-w-0 flex-1 text-sm font-medium text-[var(--ink)]">
-                  {labels[key]}
+                  {t(locale, labels[key])}
                   <input
                     autoFocus
                     value={draftValue}
@@ -100,23 +104,23 @@ export default function SettingsPage() {
                 </label>
                 <div className="flex gap-3">
                   <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--ink)]">
-                    Save
+                    {t(locale, "Save")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingKey(null)}
                     className="rounded-full border border-[rgba(22,36,58,0.08)] px-5 py-3 text-sm font-medium text-[var(--ink)]"
                   >
-                    Cancel
+                    {t(locale, "Cancel")}
                   </button>
                 </div>
               </form>
             ) : (
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm text-[var(--muted)]">{labels[key]}</p>
+                  <p className="text-sm text-[var(--muted)]">{t(locale, labels[key])}</p>
                   <p className="mt-1 font-semibold text-[var(--ink)]">
-                    {key === "email" ? settings[key] || "Signed in" : settings[key]}
+                    {key === "email" ? settings[key] || t(locale, "Signed in") : settings[key]}
                   </p>
                 </div>
                 <button
@@ -124,7 +128,7 @@ export default function SettingsPage() {
                   onClick={() => startEdit(key)}
                   className="rounded-full border border-[rgba(22,36,58,0.08)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-[rgba(22,36,58,0.03)] disabled:cursor-not-allowed disabled:bg-[rgba(235,235,235,0.6)] disabled:text-[var(--muted)]"
                 >
-                  {key === "email" ? "Locked" : "Edit"}
+                  {key === "email" ? t(locale, "Locked") : t(locale, "Edit")}
                 </button>
               </div>
             )}

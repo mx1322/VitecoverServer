@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { faqItems } from "@/lib/faq";
+import { getFaqItems } from "@/lib/faq";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/translations";
 
@@ -12,15 +12,16 @@ export const metadata: Metadata = {
 
 export default async function FaqPage() {
   const locale = await getRequestLocale();
+  const faqItems = getFaqItems(locale);
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqItems.map((item) => ({
       "@type": "Question",
-      name: t(locale, item.question),
+      name: item.question,
       acceptedAnswer: {
         "@type": "Answer",
-        text: t(locale, item.answer),
+        text: item.answer,
       },
     })),
   };
@@ -45,8 +46,8 @@ export default async function FaqPage() {
               id={item.id}
               className="scroll-mt-28 rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.88)] px-5 py-5"
             >
-              <h2 className="text-lg font-semibold leading-7 text-[var(--ink)]">{t(locale, item.question)}</h2>
-              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{t(locale, item.answer)}</p>
+              <h2 className="text-lg font-semibold leading-7 text-[var(--ink)]">{item.question}</h2>
+              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{item.answer}</p>
             </article>
           ))}
         </div>

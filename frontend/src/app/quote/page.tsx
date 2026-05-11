@@ -71,7 +71,7 @@ export default async function QuotePage({
         <FaqLinkPanel
           title={t(locale, "Need help before payment?")}
           intro={t(locale, "Use these quick answers to avoid drop-off during checkout and find full details when needed.")}
-          items={getFaqByTag("quote").slice(0, 3)}
+          items={getFaqByTag("quote", locale).slice(0, 3)}
           locale={locale}
         />
       </div>

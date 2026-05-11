@@ -13,6 +13,7 @@ import type {
 } from "@/lib/directus-admin";
 import type { AuthenticatedAccount } from "@/lib/directus-auth";
 import type { Locale } from "@/lib/i18n/config";
+import { localizePath } from "@/lib/i18n/routing";
 import { t } from "@/lib/i18n/translations";
 
 interface QuoteFormProps {
@@ -164,8 +165,8 @@ function getCoverageWindow(startAt: string, durationDays: string) {
   return { startDate, endDate };
 }
 
-function formatCoverageDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatCoverageDate(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : locale, {
     weekday: "long",
     day: "2-digit",
     month: "2-digit",
@@ -175,7 +176,7 @@ function formatCoverageDate(date: Date): string {
   }).format(date);
 }
 
-function formatDateCell(value?: string): string {
+function formatDateCell(value: string | undefined, locale: Locale): string {
   if (!value) {
     return "-";
   }
@@ -185,7 +186,7 @@ function formatDateCell(value?: string): string {
     return value;
   }
 
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -266,11 +267,12 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
       params.set("product", priceForm.productCode);
     }
     const query = params.toString();
-    return query ? `/quote?${query}` : "/quote";
+    const quotePath = localizePath("/quote", locale);
+    return query ? `${quotePath}?${query}` : quotePath;
   }
 
   function redirectToAuth(targetStep: Step) {
-    router.replace(`/auth?returnTo=${encodeURIComponent(buildQuoteHref(targetStep))}`);
+    router.replace(`${localizePath("/auth", locale)}?returnTo=${encodeURIComponent(buildQuoteHref(targetStep))}`);
   }
 
   function setWorkspaceAndSelection(nextWorkspace: CustomerWorkspace) {
@@ -481,7 +483,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         setError(
           requestError instanceof Error
             ? requestError.message
-            : "Unable to load pricing options.",
+            : t(locale, "Unable to load pricing options."),
         );
       }
     });
@@ -542,7 +544,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
         setPreview(null);
         setError(
-          requestError instanceof Error ? requestError.message : "Unable to calculate the price.",
+          requestError instanceof Error ? requestError.message : t(locale, "Unable to calculate the price."),
         );
       } finally {
         if (isActive) {
@@ -644,13 +646,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     }
 
     if (!workspace) {
-      setError("Sign in first to open the next steps.");
+      setError(t(locale, "Sign in first to open the next steps."));
       redirectToAuth(target);
       return;
     }
 
     if (!preview) {
-      setError("Choose the product options and wait for the price first.");
+      setError(t(locale, "Choose the product options and wait for the price first."));
       setStep("price");
       router.replace(buildQuoteHref("price"));
       return;
@@ -663,7 +665,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     }
 
     if (target === "driver" && !canUseCurrentVehicle()) {
-      setError("Choose or create a vehicle first.");
+      setError(t(locale, "Choose or create a vehicle first."));
       setStep("vehicle");
       return;
     }
@@ -675,13 +677,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     }
 
     if (target === "payment" && !canUseCurrentVehicle()) {
-      setError("Choose or create a vehicle first.");
+      setError(t(locale, "Choose or create a vehicle first."));
       setStep("vehicle");
       return;
     }
 
     if (target === "payment" && !canUseCurrentDriver()) {
-      setError("Choose or create a driver first.");
+      setError(t(locale, "Choose or create a driver first."));
       setStep("driver");
       return;
     }
@@ -693,7 +695,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     }
 
     if ((target === "review" || target === "success") && !result) {
-      setError("Finish payment before opening review or covered.");
+      setError(t(locale, "Finish payment before opening review or covered."));
       setStep("payment");
       return;
     }
@@ -724,13 +726,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
         const result = (await payload.json()) as WorkspaceMutationResponse;
         if (!payload.ok) {
-          throw new Error(result.error ?? "Unable to delete this item.");
+          throw new Error(result.error ?? t(locale, "Unable to delete this item."));
         }
 
         setWorkspaceAndSelection(result.workspace);
       } catch (requestError) {
         setError(
-          requestError instanceof Error ? requestError.message : "Unable to delete this item.",
+          requestError instanceof Error ? requestError.message : t(locale, "Unable to delete this item."),
         );
       }
     });
@@ -738,7 +740,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
   function handleVehicleContinue() {
     if (!workspace) {
-      setError("Sign in before continuing to vehicle details.");
+      setError(t(locale, "Sign in before continuing to vehicle details."));
       redirectToAuth("vehicle");
       return;
     }
@@ -753,15 +755,15 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
             : Number(vehicleForm.fiscalPower || priceForm.fiscalPower);
 
         if (!fiscalPower || fiscalPower <= 0) {
-          throw new Error("Choose a vehicle or provide a valid fiscal power.");
+          throw new Error(t(locale, "Choose a vehicle or provide a valid fiscal power."));
         }
 
         if (vehicleMode === "existing" && !selectedVehicle) {
-          throw new Error("Choose one of the saved vehicles.");
+          throw new Error(t(locale, "Choose one of the saved vehicles."));
         }
 
         if (vehicleMode === "new" && !vehicleForm.registrationNumber.trim()) {
-          throw new Error("Registration number is required for a new vehicle.");
+          throw new Error(t(locale, "Registration number is required for a new vehicle."));
         }
 
         const refreshedPreview = await postJson<PreviewResponse>("/api/checkout/preview", {
@@ -782,7 +784,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         setError(
           requestError instanceof Error
             ? requestError.message
-            : "Unable to continue with this vehicle.",
+            : t(locale, "Unable to continue with this vehicle."),
         );
       }
     });
@@ -792,12 +794,12 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     setError("");
 
     if (driverMode === "existing" && !selectedDriver) {
-      setError("Choose one of the saved drivers.");
+      setError(t(locale, "Choose one of the saved drivers."));
       return;
     }
 
     if (driverMode === "new" && (!driverForm.firstName.trim() || !driverForm.lastName.trim())) {
-      setError("First name and last name are required for a new driver.");
+      setError(t(locale, "First name and last name are required for a new driver."));
       return;
     }
 
@@ -807,13 +809,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
   function handleLocalPayment() {
     if (!preview) {
-      setError("Check the price first.");
+      setError(t(locale, "Check the price first."));
       setStep("price");
       return;
     }
 
     if (!workspace) {
-      setError("Sign in before payment.");
+      setError(t(locale, "Sign in before payment."));
       redirectToAuth("payment");
       return;
     }
@@ -873,7 +875,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         setError(
           requestError instanceof Error
             ? requestError.message
-            : "Unable to finish the local checkout flow.",
+            : t(locale, "Unable to finish the local checkout flow."),
         );
       }
     });
@@ -1051,56 +1053,56 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
           <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_0.95fr]">
             <div className="rounded-[24px] bg-[var(--surface-2)] p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Selected cover
+                {t(locale, "Selected cover")}
               </p>
               <p className="mt-3 text-lg font-semibold text-[var(--ink)]">
-                Temporary passenger car cover
+                {t(locale, "Temporary passenger car cover")}
               </p>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 {Number(priceForm.fiscalPower) <= 10
-                  ? "For a passenger car up to 10 CV."
-                  : "Check that the fiscal power matches the product rules before continuing."}
+                  ? t(locale, "For a passenger car up to 10 CV.")
+                  : t(locale, "Check that the fiscal power matches the product rules before continuing.")}
               </p>
             </div>
 
             <div className="rounded-[24px] bg-[var(--surface-2)] p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Cover window
+                {t(locale, "Cover window")}
               </p>
               <div className="mt-3 space-y-2 text-sm text-[var(--ink)]">
                 <p>
-                  <span className="font-semibold text-[var(--ink)]">Duration:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">{t(locale, "Duration")}:</span>{" "}
                   <span className="font-semibold text-[var(--ink)]">
                     {priceForm.durationDays} day{Number(priceForm.durationDays) > 1 ? "s" : ""}
                   </span>
                 </p>
                 <p>
-                  <span className="font-semibold text-[var(--ink)]">Starts:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">{t(locale, "Starts")}:</span>{" "}
                   <span className="font-semibold text-[var(--ink)]">
-                    {formatCoverageDate(coverageWindow.startDate)}
+                    {formatCoverageDate(coverageWindow.startDate, locale)}
                   </span>
                 </p>
                 <p>
-                  <span className="font-semibold text-[var(--ink)]">Ends:</span>{" "}
+                  <span className="font-semibold text-[var(--ink)]">{t(locale, "Ends")}:</span>{" "}
                   <span className="font-semibold text-[var(--ink)]">
-                    {formatCoverageDate(coverageWindow.endDate)}
+                    {formatCoverageDate(coverageWindow.endDate, locale)}
                   </span>
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Temporary cover starts on the selected hour and ends at 23:59 on the final day.
+                {t(locale, "Temporary cover starts on the selected hour and ends at 23:59 on the final day.")}
               </p>
             </div>
 
             <div className="rounded-[24px] border border-[rgba(255,179,71,0.35)] bg-[rgba(255,179,71,0.14)] p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Premium
+                {t(locale, "Premium")}
               </p>
               {isPreviewPending ? (
                 <>
-                  <p className="mt-3 text-3xl font-semibold text-[var(--ink)]">Updating price...</p>
+                  <p className="mt-3 text-3xl font-semibold text-[var(--ink)]">{t(locale, "Updating price...")}</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    The tariff refreshes automatically when duration or fiscal power changes.
+                    {t(locale, "The tariff refreshes automatically when duration or fiscal power changes.")}
                   </p>
                 </>
               ) : preview ? (
@@ -1110,7 +1112,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                   </p>
                   {preview.durationDays > 1 ? (
                     <p className="mt-2 text-sm font-semibold text-[var(--ink)]">
-                      Average per day:{" "}
+                      {t(locale, "Average per day")}:{" "}
                       {formatCurrencyAmount(
                         Number(preview.totalPremium) / Number(preview.durationDays),
                       )}{" "}
@@ -1118,14 +1120,14 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                     </p>
                   ) : null}
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    This is the current price for the selected duration and fiscal power.
+                    {t(locale, "This is the current price for the selected duration and fiscal power.")}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="mt-3 text-3xl font-semibold text-[var(--ink)]">Check the price</p>
+                  <p className="mt-3 text-3xl font-semibold text-[var(--ink)]">{t(locale, "Check the price")}</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Calculate the tariff here before moving on to vehicle details.
+                    {t(locale, "Calculate the tariff here before moving on to vehicle details.")}
                   </p>
                 </>
               )}
@@ -1137,13 +1139,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
           <div className="mt-8 space-y-6">
             {!workspace ? (
               <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
-                Redirecting to login...
+                {t(locale, "Redirecting to login...")}
               </p>
             ) : (
               <>
                 <div className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[var(--surface-2)] p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Logged in account
+                    {t(locale, "Logged in account")}
                   </p>
                   <p className="mt-3 text-sm text-[var(--ink)]">
                     {workspace.customer.firstName} {workspace.customer.lastName}
@@ -1162,7 +1164,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                           : "bg-[var(--surface-2)] text-[var(--muted)] hover:bg-[rgba(22,36,58,0.08)]"
                       }`}
                     >
-                      Choose saved vehicle
+                      {t(locale, "Choose saved vehicle")}
                     </button>
                     <button
                       type="button"
@@ -1173,7 +1175,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                           : "bg-[var(--surface-2)] text-[var(--muted)] hover:bg-[rgba(22,36,58,0.08)]"
                       }`}
                     >
-                      Create new vehicle
+                      {t(locale, "Create new vehicle")}
                     </button>
                   </div>
                 ) : null}
@@ -1182,13 +1184,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                   <div className="overflow-hidden rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-white">
                     <div className="grid grid-cols-[44px_1.1fr_1fr_1fr_1fr_80px_120px_88px] gap-3 border-b border-[rgba(22,36,58,0.08)] bg-[var(--surface-2)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                       <span />
-                      <span>Vehicle name</span>
-                      <span>Plate</span>
-                      <span>Brand</span>
-                      <span>Model</span>
+                      <span>{t(locale, "Vehicle name")}</span>
+                      <span>{t(locale, "Plate")}</span>
+                      <span>{t(locale, "Brand")}</span>
+                      <span>{t(locale, "Model")}</span>
                       <span>CV</span>
-                      <span>Review</span>
-                      <span>Action</span>
+                      <span>{t(locale, "Review")}</span>
+                      <span>{t(locale, "Action")}</span>
                     </div>
                     <fieldset>
                       {workspace.vehicles.map((vehicle) => (
@@ -1210,7 +1212,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                             className="mt-1 h-4 w-4 border-[rgba(22,36,58,0.2)] text-[var(--accent)]"
                           />
                           <span className="font-semibold text-[var(--ink)]">
-                            {[vehicle.manufacturer, vehicle.model].filter(Boolean).join(" ") || "Vehicle"}
+                            {[vehicle.manufacturer, vehicle.model].filter(Boolean).join(" ") || t(locale, "Vehicle")}
                           </span>
                           <span className="text-[var(--ink)]">{vehicle.registrationNumber}</span>
                           <span className="text-[var(--muted)]">{vehicle.manufacturer || "-"}</span>
@@ -1223,7 +1225,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                                 : "bg-[rgba(22,36,58,0.08)] text-[var(--muted)]"
                             }`}
                           >
-                            {vehicle.isVerified ? "Approved" : "Pending review"}
+                            {vehicle.isVerified ? t(locale, "Approved") : t(locale, "Pending review")}
                           </span>
                           <button
                             type="button"
@@ -1233,7 +1235,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                             }}
                             className="rounded-full border border-[rgba(234,111,81,0.18)] px-3 py-2 text-xs font-semibold text-[var(--danger)] transition duration-200 ease-out hover:scale-[1.03] hover:bg-[rgba(234,111,81,0.08)]"
                           >
-                            Delete
+                            {t(locale, "Delete")}
                           </button>
                         </div>
                       ))}
@@ -1242,7 +1244,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 ) : (
                   <div className="grid gap-5 md:grid-cols-2">
                     <label className={fieldLabelClass}>
-                      Registration number
+                      {t(locale, "Registration number")}
                       <input
                         value={vehicleForm.registrationNumber}
                         onChange={(event) => updateVehicleField("registrationNumber", event.target.value)}
@@ -1251,7 +1253,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                     </label>
 
                     <label className={fieldLabelClass}>
-                      Fiscal power (CV)
+                      {t(locale, "Fiscal power (CV)")}
                       <select
                         value={vehicleForm.fiscalPower}
                         onChange={(event) => updateVehicleField("fiscalPower", event.target.value)}
@@ -1266,7 +1268,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                     </label>
 
                     <label className={fieldLabelClass}>
-                      Manufacturer
+                      {t(locale, "Manufacturer")}
                       <input
                         value={vehicleForm.manufacturer}
                         onChange={(event) => updateVehicleField("manufacturer", event.target.value)}
@@ -1275,7 +1277,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                     </label>
 
                     <label className={fieldLabelClass}>
-                      Model
+                      {t(locale, "Model")}
                       <input
                         value={vehicleForm.model}
                         onChange={(event) => updateVehicleField("model", event.target.value)}
@@ -1302,7 +1304,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                       : "bg-[var(--surface-2)] text-[var(--muted)] hover:bg-[rgba(22,36,58,0.08)]"
                   }`}
                 >
-                  Choose saved driver
+                  {t(locale, "Choose saved driver")}
                 </button>
                 <button
                   type="button"
@@ -1313,7 +1315,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                       : "bg-[var(--surface-2)] text-[var(--muted)] hover:bg-[rgba(22,36,58,0.08)]"
                   }`}
                 >
-                  Create new driver
+                  {t(locale, "Create new driver")}
                 </button>
               </div>
             ) : null}
@@ -1322,13 +1324,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
               <div className="overflow-hidden rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-white">
                 <div className="grid grid-cols-[44px_1.2fr_110px_1fr_130px_110px_120px_88px] gap-3 border-b border-[rgba(22,36,58,0.08)] bg-[var(--surface-2)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                   <span />
-                  <span>Name</span>
-                  <span>Birthday</span>
-                  <span>License no.</span>
-                  <span>Expiry date</span>
-                  <span>Country</span>
-                  <span>Review</span>
-                  <span>Action</span>
+                  <span>{t(locale, "Name")}</span>
+                  <span>{t(locale, "Birthday")}</span>
+                  <span>{t(locale, "License no.")}</span>
+                  <span>{t(locale, "Expiry date")}</span>
+                  <span>{t(locale, "Country")}</span>
+                  <span>{t(locale, "Review")}</span>
+                  <span>{t(locale, "Action")}</span>
                 </div>
                 <fieldset>
                   {workspace.drivers.map((driver) => (
@@ -1352,7 +1354,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                       <span className="font-semibold text-[var(--ink)]">
                         {driver.firstName} {driver.lastName}
                       </span>
-                      <span className="text-[var(--muted)]">{formatDateCell(driver.birthday)}</span>
+                      <span className="text-[var(--muted)]">{formatDateCell(driver.birthday, locale)}</span>
                       <span className="text-[var(--muted)]">{driver.licenseNumber || "-"}</span>
                       <span className="text-[var(--muted)]">
                         {driver.licenseExpiryDate || "-"}
@@ -1365,7 +1367,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                             : "bg-[rgba(22,36,58,0.08)] text-[var(--muted)]"
                         }`}
                       >
-                        {driver.isVerified ? "Approved" : "Pending review"}
+                        {driver.isVerified ? t(locale, "Approved") : t(locale, "Pending review")}
                       </span>
                       <button
                         type="button"
@@ -1375,7 +1377,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                         }}
                         className="rounded-full border border-[rgba(234,111,81,0.18)] px-3 py-2 text-xs font-semibold text-[var(--danger)] transition duration-200 ease-out hover:scale-[1.03] hover:bg-[rgba(234,111,81,0.08)]"
                       >
-                        Delete
+                        {t(locale, "Delete")}
                       </button>
                     </div>
                   ))}
@@ -1384,7 +1386,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
                 <label className={fieldLabelClass}>
-                  First name
+                  {t(locale, "First name")}
                   <input
                     value={driverForm.firstName}
                     onChange={(event) => updateDriverField("firstName", event.target.value)}
@@ -1393,7 +1395,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  Last name
+                  {t(locale, "Last name")}
                   <input
                     value={driverForm.lastName}
                     onChange={(event) => updateDriverField("lastName", event.target.value)}
@@ -1402,7 +1404,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  Birthday
+                  {t(locale, "Birthday")}
                   <input
                     type="date"
                     value={driverForm.birthday}
@@ -1412,7 +1414,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  License number
+                  {t(locale, "License number")}
                   <input
                     value={driverForm.licenseNumber}
                     onChange={(event) => updateDriverField("licenseNumber", event.target.value)}
@@ -1421,7 +1423,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  Email
+                  {t(locale, "Email")}
                   <input
                     type="email"
                     value={driverForm.email}
@@ -1431,7 +1433,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  Phone
+                  {t(locale, "Phone")}
                   <input
                     value={driverForm.phone}
                     onChange={(event) => updateDriverField("phone", event.target.value)}
@@ -1440,7 +1442,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  License expiry date
+                  {t(locale, "License expiry date")}
                   <input
                     type="date"
                     value={driverForm.licenseExpiryDate}
@@ -1450,7 +1452,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </label>
 
                 <label className={fieldLabelClass}>
-                  License country
+                  {t(locale, "License country")}
                   <input
                     value={driverForm.licenseCountryCode}
                     onChange={(event) => updateDriverField("licenseCountryCode", event.target.value)}
@@ -1466,28 +1468,28 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
           <div className="mt-8 space-y-4">
             <div className="rounded-[28px] bg-[var(--surface-2)] p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Order recap
+                {t(locale, "Order recap")}
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="rounded-[24px] bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Product
+                    {t(locale, "Product")}
                   </p>
                   <p className="mt-3 text-sm text-[var(--ink)]">{preview.productName}</p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    {preview.durationDays} days · {preview.fiscalPower} CV
+                    {preview.durationDays} {t(locale, preview.durationDays > 1 ? "days" : "day")} · {preview.fiscalPower} CV
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    Starts: {formatCoverageDate(new Date(preview.coverageStartAt))}
+                    {t(locale, "Starts")}: {formatCoverageDate(new Date(preview.coverageStartAt), locale)}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    Ends: {formatCoverageDate(new Date(preview.coverageEndAt))}
+                    {t(locale, "Ends")}: {formatCoverageDate(new Date(preview.coverageEndAt), locale)}
                   </p>
                 </div>
 
                 <div className="rounded-[24px] bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Customer
+                    {t(locale, "Customer")}
                   </p>
                   <p className="mt-3 text-sm text-[var(--ink)]">
                     {workspace?.customer.firstName} {workspace?.customer.lastName}
@@ -1497,10 +1499,10 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
                 <div className="rounded-[24px] bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Vehicle
+                    {t(locale, "Vehicle")}
                   </p>
                   <p className="mt-3 text-sm text-[var(--ink)]">
-                    {summaryVehicle.registrationNumber || "New vehicle"}
+                    {summaryVehicle.registrationNumber || t(locale, "New vehicle")}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
                     {summaryVehicle.manufacturer} {summaryVehicle.model} · {summaryVehicle.fiscalPower} CV
@@ -1509,13 +1511,13 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
                 <div className="rounded-[24px] bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Driver
+                    {t(locale, "Driver")}
                   </p>
                   <p className="mt-3 text-sm text-[var(--ink)]">
                     {summaryDriver.firstName} {summaryDriver.lastName}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    {summaryDriver.email || workspace?.customer.email || "Email pending"}
+                    {summaryDriver.email || workspace?.customer.email || t(locale, "Email pending")}
                   </p>
                 </div>
               </div>
@@ -1523,17 +1525,16 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
 
             <div className="rounded-[28px] bg-[var(--surface-2)] p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Overview
+                {t(locale, "Overview")}
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-[var(--ink)]">
-                Confirm the order details before payment.
+                {t(locale, "Confirm the order details before payment.")}
               </h2>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                For the local flow we skip the real PSP and mark the payment as succeeded
-                immediately. The order then moves into the mandatory manual review step.
+                {t(locale, "For the local flow we skip the real PSP and mark the payment as succeeded immediately. The order then moves into the mandatory manual review step.")}
               </p>
               <p className="mt-5 text-lg font-semibold text-[var(--ink)]">
-                Amount due: {preview.totalPremium} {preview.currency}
+                {t(locale, "Amount due")}: {preview.totalPremium} {preview.currency}
               </p>
             </div>
           </div>
@@ -1542,19 +1543,18 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         {step === "review" && result ? (
           <div className="mt-8 rounded-[28px] border border-[rgba(31,183,166,0.18)] bg-[rgba(31,183,166,0.08)] p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-2)]">
-              Manual review
+              {t(locale, "Manual review")}
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-[var(--ink)]">
-              The order has passed the required human review step.
+              {t(locale, "The order has passed the required human review step.")}
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-              This insurance product must be checked by a human reviewer before coverage. In the
-              local demo, the review is approved automatically after payment so the flow can keep moving.
+              {t(locale, "This insurance product must be checked by a human reviewer before coverage. In the local demo, the review is approved automatically after payment so the flow can keep moving.")}
             </p>
             <div className="mt-5 grid gap-3 text-sm text-[var(--ink)]">
-              <p>Payment status: {result.payment.status}</p>
-              <p>Review status: {result.review.status}</p>
-              <p>Decision: {result.review.decisionReason}</p>
+              <p>{t(locale, "Payment status")}: {t(locale, result.payment.status)}</p>
+              <p>{t(locale, "Review status")}: {t(locale, result.review.status)}</p>
+              <p>{t(locale, "Decision")}: {t(locale, result.review.decisionReason)}</p>
             </div>
           </div>
         ) : null}
@@ -1562,31 +1562,30 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         {step === "success" && result ? (
           <div className="mt-8 space-y-4">
             <div className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-6">
-              <p className="eyebrow">Covered</p>
+              <p className="eyebrow">{t(locale, "Covered")}</p>
               <h2 className="mt-3 text-2xl font-semibold text-[var(--ink)]">
                 {result.order.orderNumber}
               </h2>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                The order is approved. Contract email delivery is the next milestone; for now,
-                the customer can already go to Orders to review the record and the cover window.
+                {t(locale, "The order is approved. Contract email delivery is the next milestone; for now, the customer can already go to Orders to review the record and the cover window.")}
               </p>
               <div className="mt-4 grid gap-3 text-sm text-[var(--ink)] md:grid-cols-2">
-                <p>Quote: {result.quote.quoteNumber}</p>
-                <p>Status: {result.order.status}</p>
-                <p>Review: {result.order.adminReviewStatus}</p>
-                <p>Payment: {result.payment.status}</p>
+                <p>{t(locale, "Quote")}: {result.quote.quoteNumber}</p>
+                <p>{t(locale, "Status")}: {t(locale, result.order.status)}</p>
+                <p>{t(locale, "Review")}: {t(locale, result.order.adminReviewStatus)}</p>
+                <p>{t(locale, "Payment")}: {t(locale, result.payment.status)}</p>
                 <p>
-                  Premium: {result.summary.totalPremium} {result.summary.currency}
+                  {t(locale, "Premium")}: {result.summary.totalPremium} {result.summary.currency}
                 </p>
-                <p>Coverage start: {new Date(result.summary.coverageStartAt).toLocaleString()}</p>
-                <p>Coverage end: {new Date(result.summary.coverageEndAt).toLocaleString()}</p>
+                <p>{t(locale, "Coverage start")}: {formatCoverageDate(new Date(result.summary.coverageStartAt), locale)}</p>
+                <p>{t(locale, "Coverage end")}: {formatCoverageDate(new Date(result.summary.coverageEndAt), locale)}</p>
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
-                  href="/account"
+                  href={localizePath("/account/orders", locale)}
                   className={`${primaryButtonClass} inline-flex items-center justify-center`}
                 >
-                  Go to orders
+                  {t(locale, "Go to orders")}
                 </Link>
                 <button
                   type="button"
@@ -1598,7 +1597,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                   }}
                   className={secondaryButtonClass}
                 >
-                  Start another quote
+                  {t(locale, "Start another quote")}
                 </button>
               </div>
             </div>

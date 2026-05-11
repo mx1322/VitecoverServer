@@ -143,7 +143,7 @@ export default async function HomePage() {
         <FaqLinkPanel
           title={t(locale, "Common questions before you order")}
           intro={t(locale, "To reduce friction, we keep key answers short and link directly to the right FAQ entries.")}
-          items={getFaqByTag("home").slice(0, 3)}
+          items={getFaqByTag("home", locale).slice(0, 3)}
           locale={locale}
         />
       </section>

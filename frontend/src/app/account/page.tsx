@@ -1,4 +1,6 @@
 import { AccountSummaryCard } from "@/components/account/account-summary-card";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/translations";
 
 const summaryCards = [
   { label: "Active Orders", value: 2 },
@@ -24,35 +26,36 @@ const recentActivity = [
   },
 ];
 
-export default function AccountOverviewPage() {
+export default async function AccountOverviewPage() {
+  const locale = await getRequestLocale();
+
   return (
     <div className="space-y-6">
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-          Overview
+          {t(locale, "Overview")}
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)] md:text-4xl">
-          Welcome back
+          {t(locale, "Welcome back")}
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-          Here&apos;s a quick snapshot of your account. Use the sidebar to open full details for
-          orders, drivers, vehicles, and settings.
+          {t(locale, "Here's a quick snapshot of your account. Use the sidebar to open full details for orders, drivers, vehicles, and settings.")}
         </p>
       </section>
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
-          <AccountSummaryCard key={card.label} label={card.label} value={card.value} />
+          <AccountSummaryCard key={card.label} label={t(locale, card.label)} value={card.value} />
         ))}
       </section>
 
       <section>
         <article className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-            Recent Activity
+            {t(locale, "Recent Activity")}
           </p>
           <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--ink)]">
-            Latest updates
+            {t(locale, "Latest updates")}
           </h3>
           <div className="mt-5 space-y-3">
             {recentActivity.map((activity) => (
@@ -62,8 +65,8 @@ export default function AccountOverviewPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[var(--ink)]">{activity.title}</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">{activity.detail}</p>
+                    <p className="font-semibold text-[var(--ink)]">{t(locale, activity.title)}</p>
+                    <p className="mt-1 text-sm text-[var(--muted)]">{t(locale, activity.detail)}</p>
                   </div>
                   <span className="text-xs font-medium text-[var(--muted)]">{activity.date}</span>
                 </div>
