@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -26,7 +27,7 @@ function readLanguagePreference(): SupportedLanguage {
 export function LanguageSwitcher() {
   const router = useRouter();
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextLanguage = isSupportedLanguage(event.target.value)
       ? event.target.value
       : defaultLanguage;
