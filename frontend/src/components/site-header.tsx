@@ -28,18 +28,21 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--muted)] md:flex">
-          {siteConfig.navigation.map((item) => (
-            <Link
-              key={item.label}
-              href={item.label === "Account" ? accountHref : localizePath(item.href, locale)}
-              className="transition hover:text-[var(--ink)]"
-            >
-              {t(locale, item.label)}
-            </Link>
-          ))}
-        </nav>
-        <LanguageSwitcher label={t(locale, "Language")} />
+        <div className="flex items-center gap-4 md:gap-8">
+          <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--muted)] md:flex">
+            {siteConfig.navigation.map((item) => (
+              <Link
+                key={item.label}
+                href={item.label === "Account" ? accountHref : localizePath(item.href, locale)}
+                className="transition hover:text-[var(--ink)]"
+              >
+                {t(locale, item.label)}
+              </Link>
+            ))}
+          </nav>
+
+          <LanguageSwitcher label={t(locale, "Language")} />
+        </div>
       </div>
     </header>
   );
