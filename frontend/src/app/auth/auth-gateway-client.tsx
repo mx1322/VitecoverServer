@@ -2,6 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 
+import type { Locale } from "@/lib/i18n/config";
+import { localizePath } from "@/lib/i18n/routing";
+import { t } from "@/lib/i18n/translations";
+
 async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
@@ -19,7 +23,7 @@ async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
   return payload;
 }
 
-export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
+export function AuthGatewayClient({ returnTo, locale }: { returnTo: string; locale: Locale }) {
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [email, setEmail] = useState("");
@@ -29,7 +33,10 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/account";
+  const safeReturnTo =
+    returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : localizePath("/account", locale);
 
   useEffect(() => {
     startTransition(async () => {
@@ -56,20 +63,20 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
     startTransition(async () => {
       try {
         if (!email.trim()) {
-          throw new Error("Email is required.");
+          throw new Error(t(locale, "Email is required."));
         }
 
         if (mode === "register") {
           if (!firstName.trim() || !lastName.trim()) {
-            throw new Error("First name and last name are required.");
+            throw new Error(t(locale, "First name and last name are required."));
           }
 
           if (!password || password.length < 8) {
-            throw new Error("Password must be at least 8 characters long.");
+            throw new Error(t(locale, "Password must be at least 8 characters long."));
           }
 
           if (password !== confirmPassword) {
-            throw new Error("Passwords do not match.");
+            throw new Error(t(locale, "Passwords do not match."));
           }
 
           await requestJson("/api/auth/register", {
@@ -85,7 +92,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
           setMode("login");
           setPassword("");
           setConfirmPassword("");
-          setNotice("Account created. Check your inbox to verify your email.");
+          setNotice(t(locale, "Account created. Check your inbox to verify your email."));
           return;
         }
 
@@ -96,12 +103,12 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
               email,
             }),
           });
-          setNotice("Password reset email sent.");
+          setNotice(t(locale, "Password reset email sent."));
           return;
         }
 
         if (!password) {
-          throw new Error("Password is required.");
+          throw new Error(t(locale, "Password is required."));
         }
 
         await requestJson("/api/auth/login", {
@@ -114,7 +121,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
 
         window.location.assign(safeReturnTo);
       } catch (requestError) {
-        setError(requestError instanceof Error ? requestError.message : "Unable to continue.");
+        setError(requestError instanceof Error ? requestError.message : t(locale, "Unable to continue."));
       }
     });
   }
@@ -146,7 +153,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
                     : "text-[var(--muted)]"
                 }`}
               >
-                {entry === "login" ? "Sign in" : entry === "register" ? "Register" : "Forgot"}
+                {entry === "login" ? t(locale, "Sign in") : entry === "register" ? t(locale, "Register") : t(locale, "Forgot")}
               </button>
             ))}
           </div>
@@ -154,24 +161,24 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
           <div className="mt-8">
             <h2 className="text-3xl font-semibold text-[var(--ink)]">
               {mode === "login"
-                ? "Sign in"
+                ? t(locale, "Sign in")
                 : mode === "register"
-                  ? "Create account"
-                  : "Reset password"}
+                  ? t(locale, "Create account")
+                  : t(locale, "Reset password")}
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
               {mode === "login"
-                ? "Enter your email and password to continue."
+                ? t(locale, "Enter your email and password to continue.")
                 : mode === "register"
-                  ? "Create your account and verify your email."
-                  : "We will send a password reset link."}
+                  ? t(locale, "Create your account and verify your email.")
+                  : t(locale, "We will send a password reset link.")}
             </p>
           </div>
 
           {mode === "register" ? (
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               <label className="block text-sm font-medium text-[var(--ink)]">
-                First name
+                {t(locale, "First name")}
                 <input
                   type="text"
                   value={firstName}
@@ -180,7 +187,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
                 />
               </label>
               <label className="block text-sm font-medium text-[var(--ink)]">
-                Last name
+                {t(locale, "Last name")}
                 <input
                   type="text"
                   value={lastName}
@@ -192,7 +199,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
           ) : null}
 
           <label className="mt-6 block text-sm font-medium text-[var(--ink)]">
-            Email
+            {t(locale, "Email")}
             <input
               type="email"
               value={email}
@@ -203,7 +210,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
 
           {mode !== "forgot" ? (
             <label className="mt-5 block text-sm font-medium text-[var(--ink)]">
-              Password
+              {t(locale, "Password")}
               <input
                 type="password"
                 value={password}
@@ -215,7 +222,7 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
 
           {mode === "register" ? (
             <label className="mt-5 block text-sm font-medium text-[var(--ink)]">
-              Confirm password
+              {t(locale, "Confirm password")}
               <input
                 type="password"
                 value={confirmPassword}
@@ -245,12 +252,12 @@ export function AuthGatewayClient({ returnTo }: { returnTo: string }) {
               className={primaryButtonClass}
             >
               {isPending
-                ? "Processing..."
+                ? t(locale, "Processing...")
                 : mode === "login"
-                  ? "Sign in"
+                  ? t(locale, "Sign in")
                   : mode === "register"
-                    ? "Create account"
-                    : "Send reset link"}
+                    ? t(locale, "Create account")
+                    : t(locale, "Send reset link")}
             </button>
           </div>
         </section>

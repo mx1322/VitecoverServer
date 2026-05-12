@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
-import { faqItems } from "@/lib/faq";
+import { getFaqItems } from "@/lib/faq";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/translations";
 
 export const metadata: Metadata = {
   title: "FAQ | Vitecover",
@@ -8,7 +10,9 @@ export const metadata: Metadata = {
     "Answers about temporary auto insurance, quote steps, policy delivery, and support.",
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const locale = await getRequestLocale();
+  const faqItems = getFaqItems(locale);
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -27,13 +31,12 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }} />
 
       <section className="rounded-[32px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-7 shadow-[0_20px_56px_rgba(22,36,58,0.08)] md:p-10">
-        <p className="eyebrow">Knowledge Base</p>
+        <p className="eyebrow">{t(locale, "Knowledge Base")}</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-[var(--ink)] md:text-5xl">
-          Frequently Asked Questions
+          {t(locale, "Frequently Asked Questions")}
         </h1>
         <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--muted)]">
-          Quick answers for customers and for search engines: cover, order steps, documents,
-          policy delivery, and support.
+          {t(locale, "Quick answers for customers and for search engines: cover, order steps, documents, policy delivery, and support.")}
         </p>
 
         <div className="mt-8 space-y-4">

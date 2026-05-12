@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { SiteHeader } from "@/components/site-header";
-import { defaultLanguage, languageCookieName } from "@/lib/language";
+import { getRequestLocale } from "@/lib/i18n/server";
 import { siteConfig } from "@/lib/site";
 
 import "./globals.css";
@@ -11,18 +10,18 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const language = cookies().get(languageCookieName)?.value ?? defaultLanguage;
+  const locale = await getRequestLocale();
 
   return (
-    <html lang={language}>
+    <html lang={locale}>
       <body>
         <div className="page-shell">
-          <SiteHeader />
+          <SiteHeader locale={locale} />
           {children}
         </div>
       </body>

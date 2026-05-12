@@ -1,57 +1,37 @@
 "use client";
 
-import type { ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
-import {
-  defaultLanguage,
-  isSupportedLanguage,
-  languageCookieName,
-  supportedLanguages,
-  type SupportedLanguage,
-} from "@/lib/language";
+import { locales } from "@/lib/i18n/config";
+import { getLocaleLabel, normalizeLocale, replacePathLocale } from "@/lib/i18n/routing";
 
-function readLanguagePreference(): SupportedLanguage {
-  if (typeof document === "undefined") {
-    return defaultLanguage;
-  }
-
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${languageCookieName}=([^;]*)`),
-  );
-  const value = match ? decodeURIComponent(match[1]) : defaultLanguage;
-
-  return isSupportedLanguage(value) ? value : defaultLanguage;
-}
-
-export function LanguageSwitcher() {
-  const router = useRouter();
-
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextLanguage = isSupportedLanguage(event.target.value)
-      ? event.target.value
-      : defaultLanguage;
-
-    document.cookie = `${languageCookieName}=${encodeURIComponent(nextLanguage)}; path=/; max-age=31536000; samesite=lax`;
-    document.documentElement.lang = nextLanguage;
-    router.refresh();
-  };
+export function LanguageSwitcher({ label }: { label: string }) {
+  const pathname = usePathname() ?? "/";
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
+  const currentLocale = normalizeLocale(pathname.split("/").filter(Boolean)[0]);
 
   return (
-    <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--muted)]">
-      <span className="hidden sm:inline">Language</span>
-      <select
-        aria-label="Language"
-        className="rounded-full border border-[rgba(22,36,58,0.12)] bg-white px-3 py-2 text-sm font-medium text-[var(--ink)] shadow-[0_8px_20px_rgba(22,36,58,0.05)] outline-none transition focus:border-[rgba(31,183,166,0.45)]"
-        defaultValue={readLanguagePreference()}
-        onChange={handleChange}
-      >
-        {supportedLanguages.map((language) => (
-          <option key={language} value={language}>
-            {language.toUpperCase()}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div aria-label={label} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[rgba(22,36,58,0.12)] bg-white/80 p-1">
+      {locales.map((locale) => {
+        const nextPath = replacePathLocale(pathname, locale);
+        const href = query ? `${nextPath}?${query}` : nextPath;
+        const isActive = locale === currentLocale;
+
+        return (
+          <a
+            key={locale}
+            href={href}
+            title={getLocaleLabel(locale)}
+            aria-current={isActive ? "page" : undefined}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              isActive ? "bg-[var(--accent)] text-[var(--ink)]" : "text-[var(--muted)] hover:bg-[rgba(22,36,58,0.06)] hover:text-[var(--ink)]"
+            }`}
+          >
+            {locale.toUpperCase()}
+          </a>
+        );
+      })}
+    </div>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { useCurrentLocale } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n/config";
+import { t } from "@/lib/i18n/translations";
+
 type AccountOrder = {
   id: number;
   orderNumber: string;
@@ -15,12 +19,12 @@ type AccountOrder = {
   contractFileUrl?: string;
 };
 
-function formatDate(value: string | null | undefined) {
+function formatDate(value: string | null | undefined, locale: Locale) {
   if (!value) {
-    return "Not set";
+    return t(locale, "Not set");
   }
 
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -28,6 +32,7 @@ function formatDate(value: string | null | undefined) {
 }
 
 export default function OrdersPage() {
+  const locale = useCurrentLocale();
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -39,19 +44,19 @@ export default function OrdersPage() {
         const payload = (await response.json()) as { orders?: AccountOrder[]; error?: string };
 
         if (!response.ok) {
-          throw new Error(payload.error || "Unable to load orders.");
+          throw new Error(payload.error || t(locale, "Unable to load orders."));
         }
 
         setOrders(payload.orders || []);
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Unable to load orders.");
+        setMessage(error instanceof Error ? error.message : t(locale, "Unable to load orders."));
       } finally {
         setLoading(false);
       }
     }
 
     loadOrders();
-  }, []);
+  }, [locale]);
 
   async function generatePolicyDocuments() {
     setMessage("");
@@ -61,13 +66,13 @@ export default function OrdersPage() {
       const payload = (await response.json()) as { orders?: AccountOrder[]; error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error || "Unable to generate policy documents.");
+      throw new Error(payload.error || t(locale, "Unable to generate policy documents."));
       }
 
       setOrders(payload.orders || []);
-      setMessage("Policy documents are up to date.");
+      setMessage(t(locale, "Policy documents are up to date."));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to generate policy documents.");
+      setMessage(error instanceof Error ? error.message : t(locale, "Unable to generate policy documents."));
     }
   }
 
@@ -75,11 +80,11 @@ export default function OrdersPage() {
     <div className="space-y-6">
       <section className="rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_50px_rgba(22,36,58,0.05)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-          Orders
+          {t(locale, "Orders")}
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">Order history</h2>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--ink)]">{t(locale, "Order history")}</h2>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          Review your orders, payment status, and generated policy contracts.
+          {t(locale, "Review your orders, payment status, and generated policy contracts.")}
         </p>
       </section>
 
@@ -92,13 +97,13 @@ export default function OrdersPage() {
       <section className="space-y-4">
         {loading ? (
           <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
-            Loading orders...
+            {t(locale, "Loading orders...")}
           </p>
         ) : null}
 
         {!loading && orders.length === 0 ? (
           <p className="rounded-[22px] border border-[rgba(22,36,58,0.08)] bg-white px-5 py-5 text-sm text-[var(--muted)]">
-            No orders yet.
+            {t(locale, "No orders yet.")}
           </p>
         ) : null}
 
@@ -111,19 +116,19 @@ export default function OrdersPage() {
               <div>
                 <p className="font-semibold text-[var(--ink)]">{order.orderNumber}</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  Coverage: {formatDate(order.coverageStartAt)} to {formatDate(order.coverageEndAt)}
+                  {t(locale, "Coverage")}: {formatDate(order.coverageStartAt, locale)} {t(locale, "to")} {formatDate(order.coverageEndAt, locale)}
                 </p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  Total: {order.totalAmount} {order.currency}
+                  {t(locale, "Total")}: {order.totalAmount} {order.currency}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-[rgba(248,179,71,0.16)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)]">
-                  {order.status || "pending"}
+                  {t(locale, order.status || "pending")}
                 </span>
                 {order.adminReviewStatus ? (
                   <span className="rounded-full border border-[rgba(22,36,58,0.08)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">
-                    Review: {order.adminReviewStatus}
+                    {t(locale, "Review")}: {t(locale, order.adminReviewStatus)}
                   </span>
                 ) : null}
               </div>
@@ -135,14 +140,14 @@ export default function OrdersPage() {
                   href={order.contractFileUrl}
                   className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--ink)]"
                 >
-                  Download policy
+                  {t(locale, "Download policy")}
                 </a>
               ) : (
                 <button
                   onClick={generatePolicyDocuments}
                   className="rounded-full border border-[rgba(22,36,58,0.12)] px-4 py-2 text-sm font-medium text-[var(--ink)]"
                 >
-                  Generate policy document
+                  {t(locale, "Generate policy document")}
                 </button>
               )}
             </div>
