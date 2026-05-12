@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 
 import type { Locale } from "@/lib/i18n/config";
+import { localizePath } from "@/lib/i18n/routing";
 import { t } from "@/lib/i18n/translations";
 
 async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
@@ -32,7 +33,10 @@ export function AuthGatewayClient({ returnTo, locale }: { returnTo: string; loca
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/account";
+  const safeReturnTo =
+    returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : localizePath("/account", locale);
 
   useEffect(() => {
     startTransition(async () => {
