@@ -3,12 +3,14 @@ import Link from "next/link";
 import { FaqLinkPanel } from "@/components/faq-link-panel";
 import { getFaqByTag } from "@/lib/faq";
 import { getHomeProductCards } from "@/lib/home-product-cards";
+import { getHomeContent } from "@/lib/content/get-content";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/translations";
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
   const homeProductCards = await getHomeProductCards(locale);
+  const homeContent = getHomeContent(locale);
   const cardShellClass =
     "group flex h-full min-h-[520px] flex-col rounded-[28px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_20px_56px_rgba(22,36,58,0.08)] transition duration-200 ease-out hover:translate-y-[-2px] hover:shadow-[0_28px_72px_rgba(22,36,58,0.12)] md:min-h-[640px] md:rounded-[32px] md:p-6 lg:min-h-[700px]";
   const categoryClass =
@@ -30,7 +32,7 @@ export default async function HomePage() {
             className="mt-2 max-w-4xl text-[2rem] font-semibold leading-[1.06] tracking-tight text-[var(--ink)] sm:text-[2.45rem] md:text-[3.3rem] md:leading-[1]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            {t(locale, "Get temporary auto insurance in minutes.")}
+            {homeContent.hero.title}
           </h1>
 
         </div>
@@ -39,7 +41,7 @@ export default async function HomePage() {
       <section id="products" className="section-wrap pb-16 md:pb-24">
         <div className="max-w-3xl">
           <p className="mt-4 text-lg leading-7 text-[var(--muted)]">
-            {t(locale, "Choose your temporary insurance products according to vehicle types.")}
+            {homeContent.hero.subtitle}
           </p>
         </div>
 
@@ -109,26 +111,21 @@ export default async function HomePage() {
               className="text-3xl font-semibold tracking-tight text-[var(--ink)] md:text-4xl"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              {t(locale, "How it works")}
+              {homeContent.process.title}
             </h2>
             <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-              {t(locale, "A simple online flow from product selection to policy delivery.")}
+              {homeContent.process.subtitle}
             </p>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              t(locale, "Choose a product"),
-              t(locale, "Enter driver and vehicle details"),
-              t(locale, "Pay online"),
-              t(locale, "Receive your policy by email after review"),
-            ].map((step, index) => (
+            {homeContent.process.steps.map((step, index) => (
               <div
                 key={step}
                 className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,252,247,0.92)] p-5"
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[var(--muted)]">
-                  {t(locale, "Step")} {index + 1}
+                  {homeContent.process.stepLabel} {index + 1}
                 </p>
                 <p className="mt-4 text-lg font-semibold leading-7 text-[var(--ink)]">{step}</p>
               </div>
@@ -155,16 +152,12 @@ export default async function HomePage() {
               className="text-3xl font-semibold tracking-tight text-[var(--ink)] md:text-4xl"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              {t(locale, "Why choose Vitecover")}
+              {homeContent.trust.title}
             </h2>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              t(locale, "100% online process"),
-              t(locale, "Short-term insurance products"),
-              t(locale, "Policy documents delivered digitally"),
-            ].map((item) => (
+            {homeContent.trust.highlights.map((item) => (
               <div
                 key={item}
                 className="rounded-[24px] border border-[rgba(22,36,58,0.08)] bg-[rgba(255,255,255,0.8)] p-5"
