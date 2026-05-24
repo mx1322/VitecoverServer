@@ -7,6 +7,7 @@ const accountCenterPattern = /^(Account Center|Espace compte|账户中心)$/;
 const approvalsPattern = /^(Approvals|Validations|审批)$/;
 const loggedInAccountPattern = /^(Logged in account|Compte connecte|已登录账户)$/;
 const confirmInsurancePattern = /^(Confirm insurance|Confirmer l'assurance|确认保险)$/;
+const defaultLocale = "fr";
 const accounts = [
   {
     label: "admin",
@@ -39,6 +40,10 @@ function urlFor(path) {
   return new URL(path, baseUrl).toString();
 }
 
+function localizedPath(path) {
+  return `${path === "/" ? `/${defaultLocale}` : `/${defaultLocale}${path}`}`;
+}
+
 async function waitForAppIdle(page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
@@ -69,7 +74,7 @@ for (const account of accounts) {
       runtimeErrors.push(error.message);
     });
 
-    await login(page, account, "/account");
+    await login(page, account, localizedPath("/account"));
     await waitForAppIdle(page);
     await assertNotOnAuth(page, `${account.label} account login`);
     await page.getByText(accountCenterPattern).waitFor();
@@ -90,7 +95,7 @@ for (const account of accounts) {
       await expect(page.getByRole("link", { name: approvalsPattern })).toHaveCount(0);
     }
 
-    await page.goto(urlFor("/quote"));
+    await page.goto(urlFor(localizedPath("/quote")));
     await waitForAppIdle(page);
 
     const confirmInsuranceButton = page.getByRole("button", { name: confirmInsurancePattern });
@@ -99,7 +104,6 @@ for (const account of accounts) {
     await waitForAppIdle(page);
     await assertNotOnAuth(page, `${account.label} quote vehicle step`);
 
-    await expect(page.getByText("Login required")).toHaveCount(0);
     await page.getByText(loggedInAccountPattern).waitFor();
     console.log(`OK /quote ${account.label} authenticated vehicle step`);
 
