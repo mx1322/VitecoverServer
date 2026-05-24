@@ -259,6 +259,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
     licenseCountryCode: "FR",
   });
   const requestedStep = (searchParams.get("step") as Step | null) ?? "price";
+  const requestedProductCode = searchParams.get("product")?.trim().toUpperCase() || initialProductCode || products[0]?.code || "AUTOMOBILE";
 
   function buildQuoteHref(targetStep: Step): string {
     const params = new URLSearchParams(searchParams.toString());
@@ -305,12 +306,26 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
         setPriceForm((current) => ({
           ...current,
           ...draft,
+          productCode: requestedProductCode,
         }));
       } catch {
         window.localStorage.removeItem(quoteDraftStorageKey);
       }
     }
-  }, []);
+  }, [requestedProductCode]);
+
+  useEffect(() => {
+    setPriceForm((current) => {
+      if (current.productCode === requestedProductCode) {
+        return current;
+      }
+
+      return {
+        ...current,
+        productCode: requestedProductCode,
+      };
+    });
+  }, [requestedProductCode]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
