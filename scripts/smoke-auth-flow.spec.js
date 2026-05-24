@@ -6,6 +6,7 @@ const signInPattern = /^(Sign in|Connexion|登录)$/;
 const accountCenterPattern = /^(Account Center|Espace compte|账户中心)$/;
 const approvalsPattern = /^(Approvals|Validations|审批)$/;
 const loggedInAccountPattern = /^(Logged in account|Compte connecte|已登录账户)$/;
+const confirmInsurancePattern = /^(Confirm insurance|Confirmer l'assurance|确认保险)$/;
 const accounts = [
   {
     label: "admin",
@@ -92,7 +93,9 @@ for (const account of accounts) {
     await page.goto(urlFor("/quote"));
     await waitForAppIdle(page);
 
-    await page.getByRole("button", { name: "Confirm insurance" }).click();
+    const confirmInsuranceButton = page.getByRole("button", { name: confirmInsurancePattern });
+    await expect(confirmInsuranceButton).toBeEnabled();
+    await confirmInsuranceButton.click();
     await waitForAppIdle(page);
     await assertNotOnAuth(page, `${account.label} quote vehicle step`);
 
