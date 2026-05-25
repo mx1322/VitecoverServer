@@ -8,6 +8,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: `${siteConfig.name} | Temporary Motor Insurance`,
   description: siteConfig.description,
+  icons: {
+    icon: `/api/assets/${siteConfig.logoAssetId}?width=64&height=64&fit=contain&format=png`,
+  },
 };
 
 export default async function RootLayout({
