@@ -8,15 +8,13 @@ class DeleteBlockedError extends Error {
   }
 }
 
-const DELETE_MANAGER_MODULE_ID = "delete-manager";
-
 function buildManagerUrl(collection, id = null) {
   const params = new URLSearchParams({ collection });
   if (id !== null && id !== undefined && id !== "") {
     params.set("id", String(id));
   }
 
-  return `/admin/${DELETE_MANAGER_MODULE_ID}?${params.toString()}`;
+  return `/admin/delete-manager?${params.toString()}`;
 }
 
 function compactValue(value) {
@@ -146,35 +144,6 @@ async function assertNoBlockers(database, collection, entityLabel, ids, blockers
   }
 }
 
-async function ensureDeleteManagerModuleEnabled(database) {
-  const settings = await database("directus_settings").first(["id", "module_bar"]);
-  if (!settings) return;
-
-  const moduleBar =
-    Array.isArray(settings.module_bar)
-      ? settings.module_bar
-      : typeof settings.module_bar === "string" && settings.module_bar.trim()
-        ? JSON.parse(settings.module_bar)
-        : [];
-  const existingIndex = moduleBar.findIndex((item) => item?.type === "module" && item?.id === DELETE_MANAGER_MODULE_ID);
-  const desiredItem = {
-    type: "module",
-    id: DELETE_MANAGER_MODULE_ID,
-    enabled: true,
-    locked: true,
-  };
-
-  if (existingIndex >= 0) {
-    const current = moduleBar[existingIndex] || {};
-    if (current.enabled === true && current.locked === true) return;
-    moduleBar[existingIndex] = { ...current, ...desiredItem };
-  } else {
-    moduleBar.push(desiredItem);
-  }
-
-  await database("directus_settings").update({ module_bar: moduleBar }).where({ id: settings.id });
-}
-
 function renderDeleteManagerEmbed() {
   return `
 <script>
@@ -222,11 +191,7 @@ function renderDeleteManagerEmbed() {
 </script>`;
 }
 
-export default ({ filter, embed }, { database, logger }) => {
-  ensureDeleteManagerModuleEnabled(database).catch((error) => {
-    logger?.error?.(error, "Failed to enable delete-manager in module_bar");
-  });
-
+export default ({ filter, embed }, { database }) => {
   embed("body", renderDeleteManagerEmbed);
 
   filter("customers.items.delete", async (keys) => {
