@@ -135,6 +135,18 @@ async function readItem(database, collection, id) {
   return row;
 }
 
+async function listItems(database, collection) {
+  ensureSupportedCollection(collection);
+
+  const fields = SUMMARY_FIELDS[collection] || [];
+  const rows = await database(collection).select(["id", ...fields]).orderBy("id", "asc");
+
+  return rows.map((row) => ({
+    id: row.id,
+    summary: summarizeRow(collection, row),
+  }));
+}
+
 async function readDirectDependents(database, collection, id) {
   const blockers = BLOCKERS[collection] || [];
   const groups = [];
@@ -250,6 +262,16 @@ export default (router, context) => {
         label: ENTITY_LABELS[collection] || collection,
       })),
     });
+  });
+
+  router.get("/items/:collection", async (req, res, next) => {
+    try {
+      res.json({
+        data: await listItems(database, req.params.collection),
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/plan/:collection/:id", async (req, res, next) => {

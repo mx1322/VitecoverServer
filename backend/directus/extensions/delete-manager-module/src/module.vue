@@ -4,7 +4,7 @@
       <div class="toolbar">
         <label>
           Collection
-          <select v-model="collection">
+          <select v-model="collection" @change="handleCollectionChange">
             <option v-for="item in collections" :key="item.collection" :value="item.collection">
               {{ item.label }} ({{ item.collection }})
             </option>
@@ -13,10 +13,15 @@
 
         <label>
           Item ID
-          <input v-model.trim="itemId" placeholder="53" />
+          <select v-model="itemId" :disabled="loading || itemsLoading" @change="handleItemChange">
+            <option value="">{{ itemsLoading ? "Loading items..." : "Select an item" }}</option>
+            <option v-for="item in items" :key="item.id" :value="String(item.id)">
+              {{ item.summary }}
+            </option>
+          </select>
         </label>
 
-        <button class="primary" :disabled="loading || !collection || !itemId" @click="loadPlan">
+        <button class="primary" :disabled="loading || itemsLoading || !collection || !itemId" @click="loadPlan">
           Load Actions
         </button>
       </div>
@@ -64,8 +69,10 @@ const api = useApi();
 
 const collections = ref([]);
 const collection = ref("orders");
+const items = ref([]);
 const itemId = ref("");
 const loading = ref(false);
+const itemsLoading = ref(false);
 const message = ref("");
 const errorMessage = ref("");
 const plan = ref(null);
@@ -73,6 +80,45 @@ const plan = ref(null);
 async function loadCollections() {
   const response = await api.get("/delete-manager-endpoint/collections");
   collections.value = response.data.data;
+}
+
+async function loadItems(preserveSelection = false) {
+  const requestedCollection = collection.value;
+  itemsLoading.value = true;
+
+  try {
+    const response = await api.get(`/delete-manager-endpoint/items/${requestedCollection}`);
+    if (requestedCollection !== collection.value) return;
+
+    items.value = response.data.data;
+    const selectionExists = items.value.some((item) => String(item.id) === String(itemId.value));
+    if (!preserveSelection || !selectionExists) {
+      itemId.value = "";
+    }
+  } catch (error) {
+    if (requestedCollection !== collection.value) return;
+
+    items.value = [];
+    itemId.value = "";
+    errorMessage.value = error?.response?.data?.errors?.[0]?.message || error?.message || "Unable to load items.";
+  } finally {
+    if (requestedCollection === collection.value) {
+      itemsLoading.value = false;
+    }
+  }
+}
+
+async function handleCollectionChange() {
+  plan.value = null;
+  message.value = "";
+  errorMessage.value = "";
+  await loadItems();
+}
+
+function handleItemChange() {
+  plan.value = null;
+  message.value = "";
+  errorMessage.value = "";
 }
 
 async function loadPlan() {
@@ -110,8 +156,10 @@ async function deleteBranch(targetCollection, targetId, cascade) {
     if (plan.value && plan.value.target.collection === targetCollection && String(plan.value.target.id) === String(targetId)) {
       plan.value = null;
       itemId.value = "";
+      await loadItems();
     } else if (plan.value) {
       await loadPlan();
+      await loadItems(true);
     }
   } catch (error) {
     errorMessage.value = error?.response?.data?.errors?.[0]?.message || error?.message || "Delete failed.";
@@ -135,7 +183,9 @@ onMounted(async () => {
     itemId.value = initialId;
   }
 
-  if (initialCollection && initialId) {
+  await loadItems(true);
+
+  if (initialCollection && itemId.value) {
     await loadPlan();
   }
 });
