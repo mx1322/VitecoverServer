@@ -8,6 +8,17 @@ class DeleteBlockedError extends Error {
   }
 }
 
+const DELETE_MANAGER_MODULE_ID = "delete-manager";
+const MODULE_BAR_DEFAULT = [
+  { type: "module", id: "content", enabled: true },
+  { type: "module", id: "visual", enabled: false },
+  { type: "module", id: "users", enabled: true },
+  { type: "module", id: "files", enabled: true },
+  { type: "module", id: "insights", enabled: true },
+  { type: "link", id: "docs", enabled: true, name: "$t:documentation", icon: "help", url: "https://docs.directus.io" },
+  { type: "module", id: "settings", enabled: true, locked: true },
+];
+
 function buildManagerUrl(collection, id = null) {
   const params = new URLSearchParams({ collection });
   if (id !== null && id !== undefined && id !== "") {
@@ -15,6 +26,63 @@ function buildManagerUrl(collection, id = null) {
   }
 
   return `/admin/delete-manager?${params.toString()}`;
+}
+
+function parseModuleBar(value) {
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function ensureDeleteManagerModuleEnabled(database) {
+  const settings = await database("directus_settings").first(["id", "module_bar"]);
+  if (!settings) return;
+
+  const configured = parseModuleBar(settings.module_bar);
+  const isLegacyDeleteManagerOnly =
+    configured?.length === 1 &&
+    configured[0]?.type === "module" &&
+    configured[0]?.id === DELETE_MANAGER_MODULE_ID;
+
+  const moduleBar = !configured || isLegacyDeleteManagerOnly
+    ? MODULE_BAR_DEFAULT.map((item) => ({ ...item }))
+    : configured.slice();
+
+  const existingIndex = moduleBar.findIndex(
+    (item) => item?.type === "module" && item?.id === DELETE_MANAGER_MODULE_ID,
+  );
+  const existing = existingIndex >= 0 ? moduleBar[existingIndex] : null;
+
+  if (
+    configured &&
+    !isLegacyDeleteManagerOnly &&
+    existingIndex === moduleBar.length - 1 &&
+    existing?.enabled === true
+  ) {
+    return;
+  }
+
+  if (existingIndex >= 0) {
+    moduleBar.splice(existingIndex, 1);
+  }
+
+  moduleBar.push({
+    ...(isLegacyDeleteManagerOnly ? {} : existing),
+    type: "module",
+    id: DELETE_MANAGER_MODULE_ID,
+    enabled: true,
+  });
+
+  await database("directus_settings").where({ id: settings.id }).update({ module_bar: moduleBar });
 }
 
 function compactValue(value) {
@@ -191,7 +259,11 @@ function renderDeleteManagerEmbed() {
 </script>`;
 }
 
-export default ({ filter, embed }, { database }) => {
+export default ({ filter, embed }, { database, logger }) => {
+  ensureDeleteManagerModuleEnabled(database).catch((error) => {
+    logger?.error?.(error, "Failed to append delete-manager to module_bar");
+  });
+
   embed("body", renderDeleteManagerEmbed);
 
   filter("customers.items.delete", async (keys) => {
