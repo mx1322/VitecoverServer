@@ -88,7 +88,19 @@ async function findRelated(database, table, column, ids, fields = [], limit = 10
   };
 }
 
-function formatBlockers(entityLabel, blockers) {
+function formatManagerHint(collection, ids) {
+  if (!collection) {
+    return null;
+  }
+
+  if (ids.length === 1) {
+    return `Open Delete Manager and load collection=${collection}, id=${ids[0]} to remove dependencies one by one or cascade delete.`;
+  }
+
+  return `Open Delete Manager and load collection=${collection} to remove dependencies manually.`;
+}
+
+function formatBlockers(entityLabel, collection, ids, blockers) {
   const active = blockers.filter((item) => item.count > 0);
   if (active.length === 0) {
     return null;
@@ -103,10 +115,13 @@ function formatBlockers(entityLabel, blockers) {
     })
     .join(" | ");
 
-  return `${entityLabel} delete blocked by related records: ${detail}. Remove or detach these records first.`;
+  const hint = formatManagerHint(collection, ids);
+  return hint
+    ? `${entityLabel} delete blocked by related records: ${detail}. ${hint}`
+    : `${entityLabel} delete blocked by related records: ${detail}. Remove or detach these records first.`;
 }
 
-async function assertNoBlockers(database, entityLabel, ids, blockers) {
+async function assertNoBlockers(database, collection, entityLabel, ids, blockers) {
   const resolved = await Promise.all(
     blockers.map(async (blocker) => ({
       ...blocker,
@@ -114,7 +129,7 @@ async function assertNoBlockers(database, entityLabel, ids, blockers) {
     })),
   );
 
-  const message = formatBlockers(entityLabel, resolved);
+  const message = formatBlockers(entityLabel, collection, ids, resolved);
   if (message) {
     throw new DeleteBlockedError(message);
   }
@@ -124,7 +139,7 @@ export default ({ filter }, { database }) => {
   filter("customers.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Customer", ids, [
+    await assertNoBlockers(database, "customers", "Customer", ids, [
       { table: "refunds", column: "customer" },
       { table: "policies", column: "customer", fields: ["policy_number", "status"] },
       { table: "orders", column: "customer", fields: ["order_number", "status"] },
@@ -139,7 +154,7 @@ export default ({ filter }, { database }) => {
   filter("vehicles.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Vehicle", ids, [
+    await assertNoBlockers(database, "vehicles", "Vehicle", ids, [
       { table: "policies", column: "vehicle", fields: ["policy_number", "status"] },
       { table: "orders", column: "vehicle", fields: ["order_number", "status"] },
       { table: "quotes", column: "vehicle", fields: ["quote_number", "status"] },
@@ -151,7 +166,7 @@ export default ({ filter }, { database }) => {
   filter("drivers.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Driver", ids, [
+    await assertNoBlockers(database, "drivers", "Driver", ids, [
       { table: "policies", column: "driver", fields: ["policy_number", "status"] },
       { table: "orders", column: "driver", fields: ["order_number", "status"] },
       { table: "quotes", column: "driver", fields: ["quote_number", "status"] },
@@ -163,7 +178,7 @@ export default ({ filter }, { database }) => {
   filter("quotes.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Quote", ids, [
+    await assertNoBlockers(database, "quotes", "Quote", ids, [
       { table: "orders", column: "quote", fields: ["order_number", "status"] },
     ]);
 
@@ -173,7 +188,7 @@ export default ({ filter }, { database }) => {
   filter("orders.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Order", ids, [
+    await assertNoBlockers(database, "orders", "Order", ids, [
       { table: "refunds", column: "order", fields: ["refund_type", "status"] },
       { table: "payments", column: "order", fields: ["status", "provider_payment_intent_id", "provider_charge_id"] },
       { table: "policies", column: "order", fields: ["policy_number", "status"] },
@@ -186,7 +201,7 @@ export default ({ filter }, { database }) => {
   filter("payments.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Payment", ids, [
+    await assertNoBlockers(database, "payments", "Payment", ids, [
       { table: "refunds", column: "payment", fields: ["refund_type", "status"] },
     ]);
 
@@ -196,7 +211,7 @@ export default ({ filter }, { database }) => {
   filter("policies.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "Policy", ids, [
+    await assertNoBlockers(database, "policies", "Policy", ids, [
       { table: "refunds", column: "policy", fields: ["refund_type", "status"] },
       { table: "admin_reviews", column: "policy", fields: ["review_type", "status"] },
     ]);
@@ -207,7 +222,7 @@ export default ({ filter }, { database }) => {
   filter("directus_files.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
-    await assertNoBlockers(database, "File", ids, [
+    await assertNoBlockers(database, "directus_files", "File", ids, [
       { table: "policies", column: "pdf_file", fields: ["policy_number", "status"] },
     ]);
 

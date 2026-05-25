@@ -122,6 +122,22 @@ async function deleteBranch(targetCollection, targetId, cascade) {
 
 onMounted(async () => {
   await loadCollections();
+
+  const params = new URLSearchParams(window.location.search);
+  const initialCollection = params.get("collection");
+  const initialId = params.get("id");
+
+  if (initialCollection) {
+    collection.value = initialCollection;
+  }
+
+  if (initialId) {
+    itemId.value = initialId;
+  }
+
+  if (initialCollection && initialId) {
+    await loadPlan();
+  }
 });
 </script>
 
