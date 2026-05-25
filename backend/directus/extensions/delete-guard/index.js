@@ -82,7 +82,7 @@ async function ensureDeleteManagerModuleEnabled(database) {
     enabled: true,
   });
 
-  await database("directus_settings").where({ id: settings.id }).update({ module_bar: moduleBar });
+  await database("directus_settings").where({ id: settings.id }).update({ module_bar: JSON.stringify(moduleBar) });
 }
 
 function compactValue(value) {
