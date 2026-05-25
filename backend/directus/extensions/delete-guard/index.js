@@ -1,3 +1,11 @@
+import { createError } from "@directus/errors";
+
+const DeleteBlockedError = createError(
+  "DELETE_BLOCKED",
+  ({ message }) => message,
+  409,
+);
+
 async function findRelated(database, table, column, ids, limit = 10) {
   if (!ids.length) {
     return { count: 0, ids: [] };
@@ -25,7 +33,7 @@ function formatBlockers(entityLabel, blockers) {
     })
     .join(" | ");
 
-  return `${entityLabel} cannot be deleted yet. Blockers: ${detail}`;
+  return `${entityLabel} delete blocked by related records: ${detail}. Remove or detach these records first.`;
 }
 
 async function assertNoBlockers(database, entityLabel, ids, blockers) {
@@ -38,7 +46,7 @@ async function assertNoBlockers(database, entityLabel, ids, blockers) {
 
   const message = formatBlockers(entityLabel, resolved);
   if (message) {
-    throw new Error(message);
+    throw new DeleteBlockedError({ message });
   }
 }
 
