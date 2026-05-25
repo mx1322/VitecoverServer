@@ -1,10 +1,12 @@
-import { createError } from "@directus/errors";
-
-const DeleteBlockedError = createError(
-  "DELETE_BLOCKED",
-  ({ message }) => message,
-  409,
-);
+class DeleteBlockedError extends Error {
+  constructor(reason) {
+    super(`Can't process content. ${reason}.`);
+    this.name = "DirectusError";
+    this.code = "UNPROCESSABLE_CONTENT";
+    this.status = 422;
+    this.extensions = { reason, code: "UNPROCESSABLE_CONTENT" };
+  }
+}
 
 async function findRelated(database, table, column, ids, limit = 10) {
   if (!ids.length) {
@@ -46,7 +48,7 @@ async function assertNoBlockers(database, entityLabel, ids, blockers) {
 
   const message = formatBlockers(entityLabel, resolved);
   if (message) {
-    throw new DeleteBlockedError({ message });
+    throw new DeleteBlockedError(message);
   }
 }
 
