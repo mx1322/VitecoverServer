@@ -56,6 +56,8 @@ jobs:
           cd "$REPO_DIR"
 
           git fetch origin
+          git reset --hard
+          git clean -fd
           git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
           git reset --hard "origin/$TARGET_BRANCH"
 
