@@ -23,7 +23,7 @@ export function stripLocalePrefix(pathname: string): string {
 
 export function localizePath(pathname: string, locale: Locale): string {
   const cleanPath = stripLocalePrefix(pathname);
-  return locale === defaultLocale ? cleanPath : `/${locale}${cleanPath === "/" ? "" : cleanPath}`;
+  return `/${locale}${cleanPath === "/" ? "" : cleanPath}`;
 }
 
 export function replacePathLocale(pathname: string, locale: Locale): string {

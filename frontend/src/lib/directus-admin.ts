@@ -498,6 +498,11 @@ function addDays(startAt: string, durationDays: number): string {
   return date.toISOString();
 }
 
+function getCoverageEndAt(startAt: string, durationDays: number): string {
+  const durationMs = durationDays * 24 * 60 * 60 * 1000;
+  return new Date(new Date(startAt).getTime() + durationMs - 60 * 1000).toISOString();
+}
+
 function normalizeRegistrationNumber(value: string): string {
   return value.trim().toUpperCase().replace(/\s+/g, "-");
 }
@@ -1478,7 +1483,7 @@ export async function getQuotePreview(input: QuotePreviewInput): Promise<QuotePr
     totalPremium: asCurrencyString(pricingRule.base_premium),
     currency: "EUR",
     coverageStartAt,
-    coverageEndAt: addDays(coverageStartAt, input.durationDays),
+    coverageEndAt: getCoverageEndAt(coverageStartAt, input.durationDays),
     requiresAdminReview: Boolean(product.requires_admin_review),
   };
 }

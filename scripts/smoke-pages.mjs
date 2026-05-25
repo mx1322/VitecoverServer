@@ -15,6 +15,7 @@ const baseUrl =
   `http://127.0.0.1:${process.env.EDGE_HTTP_PORT || "80"}`;
 const timeoutMs = Number(args.get("--timeout-ms") || process.env.SMOKE_TIMEOUT_MS || 10000);
 const retries = Number(args.get("--retries") || process.env.SMOKE_RETRIES || 5);
+const locales = ["fr", "en", "zh"];
 
 function findPageFiles(dir) {
   return readdirSync(dir).flatMap((entry) => {
@@ -38,6 +39,14 @@ function toRoute(file) {
   }
 
   return `/${routeParts.join("/")}`.replace(/\/$/, "") || "/";
+}
+
+function expandLocalizedRoutes(route) {
+  if (route === "/") {
+    return ["/", ...locales.map((locale) => `/${locale}`)];
+  }
+
+  return [route, ...locales.map((locale) => `/${locale}${route}`)];
 }
 
 async function requestRoute(route) {
@@ -86,7 +95,14 @@ async function requestRoute(route) {
   }
 }
 
-const routes = [...new Set(findPageFiles(appDir).map(toRoute).filter(Boolean))].sort();
+const routes = [
+  ...new Set(
+    findPageFiles(appDir)
+      .map(toRoute)
+      .filter(Boolean)
+      .flatMap(expandLocalizedRoutes),
+  ),
+].sort();
 const results = await Promise.all(routes.map(requestRoute));
 const failures = results.filter((result) => result.error || !result.status);
 
