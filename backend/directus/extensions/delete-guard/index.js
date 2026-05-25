@@ -94,10 +94,10 @@ function formatManagerHint(collection, ids) {
   }
 
   if (ids.length === 1) {
-    return `Open Delete Manager and load collection=${collection}, id=${ids[0]} to remove dependencies one by one or cascade delete.`;
+    return `Open /admin/delete-manager?collection=${collection}&id=${ids[0]} to remove dependencies one by one or cascade delete.`;
   }
 
-  return `Open Delete Manager and load collection=${collection} to remove dependencies manually.`;
+  return `Open /admin/delete-manager?collection=${collection} to remove dependencies manually.`;
 }
 
 function formatBlockers(entityLabel, collection, ids, blockers) {
