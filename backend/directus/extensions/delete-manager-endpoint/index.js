@@ -135,21 +135,6 @@ async function readItem(database, collection, id) {
   return row;
 }
 
-async function listItems(database, collection, limit = 200) {
-  ensureSupportedCollection(collection);
-
-  const fields = SUMMARY_FIELDS[collection] || [];
-  const rows = await database(collection)
-    .select(["id", ...fields])
-    .orderBy("id", "asc")
-    .limit(limit);
-
-  return rows.map((row) => ({
-    id: row.id,
-    summary: summarizeRow(collection, row),
-  }));
-}
-
 async function readDirectDependents(database, collection, id) {
   const blockers = BLOCKERS[collection] || [];
   const groups = [];
@@ -265,17 +250,6 @@ export default (router, context) => {
         label: ENTITY_LABELS[collection] || collection,
       })),
     });
-  });
-
-  router.get("/items/:collection", async (req, res, next) => {
-    try {
-      const { collection } = req.params;
-      res.json({
-        data: await listItems(database, collection),
-      });
-    } catch (error) {
-      next(error);
-    }
   });
 
   router.get("/plan/:collection/:id", async (req, res, next) => {
