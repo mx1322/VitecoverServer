@@ -222,9 +222,9 @@ function renderDeleteManagerEmbed() {
 </script>`;
 }
 
-export default ({ filter, init, embed }, { database }) => {
-  init("app.after", async () => {
-    await ensureDeleteManagerModuleEnabled(database);
+export default ({ filter, embed }, { database, logger }) => {
+  ensureDeleteManagerModuleEnabled(database).catch((error) => {
+    logger?.error?.(error, "Failed to enable delete-manager in module_bar");
   });
 
   embed("body", renderDeleteManagerEmbed);
