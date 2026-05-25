@@ -155,13 +155,12 @@ function getDefaultCoverageStart(date = new Date()): string {
 
 function getCoverageWindow(startAt: string, durationDays: string) {
   const startDate = new Date(startAt);
-  if (Number.isNaN(startDate.getTime())) {
+  const duration = Number(durationDays);
+  if (Number.isNaN(startDate.getTime()) || !Number.isFinite(duration) || duration <= 0) {
     return null;
   }
 
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + Number(durationDays || "0"));
-  endDate.setHours(23, 59, 59, 0);
+  const endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000 - 60 * 1000);
   return { startDate, endDate };
 }
 
@@ -1088,7 +1087,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 <p>
                   <span className="font-semibold text-[var(--ink)]">{t(locale, "Duration")}:</span>{" "}
                   <span className="font-semibold text-[var(--ink)]">
-                    {priceForm.durationDays} day{Number(priceForm.durationDays) > 1 ? "s" : ""}
+                    {priceForm.durationDays} {t(locale, Number(priceForm.durationDays) > 1 ? "days" : "day")}
                   </span>
                 </p>
                 <p>
@@ -1105,7 +1104,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                {t(locale, "Temporary cover starts on the selected hour and ends at 23:59 on the final day.")}
+                {t(locale, "Temporary cover starts on the selected full hour and ends one minute before the selected duration elapses.")}
               </p>
             </div>
 
