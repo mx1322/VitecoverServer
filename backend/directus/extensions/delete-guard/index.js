@@ -8,6 +8,17 @@ class DeleteBlockedError extends Error {
   }
 }
 
+const DELETE_MANAGER_MODULE_ID = "delete-manager";
+
+function buildManagerUrl(collection, id = null) {
+  const params = new URLSearchParams({ collection });
+  if (id !== null && id !== undefined && id !== "") {
+    params.set("id", String(id));
+  }
+
+  return `/admin/${DELETE_MANAGER_MODULE_ID}?${params.toString()}`;
+}
+
 function compactValue(value) {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -94,10 +105,10 @@ function formatManagerHint(collection, ids) {
   }
 
   if (ids.length === 1) {
-    return `Delete Manager: /admin/delete-manager?collection=${collection}&id=${ids[0]} . Use it to remove dependencies one by one or cascade delete.`;
+    return `Delete Manager: ${buildManagerUrl(collection, ids[0])} . Use it to remove dependencies one by one or cascade delete.`;
   }
 
-  return `Delete Manager: /admin/delete-manager?collection=${collection} . Use it to remove dependencies manually.`;
+  return `Delete Manager: ${buildManagerUrl(collection)} . Use it to remove dependencies manually.`;
 }
 
 function formatBlockers(entityLabel, collection, ids, blockers) {
@@ -135,7 +146,89 @@ async function assertNoBlockers(database, collection, entityLabel, ids, blockers
   }
 }
 
-export default ({ filter }, { database }) => {
+async function ensureDeleteManagerModuleEnabled(database) {
+  const settings = await database("directus_settings").first(["id", "module_bar"]);
+  if (!settings) return;
+
+  const moduleBar =
+    Array.isArray(settings.module_bar)
+      ? settings.module_bar
+      : typeof settings.module_bar === "string" && settings.module_bar.trim()
+        ? JSON.parse(settings.module_bar)
+        : [];
+  const existingIndex = moduleBar.findIndex((item) => item?.type === "module" && item?.id === DELETE_MANAGER_MODULE_ID);
+  const desiredItem = {
+    type: "module",
+    id: DELETE_MANAGER_MODULE_ID,
+    enabled: true,
+    locked: true,
+  };
+
+  if (existingIndex >= 0) {
+    const current = moduleBar[existingIndex] || {};
+    if (current.enabled === true && current.locked === true) return;
+    moduleBar[existingIndex] = { ...current, ...desiredItem };
+  } else {
+    moduleBar.push(desiredItem);
+  }
+
+  await database("directus_settings").update({ module_bar: moduleBar }).where({ id: settings.id });
+}
+
+function renderDeleteManagerEmbed() {
+  return `
+<script>
+(() => {
+  const pattern = /Delete Manager:\\s*(\\/admin\\/delete-manager\\?[^\\s]+)/;
+
+  const enhance = () => {
+    document.querySelectorAll('*').forEach((element) => {
+      if (element.dataset.deleteManagerEnhanced === 'true') return;
+      if (element.children.length > 0) return;
+
+      const text = element.textContent || '';
+      const match = text.match(pattern);
+      if (!match) return;
+
+      element.dataset.deleteManagerEnhanced = 'true';
+
+      const link = document.createElement('a');
+      link.href = match[1];
+      link.textContent = 'Open Delete Manager';
+      link.dataset.deleteManagerLink = 'true';
+      link.style.display = 'inline-flex';
+      link.style.alignItems = 'center';
+      link.style.marginLeft = '8px';
+      link.style.padding = '4px 10px';
+      link.style.borderRadius = '999px';
+      link.style.background = '#0f766e';
+      link.style.color = '#fff';
+      link.style.textDecoration = 'none';
+      link.style.fontWeight = '600';
+
+      element.appendChild(document.createTextNode(' '));
+      element.appendChild(link);
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', enhance, { once: true });
+  } else {
+    enhance();
+  }
+
+  new MutationObserver(enhance).observe(document.body, { childList: true, subtree: true });
+})();
+</script>`;
+}
+
+export default ({ filter, init, embed }, { database }) => {
+  init("app.after", async () => {
+    await ensureDeleteManagerModuleEnabled(database);
+  });
+
+  embed("body", renderDeleteManagerEmbed);
+
   filter("customers.items.delete", async (keys) => {
     const ids = Array.isArray(keys) ? keys : [keys];
 
