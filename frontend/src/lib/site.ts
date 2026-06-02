@@ -1,5 +1,6 @@
 export const siteConfig = {
   name: "Vitecover",
+  logoAssetId: "6e76776b-1ad3-4091-944e-72927dc371cb",
   description:
     "Temporary auto insurance products with an online quote, payment, and policy delivery flow.",
   supportEmail: "support@vitecover.example",

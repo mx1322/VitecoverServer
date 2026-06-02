@@ -19,6 +19,7 @@ import { t } from "@/lib/i18n/translations";
 interface QuoteFormProps {
   products: QuoteProductOption[];
   initialProductCode?: string;
+  initialCoverageStartAt: string;
   locale: Locale;
 }
 
@@ -137,22 +138,6 @@ function stepNumber(step: Step): number {
   return stepLabels.findIndex((item) => item.id === step);
 }
 
-function toDateTimeLocalValue(date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:00`;
-}
-
-function getDefaultCoverageStart(date = new Date()): string {
-  const nextHourTomorrow = new Date(date);
-  nextHourTomorrow.setDate(nextHourTomorrow.getDate() + 1);
-  nextHourTomorrow.setMinutes(0, 0, 0);
-  nextHourTomorrow.setHours(nextHourTomorrow.getHours() + 1);
-  return toDateTimeLocalValue(nextHourTomorrow);
-}
-
 function getCoverageWindow(startAt: string, durationDays: string) {
   const startDate = new Date(startAt);
   const duration = Number(durationDays);
@@ -213,7 +198,7 @@ function toWorkspace(account: AuthenticatedAccount): CustomerWorkspace {
   };
 }
 
-export function QuoteForm({ products, initialProductCode, locale }: QuoteFormProps) {
+export function QuoteForm({ products, initialProductCode, initialCoverageStartAt, locale }: QuoteFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -228,7 +213,7 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
   const [priceForm, setPriceForm] = useState({
     productCode: initialProductCode ?? products[0]?.code ?? "AUTOMOBILE",
     durationDays: "1",
-    coverageStartAt: getDefaultCoverageStart(),
+    coverageStartAt: initialCoverageStartAt,
     fiscalPower: "6",
   });
   const [accountForm, setAccountForm] = useState({
@@ -1103,9 +1088,6 @@ export function QuoteForm({ products, initialProductCode, locale }: QuoteFormPro
                   </span>
                 </p>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                {t(locale, "Temporary cover starts on the selected full hour and ends one minute before the selected duration elapses.")}
-              </p>
             </div>
 
             <div className="rounded-[24px] border border-[rgba(255,179,71,0.35)] bg-[rgba(255,179,71,0.14)] p-5">
